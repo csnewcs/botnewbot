@@ -10,7 +10,7 @@ namespace bot
 {
     class Program
     {
-        Dictionary<ulong, short> setting = new Dictionary<ulong, short>();
+        Dictionary<ulong, ulong[]> setting = new Dictionary<ulong, ulong[]>();
         DiscordSocketClient client = new DiscordSocketClient();
         static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
         async Task mainAsync()
@@ -56,7 +56,10 @@ namespace bot
         }
         async Task joinedGuild(SocketGuild guild)
         {
-            
+            setting.Add(guild.OwnerId, new ulong[] {guild.Id, 0});
+            Directory.CreateDirectory(guild.Id.ToString());
+            File.WriteAllText($"{guild.Id}/config.json", "{}");
+            await guild.Owner.SendMessageAsync("초기 설정을 시작합니다.");
         }
         Task guildAvailable(SocketGuild guild)
         {
