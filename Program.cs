@@ -45,7 +45,7 @@ namespace bot
                     {
                         SocketGuild guild = client.GetGuild(setting[msg.Author.Id]);
                         ulong guildId = guild.Id;
-                        server[guildId].addServer(guild, msg.Content, msg.Author);
+                        server[msg.Author.Id].addServer(guild, msg.Author, msg.Content);
                     }
                 }
             }
@@ -65,12 +65,12 @@ namespace bot
         }
         async Task joinedGuild(SocketGuild guild) //서버에 처음 들어갔을 때
         {
-            setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, {서버 ID, 현재 진행 상황})
+            setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
+            server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
             Directory.CreateDirectory("servers/" + guild.Id.ToString()); //servers/서버 ID가 이름인 디렉터리 생성
             await guild.Owner.SendMessageAsync("초기 설정을 시작합니다.");
 
-            server.Add(guild.OwnerId, new Server());
-            server[guild.OwnerId].addServer(guild, "", guild.Owner);
+            server[guild.OwnerId].addServer(guild, guild.Owner);
         }
         async Task leftGuild(SocketGuild guild)
         {
