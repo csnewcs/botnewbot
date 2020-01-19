@@ -68,7 +68,7 @@ namespace bot
             JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
             if (json["deleteMessage"].ToString() != "0") 
             {
-                IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["noticeBot"].ToString()));
+                IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
                 SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
                 string nickname = getNickname(user);
                 EmbedBuilder embedBuilder = new EmbedBuilder()
@@ -78,17 +78,26 @@ namespace bot
                 .AddField("위치", deletedMessageChannel.Name);
                 Embed embed = embedBuilder.Build();
                 await channel.SendMessageAsync("", embed:embed);
-                //await channel.SendMessageAsync("@everyone\n이 봇을 데려와주셔서 감사드립니다. 명령어를 사용하기 위한 접두사는 \"$\"이며 명령어들은 \"$명령어\"를 통해 확인하실 수 있습니다.");
             }
         }
-        async Task messageEdited(Cacheable<IMessage, ulong> beforeMsg, SocketMessage afterMsg, ISocketMessageChannel channel) //메세지 수정될 때
+        async Task messageEdited(Cacheable<IMessage, ulong> beforeMsg, SocketMessage afterMsg, ISocketMessageChannel editedMessageChannel) //메세지 수정될 때
         {
-            // JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
-            // if (json["noticeBot"].ToString() != "0") 
-            // {
-            //     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["noticeBot"].ToString()));
-            //     await channel.SendMessageAsync("@everyone\n이 봇을 데려와주셔서 감사드립니다. 명령어를 사용하기 위한 접두사는 \"$\"이며 명령어들은 \"$명령어\"를 통해 확인하실 수 있습니다.");
-            // }
+            SocketGuild guild = (editedMessageChannel as SocketTextChannel).Guild;
+            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+            if (json["editMessage"].ToString() != "0" && !string.IsNullOrEmpty(afterMsg.Content)) 
+            {
+                IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["editMessage"].ToString()));
+                SocketGuildUser user = guild.GetUser(beforeMsg.Value.Author.Id);
+                string nickname = getNickname(user);
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                .WithTitle($"{nickname}님의 메세지가 수정됨")
+                .WithColor(new Color(0x880088))
+                .AddField("이전 내용", beforeMsg.Value, true)
+                .AddField("현재 내용", afterMsg.Content, true)
+                .AddField("위치", editedMessageChannel.Name);
+                Embed embed = embedBuilder.Build();
+                await channel.SendMessageAsync("", embed:embed);
+            }
         }
         Task log(LogMessage log) //로그 출력
         {
@@ -104,9 +113,10 @@ namespace bot
 
             server[guild.OwnerId].addServer(guild, guild.Owner);
         }
-        async Task leftGuild(SocketGuild guild)
+        Task leftGuild(SocketGuild guild)
         {
             Directory.Delete("servers/" + guild.Id.ToString(),true);
+            return Task.CompletedTask;
         }
         Task guildAvailable(SocketGuild guild)
         {
