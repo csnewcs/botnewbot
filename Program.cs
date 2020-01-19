@@ -30,6 +30,7 @@ namespace bot
             this.client.MessageUpdated += messageEdited;
             this.client.JoinedGuild += joinedGuild;
             this.client.LeftGuild += leftGuild;
+            this.client.UserJoined += personJoinedGuild;
             await Task.Delay(-1); //봇 꺼지지 말라고 기다리기
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
@@ -64,39 +65,45 @@ namespace bot
         }
         async Task messageDeleted(Cacheable<IMessage, ulong> msg, ISocketMessageChannel deletedMessageChannel) //메세지 삭제될 때
         {
-            SocketGuild guild = (deletedMessageChannel as SocketTextChannel).Guild;
-            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
-            if (json["deleteMessage"].ToString() != "0") 
+            if (deletedMessageChannel is SocketGuildChannel)
             {
-                IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
-                SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
-                string nickname = getNickname(user);
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithTitle($"{nickname}님의 메세지가 삭제됨")
-                .WithColor(new Color(0xff0000))
-                .AddField("내용", msg.Value, true)
-                .AddField("위치", deletedMessageChannel.Name);
-                Embed embed = embedBuilder.Build();
-                await channel.SendMessageAsync("", embed:embed);
+                SocketGuild guild = (deletedMessageChannel as SocketTextChannel).Guild;
+                JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                if (json["deleteMessage"].ToString() != "0") 
+                {
+                    IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
+                    SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
+                    string nickname = getNickname(user);
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                    .WithTitle($"{nickname}님의 메세지가 삭제됨")
+                    .WithColor(new Color(0xff0000))
+                    .AddField("내용", msg.Value, true)
+                    .AddField("위치", deletedMessageChannel.Name);
+                    Embed embed = embedBuilder.Build();
+                    await channel.SendMessageAsync("", embed:embed);
+                }
             }
         }
         async Task messageEdited(Cacheable<IMessage, ulong> beforeMsg, SocketMessage afterMsg, ISocketMessageChannel editedMessageChannel) //메세지 수정될 때
         {
-            SocketGuild guild = (editedMessageChannel as SocketTextChannel).Guild;
-            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
-            if (json["editMessage"].ToString() != "0" && !string.IsNullOrEmpty(afterMsg.Content)) 
+            if (editedMessageChannel is SocketTextChannel)
             {
-                IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["editMessage"].ToString()));
-                SocketGuildUser user = guild.GetUser(beforeMsg.Value.Author.Id);
-                string nickname = getNickname(user);
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithTitle($"{nickname}님의 메세지가 수정됨")
-                .WithColor(new Color(0x880088))
-                .AddField("이전 내용", beforeMsg.Value, true)
-                .AddField("현재 내용", afterMsg.Content, true)
-                .AddField("위치", editedMessageChannel.Name);
-                Embed embed = embedBuilder.Build();
-                await channel.SendMessageAsync("", embed:embed);
+                SocketGuild guild = (editedMessageChannel as SocketTextChannel).Guild;
+                JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                if (json["editMessage"].ToString() != "0" && !string.IsNullOrEmpty(afterMsg.Content)) 
+                {
+                    IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["editMessage"].ToString()));
+                    SocketGuildUser user = guild.GetUser(beforeMsg.Value.Author.Id);
+                    string nickname = getNickname(user);
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                    .WithTitle($"{nickname}님의 메세지가 수정됨")
+                    .WithColor(new Color(0x880088))
+                    .AddField("이전 내용", beforeMsg.Value, true)
+                    .AddField("현재 내용", afterMsg.Content, true)
+                    .AddField("위치", editedMessageChannel.Name);
+                    Embed embed = embedBuilder.Build();
+                    await channel.SendMessageAsync("", embed:embed);
+                }
             }
         }
         Task log(LogMessage log) //로그 출력
@@ -112,6 +119,11 @@ namespace bot
             await guild.Owner.SendMessageAsync("초기 설정을 시작합니다.");
 
             server[guild.OwnerId].addServer(guild, guild.Owner);
+        }
+        async Task personJoinedGuild(SocketGuildUser user)
+        {
+            File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"power\":0, \"money\":100}");
+            await user.Guild.SystemChannel.SendMessageAsync("새로운 유저 " + user.Mention + "님이 오셨어요!");
         }
         Task leftGuild(SocketGuild guild)
         {
