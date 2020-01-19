@@ -122,7 +122,7 @@ namespace bot
         }
         async Task personJoinedGuild(SocketGuildUser user)
         {
-            File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"power\":0, \"money\":100}");
+            if (!user.IsBot) File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"power\":0, \"money\":100}");            
             await user.Guild.SystemChannel.SendMessageAsync("새로운 유저 " + user.Mention + "님이 오셨어요!");
         }
         Task leftGuild(SocketGuild guild)
