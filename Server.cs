@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace bot
     class Server
     {
         Dictionary<int, string[]> saveChannel = new Dictionary<int, string[]>(); //채널들 저장할 곳
+        Dictionary<int, string[]> saveRole = new Dictionary<int, string[]>();
         JObject save = new JObject(); //저장할 json
         int now = 0;
         public bool addServer(SocketGuild guild, SocketUser owner, string msg = "") //작업 받는 곳
@@ -29,17 +31,16 @@ namespace bot
                     else {Embed embed = selChannel(guild, "누군가가 메세지를 삭제"); owner.SendMessageAsync("", embed:embed);} //새로고침
                     break;
                 case 3:
-                    if (answerNoticeBot(guild, msg, owner)) //설정 완료되었는지 확인
-                    {
-                        foreach (SocketGuildUser user in guild.Users) //유저 추가
-                        {
-                            if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"power\":0, \"money\":100}");
-                        }
-                        File.Delete($"servers/{guild.Id}/{owner.Id}"); //소유자는 최대 권한 (0(블랙리스트): 명령어 사용 불가, 1(유저): 명령어 사용 가능, 2(관리자): 관리자 명령어 사용 가능, 3(소유자): 소유자 명령어 사용 가능, 유저 이하로 강등되지 않음)
-                        File.WriteAllText($"servers/{guild.Id}/{owner.Id}","{\"power\":3, \"money\":100}");
-                        return true;
-                    }
+                    if (answerNoticeBot(guild, msg, owner)) now = 4; 
                     else {Embed embed = selChannel(guild, "봇에 관한 공지를"); owner.SendMessageAsync("", embed:embed);} //새로고침
+                    break;
+                case 4:
+                    if (answerUserPower(guild, msg, owner)) now = 5;
+                    else {Embed embed = selRole(guild, "이 봇의 이용자", "이 봇을 사용"); owner.SendMessageAsync("", embed:embed);} //새로고침
+                    break;
+                case 5:
+                    if (answerAdminPower(guild, msg, owner)) return true;
+                    else {Embed embed = selRole(guild, "이 봇의 관리자", "이 봇을 관리"); owner.SendMessageAsync("", embed:embed);} //새로고침
                     break;
             }
             return false; //위 switch에서 return이 되지 않았다면 여기서 return
@@ -137,13 +138,13 @@ namespace bot
                 Embed embed = builder.Build();
                 owner.SendMessageAsync("", embed:embed);
                 File.WriteAllText($"servers/{guild.Id}/config.json", save.ToString());
-                owner.SendMessageAsync("마지막 설정 정리를 하고 있습니다. 잠시만 기다려주세요");
                 return true;
             }
             else
             {
                 try
                 {
+                    Embed send = selRole(guild, "이 봇의 이용자", "이 봇을 사용");
                     save.Add("noticeBot", saveChannel[int.Parse(message)][0]);
                     File.WriteAllText($"servers/{guild.Id}/config.json", save.ToString());
                     EmbedBuilder builder = new EmbedBuilder()
@@ -151,12 +152,63 @@ namespace bot
                     .AddField("설정 완료", $"이 봇에 관한 공지를 알릴 채널을 {saveChannel[int.Parse(message)][1]}로 설정했습니다.");
                     Embed embed = builder.Build();
                     owner.SendMessageAsync("", embed:embed);
-                    owner.SendMessageAsync("마지막 설정 정리를 하고 있습니다. 잠시만 기다려주세요");
+                    Thread.Sleep(50);
+                    owner.SendMessageAsync("", embed:send);
                     return true;
                 }
                 catch
                 {
                     owner.SendMessageAsync("저런, 그런 채널은 없어요. 채널 앞에 붙은 숫자로만 답해주세요.");
+                    return false;
+                }
+            }
+        }
+        private bool answerUserPower(SocketGuild guild, string message, SocketUser owner)
+        {
+            if (message == "#") return false;
+            else
+            {
+                try
+                {
+                    Embed send = selRole(guild, "이 봇의 관리자", "이 봇을 관리");
+                    save.Add("useBot", saveRole[int.Parse(message)][0]);
+                    File.WriteAllText($"servers/{guild.Id}/config.json", save.ToString());
+                    EmbedBuilder builder = new EmbedBuilder()
+                    .WithColor(new Color(0x00881d))
+                    .AddField("설정 완료", $"이 봇 사용 권한을 {saveRole[int.Parse(message)][1]}로 설정했습니다.");
+                    Embed embed = builder.Build();
+                    owner.SendMessageAsync("", embed:embed);
+                    Thread.Sleep(50);
+                    owner.SendMessageAsync("", embed:send);
+                    return true;
+                }
+                catch
+                {
+                    owner.SendMessageAsync("저런, 그런 역할은 없어요. 역할 앞에 붙은 숫자로만 답해주세요.");
+                    return false;
+                }
+            }
+        }
+        private bool answerAdminPower(SocketGuild guild, string message, SocketUser owner)
+        {
+            if (message == "#") return false;
+            else
+            {
+                try
+                {
+                    save.Add("adminBot", saveRole[int.Parse(message)][0]);
+                    File.WriteAllText($"servers/{guild.Id}/config.json", save.ToString());
+                    EmbedBuilder builder = new EmbedBuilder()
+                    .WithColor(new Color(0x00881d))
+                    .AddField("설정 완료", $"이 봇 관리 권한을 {saveRole[int.Parse(message)][1]}로 설정했습니다.");
+                    Embed embed = builder.Build();
+                    owner.SendMessageAsync("", embed:embed);
+                    Thread.Sleep(50);
+                    return true;
+                }
+                catch
+                {
+                    owner.SendMessageAsync("저런, 그런 역할은 없어요. 역할 앞에 붙은 숫자로만 답해주세요.");
                     return false;
                 }
             }
@@ -173,11 +225,31 @@ namespace bot
                 if (channel is SocketTextChannel) 
                 {
                     saveChannel.Add(index, new string[2] {channel.Id.ToString(), channel.Name});
-                    send += $"{index}: {channel.Name}\n";
+                    send += $"{index}: {channel.Name}(ID: {channel.Id})\n";
                     index++;
                 }
             }
             builder.AddField("채널 목록", send);
+            Embed embed = builder.Build();
+            return embed;
+        }
+        private Embed selRole(SocketGuild guild, string what, string cannot)
+        {
+            int index = 1;
+            saveRole.Clear();
+            EmbedBuilder builder = new EmbedBuilder()
+            .WithTitle($"{what}에게 부여할 역할을 선택하세요. (이 역할이 없으면 {cannot}할 수 없습니다.)");
+            string send = "";
+            foreach (var role in guild.Roles) //텍스트 채널만 리스트에 추가해 보내기
+            {
+                if (!role.IsManaged)
+                {
+                    saveRole.Add(index, new string[] {role.Id.ToString(), role.Name});
+                    send += $"{index}: {role.Name}(ID: {role.Id})\n";
+                    index++;
+                }                
+            }
+            builder.AddField("역할 목록", send);
             Embed embed = builder.Build();
             return embed;
         }

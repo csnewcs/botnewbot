@@ -37,10 +37,27 @@ namespace bot
         {
             if (!msg.Author.IsBot)
             {
-                if (msg.Channel is SocketGuildChannel)
+                if (msg.Channel is SocketGuildChannel) //기본적으로 서버만 지원
                 {
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
+                    JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                    var guildUser = guild.GetUser(msg.Author.Id);
+                    ulong roleId = (ulong)config["useBot"];
+                    bool hasRole = false;
+                    foreach (var role in guildUser.Roles)
+                    {
+                        if (role.Id == roleId)
+                        {
+                            hasRole = true;
+                            break;
+                        }
+                    }
+                    if (hasRole) //명령 수행할 부분
+                    {
+                        Console.WriteLine("명령어 사용 가능");
+                    }
+                    else Console.WriteLine("명령어 사용 불가");
                 }
                 else
                 {
@@ -50,9 +67,9 @@ namespace bot
                         ulong guildId = guild.Id;
                         if (server[msg.Author.Id].addServer(guild, msg.Author, msg.Content))
                         {
-                            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json")); //설정 json가져오기
                             await msg.Author.SendMessageAsync("설정이 완료되었습니다. 그럼 이제 서버원들과 함께 즐기세요!\n당신은 이 봇의 관리자이며 \"$관리자명령어\" 를 통해 관리자 전용 명령어를 확인할 수 있습니다.");
-                            if (json["noticeBot"].ToString() != "0") 
+                            if (json["noticeBot"].ToString() != "0") //봇이 공지를 할 수 있으면
                             {
                                 IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["noticeBot"].ToString()));
                                 await channel.SendMessageAsync("@everyone\n이 봇을 데려와주셔서 감사드립니다. 명령어를 사용하기 위한 접두사는 \"$\"이며 명령어들은 \"$명령어\"를 통해 확인하실 수 있습니다.");
@@ -65,18 +82,18 @@ namespace bot
         }
         async Task messageDeleted(Cacheable<IMessage, ulong> msg, ISocketMessageChannel deletedMessageChannel) //메세지 삭제될 때
         {
-            if (deletedMessageChannel is SocketGuildChannel)
+            if (deletedMessageChannel is SocketGuildChannel) //서비인지 확인
             {
                 SocketGuild guild = (deletedMessageChannel as SocketTextChannel).Guild;
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
-                if (json["deleteMessage"].ToString() != "0") 
+                if (json["deleteMessage"].ToString() != "0") //메세지가 삭제되었을 알리는지 확인
                 {
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
                     SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
                     string nickname = getNickname(user);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle($"{nickname}님의 메세지가 삭제됨")
-                    .WithColor(new Color(0xff0000))
+                    .WithColor(new Color(0xff0000)) //빨간색
                     .AddField("내용", msg.Value, true)
                     .AddField("위치", deletedMessageChannel.Name);
                     Embed embed = embedBuilder.Build();
@@ -86,7 +103,7 @@ namespace bot
         }
         async Task messageEdited(Cacheable<IMessage, ulong> beforeMsg, SocketMessage afterMsg, ISocketMessageChannel editedMessageChannel) //메세지 수정될 때
         {
-            if (editedMessageChannel is SocketTextChannel)
+            if (editedMessageChannel is SocketTextChannel) //서버인지 확인
             {
                 SocketGuild guild = (editedMessageChannel as SocketTextChannel).Guild;
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
@@ -116,14 +133,21 @@ namespace bot
             setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
             server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
             Directory.CreateDirectory("servers/" + guild.Id.ToString()); //servers/서버 ID가 이름인 디렉터리 생성
+            await guild.Owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
+            foreach (SocketGuildUser user in guild.Users) //유저 추가
+            {
+                if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
+            }
+            File.Delete($"servers/{guild.Id}/{guild.OwnerId}"); //소유자는 최대 권한 (0(블랙리스트): 명령어 사용 불가, 1(유저): 명령어 사용 가능, 2(관리자): 관리자 명령어 사용 가능, 3(소유자): 소유자 명령어 사용 가능, 유저 이하로 강등되지 않음)
+            File.WriteAllText($"servers/{guild.Id}/{guild.OwnerId}","{\"owner\":true, \"money\":100}");
             await guild.Owner.SendMessageAsync("초기 설정을 시작합니다.");
 
             server[guild.OwnerId].addServer(guild, guild.Owner);
         }
-        async Task personJoinedGuild(SocketGuildUser user)
+        Task personJoinedGuild(SocketGuildUser user)
         {
-            if (!user.IsBot) File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"power\":0, \"money\":100}");            
-            await user.Guild.SystemChannel.SendMessageAsync("새로운 유저 " + user.Mention + "님이 오셨어요!");
+            if (!user.IsBot) File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"power\":0, \"money\":100}");
+            return Task.CompletedTask;
         }
         Task leftGuild(SocketGuild guild)
         {
