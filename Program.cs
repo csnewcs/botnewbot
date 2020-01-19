@@ -72,7 +72,12 @@ namespace bot
                 SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
                 string nickname = getNickname(user);
                 EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithTitle($"");
+                .WithTitle($"{nickname}님의 메세지가 삭제됨")
+                .WithColor(new Color(0xff0000))
+                .AddField("내용", msg.Value, true)
+                .AddField("위치", deletedMessageChannel.Name);
+                Embed embed = embedBuilder.Build();
+                await channel.SendMessageAsync("", embed:embed);
                 //await channel.SendMessageAsync("@everyone\n이 봇을 데려와주셔서 감사드립니다. 명령어를 사용하기 위한 접두사는 \"$\"이며 명령어들은 \"$명령어\"를 통해 확인하실 수 있습니다.");
             }
         }
