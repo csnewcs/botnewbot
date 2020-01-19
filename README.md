@@ -1,13 +1,24 @@
 # botnewbot
 
 ## 주의사항
-이 브렌치는 아직 개발 중입니다. 프로그램이 작동을 하지 않거나 오작동을 할 수 있습니다.
+이 브렌치는 아직 **개발 중**입니다. 프로그램이 작동을 하지 않거나 오작동을 할 수 있습니다.
 
-## 필요한 프로그램
+이 프로젝트는 MIT 라이센스가 적용되어 있으나 2차 배포시 **원제작자 표시가 필수**입니다.
+
+## 사용하기 전 필요한 것
+### 프로그램
 * .Net Core(3.1 이상)
+### 파일
+* config.txt 
+    >이 안에 봇의 토큰이 들어가야 합니다. (줄 바꿈 같은거 있으면 오작동하니 주의하세요.)
  
-## 개발 전 필요한 Nuget 패키지들
-* Discord.Net
-* Newtonsoft.Json
+## 개발자에게 알릴 것
+* 이 프로그램은 C#(.Net Core 3.1)으로 만들어졌습니다.
+### Nuget Package
+* Discord.Net (개발 버전: 2.1.1)
+* Newtonsoft.Json (개발 버전: 12.0.3)
 ***
-Copyright(c) 2020 hj666c2 MIT Licenced
+>botnewbot 프로젝트
+>>버전 1.0
+***
+Copyright(c) 2020 hj666c2 MIT Licenced 
