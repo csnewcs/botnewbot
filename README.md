@@ -18,7 +18,7 @@
 * Discord.Net (개발 버전: 2.1.1)
 * Newtonsoft.Json (개발 버전: 12.0.3)
 ***
->botnewbot 프로젝트
->>버전 1.0
+> ## botnewbot 프로젝트
+>> ### 버전 1.0
 ***
 Copyright(c) 2020 hj666c2 MIT Licenced 

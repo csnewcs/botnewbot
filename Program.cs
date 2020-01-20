@@ -70,6 +70,7 @@ namespace bot
                         SocketCommandContext context = new SocketCommandContext(client, message);
                         Help help = new Help();
                         var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
+                        Console.WriteLine("명령어 감지");
                     }
                     else return;
                 }
@@ -82,7 +83,7 @@ namespace bot
                         if (server[msg.Author.Id].addServer(guild, msg.Author, msg.Content))
                         {
                             JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json")); //설정 json가져오기
-                            await msg.Author.SendMessageAsync("설정이 완료되었습니다. 그럼 이제 서버원들과 함께 즐기세요!\n당신은 이 봇의 관리자이며 \"$관리자명령어\" 를 통해 관리자 전용 명령어를 확인할 수 있습니다.");
+                            await msg.Author.SendMessageAsync("설정이 완료되었습니다. 그럼 이제 서버원들과 함께 즐기세요!\n당신은 이 봇의 관리자이며 \"$명령어 관리자\" 를 통해 관리자 전용 명령어를 확인할 수 있습니다.");
                             if (json["noticeBot"].ToString() != "0") //봇이 공지를 할 수 있으면
                             {
                                 IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["noticeBot"].ToString()));
