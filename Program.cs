@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using Discord.Commands;
+using System.Reflection;
+using System.Security.Permissions;
 
 namespace bot
 {
@@ -13,24 +16,28 @@ namespace bot
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
+        CommandService command;
         static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
         async Task mainAsync()
         {
             DiscordSocketConfig config = new DiscordSocketConfig{MessageCacheSize = 200};
-            DiscordSocketClient client = new DiscordSocketClient(config);
-            this.client = client;
+            CommandServiceConfig serviceConfig = new CommandServiceConfig{};
+            command = new CommandService(serviceConfig);
+            client = new DiscordSocketClient(config);
             string token = File.ReadAllText("config.txt"); //토큰 가져오기
-            await this.client.LoginAsync(TokenType.Bot, token); //봇 로그인과 시작
-            await this.client.StartAsync();
-            this.client.Log += log; //이벤트 설정
-            this.client.Ready += ready;
-            this.client.GuildAvailable += guildAvailable;
-            this.client.MessageReceived += messageReceived;
-            this.client.MessageDeleted += messageDeleted;
-            this.client.MessageUpdated += messageEdited;
-            this.client.JoinedGuild += joinedGuild;
-            this.client.LeftGuild += leftGuild;
-            this.client.UserJoined += personJoinedGuild;
+            await client.LoginAsync(TokenType.Bot, token); //봇 로그인과 시작
+            await client.StartAsync();
+            client.Log += log; //이벤트 설정
+            client.Ready += ready;
+            client.GuildAvailable += guildAvailable;
+            client.MessageReceived += messageReceived;
+            client.MessageDeleted += messageDeleted;
+            client.MessageUpdated += messageEdited;
+            client.JoinedGuild += joinedGuild;
+            client.LeftGuild += leftGuild;
+            client.UserJoined += personJoinedGuild;
+            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(),
+                                        services: null);
             await Task.Delay(-1); //봇 꺼지지 말라고 기다리기
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
@@ -39,6 +46,11 @@ namespace bot
             {
                 if (msg.Channel is SocketGuildChannel) //기본적으로 서버만 지원
                 {
+                    SocketUserMessage message = msg as SocketUserMessage;
+                    if (message == null) return;
+                    int argPos = 0;
+                    if (!message.HasCharPrefix('$', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))  return; //접두사 $없으면 리턴, 접두사가 언급하는거면 리턴(왜 있는거지?)
+
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
                     JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
@@ -55,9 +67,11 @@ namespace bot
                     }
                     if (hasRole) //명령 수행할 부분
                     {
-                        Console.WriteLine("명령어 사용 가능");
+                        SocketCommandContext context = new SocketCommandContext(client, message);
+                        Help help = new Help();
+                        var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     }
-                    else Console.WriteLine("명령어 사용 불가");
+                    else return;
                 }
                 else
                 {
@@ -76,7 +90,9 @@ namespace bot
                             }
                             setting.Remove(msg.Author.Id);
                         }
+                        else return;
                     }
+                    else return;
                 }
             }
         }
