@@ -48,13 +48,13 @@ namespace bot
                 {
                     SocketUserMessage message = msg as SocketUserMessage;
                     if (message == null) return;
-                    int argPos = 0;
-                    if (!message.HasCharPrefix('$', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))  return; //접두사 $없으면 리턴, 접두사가 언급하는거면 리턴(왜 있는거지?)
-
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
-                    JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
                     var guildUser = guild.GetUser(msg.Author.Id);
+                    await addMoney(guildUser, msg);
+                    int argPos = 0;
+                    if (!message.HasCharPrefix('$', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))  return; //접두사 $없으면 리턴, 접두사가 언급하는거면 리턴(왜 있는거지?)
+                    JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
                     ulong roleId = (ulong)config["useBot"];
                     bool hasRole = false;
                     foreach (var role in guildUser.Roles)
@@ -68,9 +68,7 @@ namespace bot
                     if (hasRole) //명령 수행할 부분
                     {
                         SocketCommandContext context = new SocketCommandContext(client, message);
-                        Help help = new Help();
                         var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
-                        Console.WriteLine("명령어 감지");
                     }
                     else return;
                 }
@@ -96,6 +94,18 @@ namespace bot
                     else return;
                 }
             }
+        }
+        async Task addMoney(SocketGuildUser guildUser, SocketMessage msg)
+        {
+            Random random = new Random();
+            int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) / (random.Next(3, 16)) + 1;
+            Console.WriteLine("바이트 수: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length));
+            Console.WriteLine("실제 얻은거: " + getByte);
+            string path = $"servers/{guildUser.Guild.Id}/{guildUser.Id}";
+            JObject user = JObject.Parse(File.ReadAllText(path));
+            ulong money = (ulong)user["money"] + (ulong)getByte;
+            user["money"] = money;
+            File.WriteAllText(path, user.ToString());
         }
         async Task messageDeleted(Cacheable<IMessage, ulong> msg, ISocketMessageChannel deletedMessageChannel) //메세지 삭제될 때
         {
@@ -155,8 +165,6 @@ namespace bot
             {
                 if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
             }
-            File.Delete($"servers/{guild.Id}/{guild.OwnerId}"); //소유자는 최대 권한 (0(블랙리스트): 명령어 사용 불가, 1(유저): 명령어 사용 가능, 2(관리자): 관리자 명령어 사용 가능, 3(소유자): 소유자 명령어 사용 가능, 유저 이하로 강등되지 않음)
-            File.WriteAllText($"servers/{guild.Id}/{guild.OwnerId}","{\"owner\":true, \"money\":100}");
             await guild.Owner.SendMessageAsync("초기 설정을 시작합니다.");
 
             server[guild.OwnerId].addServer(guild, guild.Owner);

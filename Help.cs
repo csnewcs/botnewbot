@@ -28,29 +28,26 @@ namespace bot
         public async Task adminHelp()
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
-            Console.WriteLine(user);
-            SocketGuild guild = user.Guild;
-            JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id.ToString()}/config.json"));
-            SocketRole adminRole = guild.GetRole(ulong.Parse((config["adminBot"].ToString())));
-            Console.WriteLine(adminRole.Name);
+            SocketGuild guild = user.Guild; //서버 정보 얻기
+            JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id.ToString()}/config.json")); //그 서버의 설정 파일
+            SocketRole adminRole = guild.GetRole(ulong.Parse((config["adminBot"].ToString()))); //그 서버에서 지정한 관리자 검색
             bool isAdmin = false;
-            foreach(var role in user.Roles)
+            foreach(var role in user.Roles) //그냥 try catch로 바꿀까 고민중... (역할 줬을 때 성공하면 다시 뺏고 리턴 실패하면 작업) (근데 사람 역할을 수백개씩 가지고 있진 않을테니 아마 이대로 갈 듯)
             {
                 if (role == adminRole) 
                 {
                     isAdmin = true; 
-                    break;
+                    break; //그래도 최적화라고 성공하면 나가기
                 }
             }
             if (isAdmin)
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithTitle("이 봇의 관리자가 사용 가능한 명령어")
-                .AddField("읎어요!", "???: 영 좋지 않은 타이밍에 누르셨군요.");
+                .AddField("읎어요!", "???: 내가.... 내가 쓸 수 있는 명령어가 없다니!");
                 await user.SendMessageAsync("", embed:builder.Build());
                 await ReplyAsync("DM으로 결과를 전송했습니다.");
             }
-            else Console.WriteLine("권한 없음");
         }
     }
 }
