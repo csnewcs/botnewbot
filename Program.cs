@@ -20,7 +20,7 @@ namespace bot
         static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
         async Task mainAsync()
         {
-            DiscordSocketConfig config = new DiscordSocketConfig{MessageCacheSize = 200};
+            DiscordSocketConfig config = new DiscordSocketConfig{MessageCacheSize = 100};
             CommandServiceConfig serviceConfig = new CommandServiceConfig{};
             command = new CommandService(serviceConfig);
             client = new DiscordSocketClient(config);
@@ -51,7 +51,7 @@ namespace bot
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
                     var guildUser = guild.GetUser(msg.Author.Id);
-                    await addMoney(guildUser, msg);
+                    addMoney(guildUser, msg);
                     int argPos = 0;
                     if (!message.HasCharPrefix('$', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))  return; //접두사 $없으면 리턴, 접두사가 언급하는거면 리턴(왜 있는거지?)
                     JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
@@ -68,6 +68,17 @@ namespace bot
                     if (hasRole) //명령 수행할 부분
                     {
                         SocketCommandContext context = new SocketCommandContext(client, message);
+                        string[] forMention = msg.Content.Split(' '); //이유는 모르겠는데 멘션들끼리 떨어져있으면 얘가 명령어라 인식을 못해서 수동작업
+                        if (forMention[0] == "$역할")
+                        {
+                            Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
+                            switch (forMention[1])
+                            {
+                                case "부여":
+                                    await role.giveRole(guildUser, msg, forMention);
+                                    break;
+                            }
+                        }
                         var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     }
                     else return;
@@ -95,7 +106,7 @@ namespace bot
                 }
             }
         }
-        async Task addMoney(SocketGuildUser guildUser, SocketMessage msg)
+        void addMoney(SocketGuildUser guildUser, SocketMessage msg)
         {
             Random random = new Random();
             int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) / (random.Next(3, 16)) + 1;
@@ -188,7 +199,7 @@ namespace bot
         {
             return Task.CompletedTask;
         }
-        string getNickname(SocketGuildUser guild)
+        public string getNickname(SocketGuildUser guild)
         {
             if (string.IsNullOrEmpty(guild.Nickname))
             {

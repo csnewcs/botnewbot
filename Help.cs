@@ -17,8 +17,9 @@ namespace bot
         {
             SocketUser user = Context.User; 
             EmbedBuilder builder = new EmbedBuilder()
+            .WithColor(new Color(0xbe33ff))
             .WithTitle("이 봇이 사용 가능한 명령어")
-            .AddField("읎어요!", "???: 영 좋지 않은 타이밍에 누르셨군요.");
+            .AddField("은행", "가지고 있는 돈이 얼마나 있는지 알려줍니다. (단위: BNB)");
             await user.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
@@ -43,8 +44,9 @@ namespace bot
             if (isAdmin)
             {
                 EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(new Color(0xbe33ff))
                 .WithTitle("이 봇의 관리자가 사용 가능한 명령어")
-                .AddField("읎어요!", "???: 내가.... 내가 쓸 수 있는 명령어가 없다니!");
+                .AddField("역할", "사용자들의 역할을 관리하는 명령어입니다. 봇의 역할보다 상위에 있는 사람이나 역할은 건들 수 없으니 봇의 역할을 가장 위로 올려주세요. (자세한 설명은 \"$역할\"을 통해 확인해 주세요.)");
                 await user.SendMessageAsync("", embed:builder.Build());
                 await ReplyAsync("DM으로 결과를 전송했습니다.");
             }
