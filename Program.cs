@@ -1,13 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Discord;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Collections;
 using Discord.Commands;
 using System.Reflection;
-using System.Security.Permissions;
 
 namespace bot
 {
@@ -17,6 +18,7 @@ namespace bot
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
         CommandService command;
+        Dictionary<ulong, int> people = new Dictionary<ulong, int>();
         static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
         async Task mainAsync()
         {
@@ -36,6 +38,8 @@ namespace bot
             client.JoinedGuild += joinedGuild;
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
+            System.Threading.Thread thread = new System.Threading.Thread(new System.Threading.ThreadStart(minus));
+            thread.Start();
             await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(),
                                         services: null);
             await Task.Delay(-1); //봇 꺼지지 말라고 기다리기
@@ -54,6 +58,13 @@ namespace bot
                     addMoney(guildUser, msg);
                     int argPos = 0;
                     if (!message.HasCharPrefix('$', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))  return; //접두사 $없으면 리턴, 접두사가 언급하는거면 리턴(왜 있는거지?)
+                    if (coolDown(msg.Author.Id))
+                    {
+                        var a = await msg.Channel.SendMessageAsync("아직 명령어를 입력할 수 없습니다.");
+                        await Task.Delay(500);
+                        await a.DeleteAsync();
+                        return;
+                    }
                     JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
                     ulong roleId = (ulong)config["useBot"];
                     bool hasRole = false;
@@ -118,6 +129,34 @@ namespace bot
             user["money"] = money;
             File.WriteAllText(path, user.ToString());
         }
+        bool coolDown(ulong Id)
+        {
+            if (people.ContainsKey(Id))
+            {
+                return true;
+            }
+            else
+            {
+                people.Add(Id, 3);
+                return false;
+            }
+        }
+        void minus()
+        {
+            while(true)
+            {
+                var temp = people.Keys.ToList();
+                foreach(ulong key in temp)
+                {
+                    people[key]--;
+                    if (people[key] == 0) 
+                    {
+                        people.Remove(key);
+                    }
+                }
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
         async Task messageDeleted(Cacheable<IMessage, ulong> msg, ISocketMessageChannel deletedMessageChannel) //메세지 삭제될 때
         {
             if (deletedMessageChannel is SocketGuildChannel) //서비인지 확인
@@ -126,6 +165,7 @@ namespace bot
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
                 if (json["deleteMessage"].ToString() != "0") //메세지가 삭제되었을 알리는지 확인
                 {
+                    if (msg.Value.Author.IsBot) return;
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
                     SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
                     string nickname = getNickname(user);
@@ -147,6 +187,7 @@ namespace bot
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
                 if (json["editMessage"].ToString() != "0" && !string.IsNullOrEmpty(afterMsg.Content)) 
                 {
+                    if (beforeMsg.Value.Author.IsBot) return;
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["editMessage"].ToString()));
                     SocketGuildUser user = guild.GetUser(beforeMsg.Value.Author.Id);
                     string nickname = getNickname(user);

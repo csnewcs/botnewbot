@@ -18,17 +18,18 @@ namespace bot
             EmbedBuilder build = new EmbedBuilder()
             .WithTitle("역할 설정 명령어")
             .WithColor(new Color(0xbe33ff))
-            .AddField("제비뽑기", "1번~8번 제비를 뽑아 건 돈의 0% ~ 640%를 돌려받습니다. (사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
-            .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다. 나온 숫자에 의해 건 돈의 0배 ~ 100배를 돌려받습니다. (사용법: $도박 슬롯머신 [걸 돈])");
+            .AddField("제비뽑기", "1번 ~ 10번 제비를 뽑아 건 돈의 0% ~ 360%를 돌려받습니다. (사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
+            .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다. 나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다. (사용법: $도박 슬롯머신 [걸 돈])")
+            .AddField("슬롯머신(연속)", "슬롯머신과 같습니다. 단 연속으로(100번 까지) 돌립니다. 결과는 DM으로 전송됩니다.(사용법: $도박 슬롯머신 [(판당)걸 돈] [돌릴 수(0이면 일반 슬롯머신으로 간주)])");
             await Context.User.SendMessageAsync("", embed:build.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
         [Command("제비뽑기")]
         public async Task draw(ulong money, ulong select) //제비뽑기
         {
-            if (select < 1 || select > 8)
+            if (select < 1 || select > 9)
             {
-                await ReplyAsync("제비는 1~8번까지 있습니다.");
+                await ReplyAsync("제비는 1~9번까지 있습니다.");
                 return;
             }
             if (money % 100 != 0 || money == 0)
@@ -42,13 +43,13 @@ namespace bot
                 await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                 return;
             }
-            int[] multi = new int[] {0, 10, 20, 40, 80, 160, 320, 640};
+            int[] multi = new int[] {0, 10, 20, 40, 60, 80, 120, 200, 360};
             Random rd = new Random();
             int temp = 0;
             foreach (int i in multi) //그냥 랜덤으로 한번에 끝내려다가 그래도 제비뽑기니까 섞음
             {
-                int rd1 = rd.Next(0, 8);
-                int rd2 = rd.Next(0, 8);
+                int rd1 = rd.Next(0, 9);
+                int rd2 = rd.Next(0, 9);
                 temp = multi[rd1];
                 multi[rd1] = multi[rd2];
                 multi[rd2] = temp;
@@ -61,9 +62,9 @@ namespace bot
             await ReplyAsync("", embed:builder.Build());
         }
         [Command("슬롯머신")]
-        public async Task slot(ulong money, uint loop = 1) //슬롯머신
+        public async Task slot(ulong money, uint loop = 0) //슬롯머신
         {
-            if (loop != 1)
+            if (loop != 0)
             {
                 await manySlot(money, loop, Context.User as SocketGuildUser, Context.Message);
                 return;
@@ -92,7 +93,7 @@ namespace bot
             if (one == two && one == three && two == three) //숫자 3개 모두 일치
             {
                 if (one == 6) result = money * 100;
-                else result = money * ((ulong)one + 2) * ((ulong)one + 2); 
+                else result = money * ((ulong)one + 3) * ((ulong)one + 3); 
                 plusMoney(Context.User as SocketGuildUser, result);
                 builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {money * 3} BNB가 {result} BNB가 되어 돌아갑니다!");
             }
@@ -100,7 +101,7 @@ namespace bot
             {
                 ulong avg = (ulong)(one + two + three) / 3;
                 if (one == 6) result = money * 15;
-                else result = money * (avg + 2); //1 ~ 9배
+                else result = money * (avg + 4); //1 ~ 9배
                 plusMoney(Context.User as SocketGuildUser, result);
                 builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {money * 3} BNB가 {result} BNB가 되어 돌아갑니다.");
             }
@@ -162,7 +163,7 @@ namespace bot
                     ulong temp = 0;
                     ulong avg = (ulong)(one + two + three) / 3;
                     if (one == 6) temp = money * 15;
-                    else temp = money * (avg + 2); //1 ~ 11배
+                    else temp = money * (avg + 3);
                     result += temp;
                     results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {temp} BNB)\n";
                 }
@@ -171,7 +172,7 @@ namespace bot
                     ulong temp = 0;
                     ulong avg = (ulong)(one + two + three) / 3;
                     if (two == 6) temp = money * 15;
-                    else temp = money * (avg + 2);
+                    else temp = money * (avg + 3);
                     result += temp;
                     results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {temp} BNB)\n";
                 }
@@ -179,7 +180,7 @@ namespace bot
                 {
                     results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(실패)\n";
                 }
-                if (i % 25 == 0 && i != 100) results += ";";
+                if (i % 25 == 0 && i != loop) results += ";";
             }
             plusMoney(user, result);
             string log = "";
