@@ -19,7 +19,8 @@ namespace bot
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color(0xbe33ff))
             .WithTitle("이 봇이 사용 가능한 명령어")
-            .AddField("은행", "가지고 있는 돈이 얼마나 있는지 알려줍니다. (단위: BNB)");
+            .AddField("은행", "가지고 있는 돈이 얼마나 있는지 알려줍니다. (단위: BNB)")
+            .AddField ("도박", "돈을 걸고 간단한 게임을 하는 것입니다. 도박이니 당연히 운입니다. (판돈 단위: 100BNB)");
             await user.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
