@@ -19,7 +19,7 @@ namespace bot
             .WithTitle("역할 설정 명령어")
             .WithColor(new Color(0xbe33ff))
             .AddField("제비뽑기", "1번~8번 제비를 뽑아 건 돈의 0% ~ 640%를 돌려받습니다. (사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
-            .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다. 나온 숫자에 의해 건 돈의 0% ~ ?%를 돌려받습니다. (사용법: $도박 슬롯머신 [걸 돈])");
+            .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다. 나온 숫자에 의해 건 돈의 0배 ~ 100배를 돌려받습니다. (사용법: $도박 슬롯머신 [걸 돈])");
             await Context.User.SendMessageAsync("", embed:build.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
@@ -61,11 +61,16 @@ namespace bot
             await ReplyAsync("", embed:builder.Build());
         }
         [Command("슬롯머신")]
-        public async Task slot(ulong money) //슬롯머신
+        public async Task slot(ulong money, uint loop = 1) //슬롯머신
         {
-            if (money % 100 != 0 || money == 0)
+            if (loop != 1)
             {
-                await ReplyAsync("100BNB 단위로만 도박이 가능합니다.");
+                await manySlot(money, loop, Context.User as SocketGuildUser, Context.Message);
+                return;
+            }
+            if (money % 150 != 0 || money == 0)
+            {
+                await ReplyAsync("150BNB 단위로만 도박이 가능합니다.");
                 return;
             }
             Program program = new Program();
@@ -75,7 +80,7 @@ namespace bot
                 return;
             }
             Random rd = new Random();
-            
+            money = money / 3;
             string[] number = new string[9] {":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:" ,":eight:" ,":nine:"};
             int one = rd.Next(0, 9);
             int two = rd.Next(0, 9);
@@ -86,30 +91,122 @@ namespace bot
             ulong result = 0;
             if (one == two && one == three && two == three) //숫자 3개 모두 일치
             {
-                if (one == 7) result = money * 98;
-                else result = money * (ulong)one ^ 2; //1 ~ 81배
+                if (one == 6) result = money * 100;
+                else result = money * ((ulong)one + 2) * ((ulong)one + 2); 
                 plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {money} BNB가 {result} BNB가 되어 돌아갑니다!");
+                builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {money * 3} BNB가 {result} BNB가 되어 돌아갑니다!");
             }
             else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
             {
-                if (one == 7) result = money * 14;
-                else result = money * ((ulong)one + 1); //1 ~ 9배
+                ulong avg = (ulong)(one + two + three) / 3;
+                if (one == 6) result = money * 15;
+                else result = money * (avg + 2); //1 ~ 9배
                 plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {money} BNB가 {result} BNB가 되어 돌아갑니다.");
+                builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {money * 3} BNB가 {result} BNB가 되어 돌아갑니다.");
             }
             else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
             {
-                if (two == 7) result = money * 14;
-                else result = money * ((ulong)two + 1);
+                ulong avg = (ulong)(one + two + three) / 3;
+                if (two == 7) result = money * 15;
+                else result = money * (avg + 2);
                 plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다.", $"숫자 2개를 {two + 1}으로 맞추셨습니다! 거셨던 {money} BNB가 {result} BNB가 되어 돌아갑니다.");
+                builder.AddField("축하 드립니다.", $"숫자 2개를 {two + 1}으로 맞추셨습니다. 거셨던 {money * 3} BNB가 {result} BNB가 되어 돌아갑니다.");
             }
             else
             {
-                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {money} BNB가 소멸 되었습니다.");
+                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {money * 3} BNB가 소멸 되었습니다.");
             }
             await ReplyAsync("", embed:builder.Build());
+        }
+        
+        private async Task manySlot(ulong money, uint loop, SocketGuildUser user, SocketMessage msg)
+        {
+            if (loop > 100)
+            {
+                await ReplyAsync("100번까지만 연속 슬롯머신이 가능합니다.");
+                return;
+            }
+            if (money % 150 != 0 || money == 0)
+            {
+                await ReplyAsync("150BNB 단위로만 도박이 가능합니다.");
+                return;
+            }
+            Program program = new Program();
+            if (minusMoney(Context.User as SocketGuildUser, money * loop))
+            {
+                await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
+                return;
+            }
+
+            money = money / 3;
+            Random rd = new Random();
+            
+            string[] number = new string[9] {":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:" ,":eight:" ,":nine:"};
+            ulong result = 0;
+            string results = "";
+            for (int i = 1; i <= loop; i++)
+            {
+                int one = rd.Next(0, 9);
+                int two = rd.Next(0, 9);
+                int three = rd.Next(0, 9);
+                if (one == two && one == three && two == three) //숫자 3개 모두 일치
+                {
+                    ulong temp = 0;
+                    if (one == 7) temp = money * 130;
+                    else temp = money * ((ulong)one + 2) * ((ulong) one + 2); //1 ~ 81배
+                    result += temp;
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {temp} BNB)\n";
+                }
+                else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
+                {
+                    ulong temp = 0;
+                    ulong avg = (ulong)(one + two + three) / 3;
+                    if (one == 6) temp = money * 15;
+                    else temp = money * (avg + 2); //1 ~ 11배
+                    result += temp;
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {temp} BNB)\n";
+                }
+                else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
+                {
+                    ulong temp = 0;
+                    ulong avg = (ulong)(one + two + three) / 3;
+                    if (two == 6) temp = money * 15;
+                    else temp = money * (avg + 2);
+                    result += temp;
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {temp} BNB)\n";
+                }
+                else
+                {
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(실패)\n";
+                }
+                if (i % 25 == 0 && i != 100) results += ";";
+            }
+            plusMoney(user, result);
+            string log = "";
+            money *= 3;
+            if (result > money * loop) log = $"{result - (money * loop)} BNB 이득";
+            else log = $"{(money * loop) - result} BNB 손해";
+            string[] array = results.Split(';');
+            EmbedBuilder builder = new EmbedBuilder()
+                .WithTitle($"{program.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과")
+                .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256));
+            if (array.Length > 1)
+            {
+                int i = 1;
+                foreach (string split in array)
+                {
+                    builder.AddField($"결과 목록({i})", split);
+                    i++;
+                }
+                builder.AddField("결론", log);
+            }
+            else
+            {
+                builder.AddField("결과 목록", results)
+                .AddField("결론", log);
+            }
+            await msg.Author.SendMessageAsync("", embed:builder.Build());
+            await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
         }
         private void plusMoney(SocketGuildUser user, ulong plus)
         {
