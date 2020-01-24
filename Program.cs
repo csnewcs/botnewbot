@@ -89,6 +89,9 @@ namespace bot
                                     case "부여":
                                         await role.giveRole(guildUser, msg, forMention);
                                         break;
+                                    case "강탈":
+                                        await role.ridRole(guildUser, msg, forMention);
+                                        break;
                                 }
                             break;
                             case "$초기설정":

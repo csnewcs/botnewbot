@@ -20,7 +20,7 @@ namespace bot
             .WithColor(new Color(0xbe33ff))
             .WithTitle("이 봇이 사용 가능한 명령어")
             .AddField("은행", "가지고 있는 돈이 얼마나 있는지 알려줍니다. (단위: BNB)")
-            .AddField ("도박", "돈을 걸고 간단한 게임을 하는 것입니다. 도박이니 당연히 운입니다. (판돈 단위: 100BNB)");
+            .AddField ("도박", "돈을 걸고 간단한 게임을 하는 것입니다. 도박이니 당연히 운입니다. (자세한 도움말: $도박)");
             await user.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
@@ -47,7 +47,7 @@ namespace bot
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor(new Color(0xbe33ff))
                 .WithTitle("이 봇의 관리자가 사용 가능한 명령어")
-                .AddField("역할", "사용자들의 역할을 관리하는 명령어입니다. 봇의 역할보다 상위에 있는 사람이나 역할은 건들 수 없으니 봇의 역할을 가장 위로 올려주세요. (자세한 설명은 \"$역할\"을 통해 확인해 주세요.)");
+                .AddField("역할", "사용자들의 역할을 관리하는 명령어입니다. 봇의 역할보다 상위에 있는 사람이나 역할은 건들 수 없으니 봇의 역할의 위치를 적절히 설정해주세요. (자세한 설명은 \"$역할\"을 통해 확인해 주세요.)");
                 await user.SendMessageAsync("", embed:builder.Build());
                 await ReplyAsync("DM으로 결과를 전송했습니다.");
             }
