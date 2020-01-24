@@ -138,7 +138,6 @@ namespace bot
                 await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                 return;
             }
-
             money = money / 3;
             Random rd = new Random();
             
@@ -153,8 +152,8 @@ namespace bot
                 if (one == two && one == three && two == three) //숫자 3개 모두 일치
                 {
                     ulong temp = 0;
-                    if (one == 7) temp = money * 130;
-                    else temp = money * ((ulong)one + 2) * ((ulong) one + 2); //1 ~ 81배
+                    if (one == 6) temp = money * 130;
+                    else temp = money * ((ulong)one + 2) * ((ulong) one + 2); //4 ~ 100배
                     result += temp;
                     results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {program.unit(temp)} BNB)\n";
                 }

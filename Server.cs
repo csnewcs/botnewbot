@@ -52,6 +52,8 @@ namespace bot
         }
         private bool answerEditedMessage(SocketGuild guild, string message, SocketUser owner)
         {
+            Console.WriteLine("들어옴");
+
             Embed send = selChannel(guild, "누군가가 메세지를 삭제"); //다음 질문 미리 준비
             if (message == "#") return false; //새로고침 요청
             else if (message == "0") //등록 거부

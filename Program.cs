@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace bot
 {
-    class Program
+    public class Program : ModuleBase <SocketCommandContext>
     {
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
@@ -79,16 +79,21 @@ namespace bot
                     if (hasRole) //명령 수행할 부분
                     {
                         SocketCommandContext context = new SocketCommandContext(client, message);
-                        string[] forMention = msg.Content.Split(' '); //이유는 모르겠는데 멘션들끼리 떨어져있으면 얘가 명령어라 인식을 못해서 수동작업
-                        if (forMention[0] == "$역할")
+                        string[] forMention = msg.Content.Split(' '); //커맨드를 이용해서 안되는 것들
+                        switch (forMention[0])
                         {
-                            Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
-                            switch (forMention[1])
-                            {
-                                case "부여":
-                                    await role.giveRole(guildUser, msg, forMention);
-                                    break;
-                            }
+                            case "$역할":
+                                Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
+                                switch (forMention[1])
+                                {
+                                    case "부여":
+                                        await role.giveRole(guildUser, msg, forMention);
+                                        break;
+                                }
+                            break;
+                            case "$초기설정":
+                                await reset(msg.Author as SocketGuildUser);
+                                break;
                         }
                         var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     }
@@ -98,6 +103,7 @@ namespace bot
                 {
                     if (setting.ContainsKey(msg.Author.Id)) //세팅 값에 있는지 확인 후 있으면 설정 이어가기
                     {
+                        Console.WriteLine("키에 있음");
                         SocketGuild guild = client.GetGuild(setting[msg.Author.Id]);
                         ulong guildId = guild.Id;
                         if (server[msg.Author.Id].addServer(guild, msg.Author, msg.Content))
@@ -261,6 +267,28 @@ namespace bot
             if (length > 16) moneyString = moneyString.Insert(length - 28,"경 ");
             moneyString = moneyString.Replace("0000", "");
             return moneyString;
+        }
+        private async Task reset(SocketGuildUser user)
+        {
+            SocketGuild guild = user.Guild;
+            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+            SocketRole adminRole = guild.GetRole(ulong.Parse(json["adminBot"].ToString()));
+            bool isNotAdin = true;
+            foreach (SocketRole role in guild.Roles)
+            {
+                if (role == adminRole)
+                {
+                    isNotAdin = false;
+                    break;
+                }
+            }
+            if (isNotAdin) return;
+            File.Delete($"servers/{guild.Id}/config.json");
+            Console.WriteLine(user.Id);
+            setting.Add(user.Id, guild.Id);
+            server.Add(user.Id, new Server());
+            await user.SendMessageAsync("초기 설정을 시작합니다.");
+            server[user.Id].addServer(guild, user);
         }
     }
 }
