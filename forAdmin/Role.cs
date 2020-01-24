@@ -27,7 +27,7 @@ namespace bot
             }
             if (isNotAdin) return;
             EmbedBuilder build = new EmbedBuilder()
-            .WithTitle("역할 설정 명령어")
+            .WithTitle("역할 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
             .AddField("부여", "사람 혹은 사람들에게 역할을 부여합니다. (사용법: $역할 부여 [@역할 부여할 사람 멘션 (여러명 가능)] [@부여할 역할 멘션 (여러개 가능)])")
             .AddField("부여 모두", "모든 사람에게 역할을 부여합니다. (사용법: $역할 부여 모두 [@부여할 역할 멘션 (여러개 가능)])");

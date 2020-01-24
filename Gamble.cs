@@ -16,7 +16,7 @@ namespace bot
         public async Task help()
         {
             EmbedBuilder build = new EmbedBuilder()
-            .WithTitle("역할 설정 명령어")
+            .WithTitle("도박 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
             .AddField("제비뽑기", "1번 ~ 10번 제비를 뽑아 건 돈의 0% ~ 360%를 돌려받습니다. (사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
             .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다. 나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다. (사용법: $도박 슬롯머신 [걸 돈])")
