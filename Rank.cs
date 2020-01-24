@@ -69,7 +69,7 @@ namespace bot
             {
                 string nickName = program.getNickname(Context.Guild.GetUser(ulong.Parse(a.Value.Key)));
                 builder.AddField(a.Key + "등", nickName + ": (" + program.unit((ulong)a.Value.Value["money"]) + " BNB)");
-                if (a.Key % 1000 == 0 && a.Key != allRank.Count)
+                if (a.Key % 25 == 0 && a.Key != allRank.Count)
                 {
                     await Context.User.SendMessageAsync("", embed:builder.Build());
                     builder = new EmbedBuilder()
@@ -84,7 +84,26 @@ namespace bot
         [Command("상위권")]
         public async Task top()
         {
-            
+            makeJson(Context.Guild.Id);
+            sort();
+            Random rd = new Random();
+            EmbedBuilder builder = new EmbedBuilder()
+            .WithTitle($"{Context.Guild.Name}서버의 순위")
+            .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
+            Program program = new Program();
+            for (int i = 1; i <= 5; i++)
+            {
+                try
+                {
+                    string nickName = program.getNickname(Context.Guild.GetUser(ulong.Parse(allRank[i].Key)));
+                    builder.AddField(i + "등", nickName + ": (" + program.unit((ulong)allRank[i].Value["money"]) + " BNB)");
+                }
+                catch
+                {
+                    builder.AddField(i + "등", "사람이... 읎어요!");
+                }
+            }
+            await ReplyAsync("", embed:builder.Build());
         }
         private void makeJson(ulong guildId)
         {
