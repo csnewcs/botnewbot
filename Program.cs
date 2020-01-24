@@ -223,7 +223,7 @@ namespace bot
         }
         Task personJoinedGuild(SocketGuildUser user)
         {
-            if (!user.IsBot) File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"power\":0, \"money\":100}");
+            if (!user.IsBot) File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"money\":100}");
             return Task.CompletedTask;
         }
         Task leftGuild(SocketGuild guild)
@@ -250,6 +250,16 @@ namespace bot
             {
                 return guild.Nickname;
             }
+        }
+        public string unit(ulong money)
+        {
+            string moneyString = money.ToString();
+            int length = moneyString.Length;
+            if (length > 4) moneyString = moneyString.Insert(length - 4,"만 ");
+            if (length > 8) moneyString = moneyString.Insert(length - 10,"억 ");
+            if (length > 12) moneyString = moneyString.Insert(length - 18,"조 ");
+            if (length > 16) moneyString = moneyString.Insert(length - 28,"경 ");
+            return moneyString;
         }
     }
 }

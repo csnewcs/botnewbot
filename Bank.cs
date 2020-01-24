@@ -19,10 +19,11 @@ namespace bot
             JObject json = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
             Program program = new Program();
             string nickname = program.getNickname(user);
+            string moneyString = program.unit((ulong)json["money"]);
             Random rd = new Random();
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256))
-            .AddField(nickname + "님의 통장엔...", json["money"].ToString() + " BNB가 있습니다.");
+            .AddField(nickname + "님의 통장엔...", moneyString + " BNB가 있습니다.");
             await ReplyAsync("", embed:builder.Build());
         }
     }
