@@ -22,7 +22,8 @@ namespace bot
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("순위 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
-            .AddField("나","자기 자신의 순위를 봅니다. (사용법: 순위 나)");
+            .AddField("나","자기 자신의 순위를 봅니다. (사용법: 순위 나)")
+            .AddField("모두","서버 전체의 순위를 봅니다. (결과는 DM으로 전송됩니다.) (사용법: 순위 모두)");
             await Context.User.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }

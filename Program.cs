@@ -259,6 +259,7 @@ namespace bot
             if (length > 8) moneyString = moneyString.Insert(length - 10,"억 ");
             if (length > 12) moneyString = moneyString.Insert(length - 18,"조 ");
             if (length > 16) moneyString = moneyString.Insert(length - 28,"경 ");
+            moneyString = moneyString.Replace("0000", "");
             return moneyString;
         }
     }
