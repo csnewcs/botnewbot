@@ -23,7 +23,8 @@ namespace bot
             .WithTitle("순위 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
             .AddField("나","자기 자신의 순위를 봅니다. (사용법: 순위 나)")
-            .AddField("모두","서버 전체의 순위를 봅니다. (결과는 DM으로 전송됩니다.) (사용법: 순위 모두)");
+            .AddField("모두","서버 내부 사람 전체의 순위를 봅니다. (결과는 DM으로 전송됩니다.) (사용법: 순위 모두)")
+            .AddField("상위권","서버 내부 사람 상위 5명의 순위를 봅니다. (사용법: 순위 상위권)");
             await Context.User.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
@@ -31,27 +32,32 @@ namespace bot
         [Command("나")]
         public async Task me()
         {
-            string dirPath = $"servers/{Context.Guild.Id}";
-            DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
-            makeJson(Context.Guild.Id);
-            int rank = 1;
-            ulong first = (ulong)json[Context.User.Id.ToString()]["money"];
-            foreach (var file in json)
+            try
             {
-                ulong person = (ulong)file.Value["money"];
-                if (person > first)
+                makeJson(Context.Guild.Id);
+                sort();
+                KeyValuePair<string, JToken> find = new KeyValuePair<string, JToken>(Context.User.Id.ToString(), json["money"]);
+                int rank = 0;
+                foreach (var a in allRank)
                 {
-                    rank++;
-                    first = person;
+                    if (a.Value.Key == find.Key)
+                    {
+                        rank = a.Key;
+                        break;
+                    }
                 }
+                Random rd = new Random();
+                Program program = new Program();
+                string nickName = program.getNickname(Context.User as SocketGuildUser);
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
+                .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
+                await ReplyAsync("", embed:builder.Build());
             }
-            Random rd = new Random();
-            Program program = new Program();
-            string nickName = program.getNickname(Context.User as SocketGuildUser);
-            EmbedBuilder builder = new EmbedBuilder()
-            .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
-            .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
-            await ReplyAsync("", embed:builder.Build());
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         [Command("모두")]
@@ -134,7 +140,15 @@ namespace bot
                         first = money;
                     }
                 }
-                allRank.Add(rank, person);
+                while(true)
+                {
+                    try
+                    {
+                        allRank.Add(rank, person);
+                        break;
+                    }
+                    catch {rank++;}
+                }
             }
         }
     }
