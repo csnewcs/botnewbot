@@ -47,7 +47,8 @@ namespace bot
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor(new Color(0xbe33ff))
                 .WithTitle("이 봇의 관리자가 사용 가능한 명령어")
-                .AddField("역할", "사용자들의 역할을 관리하는 명령어입니다. 봇의 역할보다 상위에 있는 사람이나 역할은 건들 수 없으니 봇의 역할의 위치를 적절히 설정해주세요. (자세한 설명은 \"$역할\"을 통해 확인해 주세요.)");
+                .AddField("역할", "사용자들의 역할을 관리하는 명령어입니다. 봇의 역할보다 상위에 있는 사람이나 역할은 건들 수 없으니 봇의 역할의 위치를 적절히 설정해주세요. (자세한 설명은 \"$역할\"을 통해 확인해 주세요.)")
+                .AddField("처벌", "유저를 뮤트시키거나 킥하거나 밴시킵니다. 물론 봇 보다 상위 유저는 관리할 수 없습니다. (자세한 설명은 \"$처벌\")을 통해 확인해 주세요.");
                 await user.SendMessageAsync("", embed:builder.Build());
                 await ReplyAsync("DM으로 결과를 전송했습니다.");
             }

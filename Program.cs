@@ -97,6 +97,25 @@ namespace bot
                             case "$초기설정":
                                 await reset(msg.Author as SocketGuildUser);
                                 break;
+                            case "$처벌":
+                                Punish punish = new Punish();
+                                if (forMention.Length == 1) await punish.help(guildUser, msg);
+                                else
+                                {    
+                                    switch (forMention[1])
+                                    {
+                                        case "뮤트":
+                                            await punish.mute(guildUser, msg);
+                                            break;
+                                        case "킥":
+                                            await punish.kick(guildUser, msg);
+                                            break;
+                                        case "밴":
+                                            await punish.ban(guildUser, msg);
+                                            break;
+                                    }
+                                }
+                                break;
                         }
                         var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     }
