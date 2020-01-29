@@ -32,7 +32,6 @@ namespace bot
                 Program program = new Program();
                 foreach (var muteUser in muteUsers)
                 {
-                    GuildUserProperties properties = new GuildUserProperties{Mute = true};
                     await (muteUser as SocketGuildUser).ModifyAsync(m => {m.Mute = true;});
                 }
                 if (muteUsers.Count != 1)

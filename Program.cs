@@ -126,7 +126,7 @@ namespace bot
                                         switch (forMention[1])
                                         {
                                             case "뮤트":
-                                                
+                                                await release.mute(guildUser, msg);
                                                 break;
                                             case "밴":
                                                 break;
