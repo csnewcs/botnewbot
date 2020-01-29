@@ -80,42 +80,60 @@ namespace bot
                     {
                         SocketCommandContext context = new SocketCommandContext(client, message);
                         string[] forMention = msg.Content.Split(' '); //커맨드를 이용해서 안되는 것들
-                        switch (forMention[0])
+                        if (!isNotAdmin(msg.Author as SocketGuildUser)) //관리자만 사용 가능
                         {
-                            case "$역할":
-                                Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
-                                switch (forMention[1])
-                                {
-                                    case "부여":
-                                        await role.giveRole(guildUser, msg, forMention);
-                                        break;
-                                    case "강탈":
-                                        await role.ridRole(guildUser, msg, forMention);
-                                        break;
-                                }
-                            break;
-                            case "$초기설정":
-                                await reset(msg.Author as SocketGuildUser);
-                                break;
-                            case "$처벌":
-                                Punish punish = new Punish();
-                                if (forMention.Length == 1) await punish.help(guildUser, msg);
-                                else
-                                {    
+                            switch (forMention[0])
+                            {
+                                case "$역할":
+                                    Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
                                     switch (forMention[1])
                                     {
-                                        case "뮤트":
-                                            await punish.mute(guildUser, msg);
+                                        case "부여":
+                                            await role.giveRole(guildUser, msg, forMention);
                                             break;
-                                        case "킥":
-                                            await punish.kick(guildUser, msg);
-                                            break;
-                                        case "밴":
-                                            await punish.ban(guildUser, msg);
+                                        case "강탈":
+                                            await role.ridRole(guildUser, msg, forMention);
                                             break;
                                     }
-                                }
                                 break;
+                                case "$초기설정":
+                                    await reset(msg.Author as SocketGuildUser);
+                                    break;
+                                case "$처벌":
+                                    Punish punish = new Punish();
+                                    if (forMention.Length == 1) await punish.help(guildUser, msg);
+                                    else
+                                    {    
+                                        switch (forMention[1])
+                                        {
+                                            case "뮤트":
+                                                await punish.mute(guildUser, msg);
+                                                break;
+                                            case "킥":
+                                                await punish.kick(guildUser, msg);
+                                                break;
+                                            case "밴":
+                                                await punish.ban(guildUser, msg);
+                                                break;
+                                        }
+                                    }
+                                    break;
+                                case "$처벌해제":
+                                    Release release = new Release();
+                                    if (forMention.Length == 1) await release.help(guildUser, msg);
+                                    else
+                                    {
+                                        switch (forMention[1])
+                                        {
+                                            case "뮤트":
+                                                
+                                                break;
+                                            case "밴":
+                                                break;
+                                        }
+                                    }
+                                    break;
+                            }
                         }
                         var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     }
@@ -125,7 +143,6 @@ namespace bot
                 {
                     if (setting.ContainsKey(msg.Author.Id)) //세팅 값에 있는지 확인 후 있으면 설정 이어가기
                     {
-                        Console.WriteLine("키에 있음");
                         SocketGuild guild = client.GetGuild(setting[msg.Author.Id]);
                         ulong guildId = guild.Id;
                         if (server[msg.Author.Id].addServer(guild, msg.Author, msg.Content))
@@ -293,24 +310,28 @@ namespace bot
         private async Task reset(SocketGuildUser user)
         {
             SocketGuild guild = user.Guild;
-            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
-            SocketRole adminRole = guild.GetRole(ulong.Parse(json["adminBot"].ToString()));
-            bool isNotAdin = true;
-            foreach (SocketRole role in guild.Roles)
-            {
-                if (role == adminRole)
-                {
-                    isNotAdin = false;
-                    break;
-                }
-            }
-            if (isNotAdin) return;
             File.Delete($"servers/{guild.Id}/config.json");
             Console.WriteLine(user.Id);
             setting.Add(user.Id, guild.Id);
             server.Add(user.Id, new Server());
             await user.SendMessageAsync("초기 설정을 시작합니다.");
             server[user.Id].addServer(guild, user);
+        }
+        public bool isNotAdmin(SocketGuildUser user)
+        {
+            bool notAdmin = true;
+            SocketGuild guild = user.Guild;
+            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+            SocketRole adminRole = guild.GetRole(ulong.Parse(json["adminBot"].ToString()));
+            foreach (SocketRole role in guild.Roles)
+            {
+                if (role == adminRole)
+                {
+                    notAdmin = false;
+                    break;
+                }
+            }
+            return notAdmin;
         }
     }
 }

@@ -32,32 +32,25 @@ namespace bot
         [Command("나")]
         public async Task me()
         {
-            try
+            makeJson(Context.Guild.Id);
+            sort();
+            KeyValuePair<string, JToken> find = new KeyValuePair<string, JToken>(Context.User.Id.ToString(), json["money"]);
+            int rank = 0;
+            foreach (var a in allRank)
             {
-                makeJson(Context.Guild.Id);
-                sort();
-                KeyValuePair<string, JToken> find = new KeyValuePair<string, JToken>(Context.User.Id.ToString(), json["money"]);
-                int rank = 0;
-                foreach (var a in allRank)
+                if (a.Value.Key == find.Key)
                 {
-                    if (a.Value.Key == find.Key)
-                    {
-                        rank = a.Key;
-                        break;
-                    }
+                    rank = a.Key;
+                    break;
                 }
-                Random rd = new Random();
-                Program program = new Program();
-                string nickName = program.getNickname(Context.User as SocketGuildUser);
-                EmbedBuilder builder = new EmbedBuilder()
-                .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
-                .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
-                await ReplyAsync("", embed:builder.Build());
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            Random rd = new Random();
+            Program program = new Program();
+            string nickName = program.getNickname(Context.User as SocketGuildUser);
+            EmbedBuilder builder = new EmbedBuilder()
+            .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
+            .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
+            await ReplyAsync("", embed:builder.Build());
         }
 
         [Command("모두")]

@@ -14,18 +14,6 @@ namespace bot
         [Command("역할")]
         public async Task helpRole()
         {
-            JObject json = JObject.Parse(File.ReadAllText($"servers/{Context.Guild.Id}/config.json"));
-            SocketRole adminRole = Context.Guild.GetRole(ulong.Parse(json["adminBot"].ToString()));
-            bool isNotAdin = true;
-            foreach (SocketRole role in Context.Guild.Roles)
-            {
-                if (role == adminRole)
-                {
-                    isNotAdin = false;
-                    break;
-                }
-            }
-            if (isNotAdin) return;
             EmbedBuilder build = new EmbedBuilder()
             .WithTitle("역할 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
@@ -36,18 +24,6 @@ namespace bot
         }
         public async Task giveRole(SocketGuildUser user, SocketMessage message, string[] split)
         {
-            JObject json = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/config.json"));
-            SocketRole adminRole = user.Guild.GetRole(ulong.Parse(json["adminBot"].ToString()));
-            bool isNotAdin = true;
-            foreach (SocketRole role in user.Roles)
-            {
-                if (role == adminRole)
-                {
-                    isNotAdin = false;
-                    break;
-                }
-            }
-            if (isNotAdin) return;
             if (split[2] == "모두") await all(message);
             else await single(message);
         }
