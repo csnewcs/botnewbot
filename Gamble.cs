@@ -43,7 +43,7 @@ namespace bot
                 await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                 return;
             }
-            int[] multi = new int[] {0, 10, 20, 40, 60, 80, 120, 200, 360};
+            int[] multi = new int[] {0, 5, 10, 20, 40, 80, 120, 200, 360};
             Random rd = new Random();
             int temp = 0;
             foreach (int i in multi) //그냥 랜덤으로 한번에 끝내려다가 그래도 제비뽑기니까 섞음

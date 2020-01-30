@@ -129,6 +129,7 @@ namespace bot
                                                 await release.mute(guildUser, msg);
                                                 break;
                                             case "밴":
+                                                await release.ban(guild, msg, forMention);
                                                 break;
                                         }
                                     }

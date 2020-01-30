@@ -63,21 +63,30 @@ namespace bot
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle($"{Context.Guild.Name}서버의 순위")
             .WithColor(new Color(color));
+            int count = 0;
             Program program = new Program();
+            string users = "";
             foreach (var a in allRank)
             {
                 string nickName = program.getNickname(Context.Guild.GetUser(ulong.Parse(a.Value.Key)));
-                builder.AddField(a.Key + "등", nickName + ": (" + program.unit((ulong)a.Value.Value["money"]) + " BNB)");
-                if (a.Key % 25 == 0 && a.Key != allRank.Count)
+                users += a.Key + "등" + "\n" +  nickName + ": (" + program.unit((ulong)a.Value.Value["money"]) + " BNB)\n\n";
+                if (a.Key % 20 == 0 && a.Key != allRank.Count)
                 {
-                    await Context.User.SendMessageAsync("", embed:builder.Build());
-                    builder = new EmbedBuilder()
-                    .WithTitle($"{Context.Guild.Name}서버의 순위")
-                    .WithColor(new Color(color));
+                    builder.AddField($"순위({count})", users);
+                    users = "";
+                    count++;
+                    if (count % 20 == 0)
+                    {
+                        await Context.User.SendMessageAsync("", embed:builder.Build());
+                        builder = new EmbedBuilder()
+                        .WithTitle($"{Context.Guild.Name}서버의 순위")
+                        .WithColor(new Color(color));
+                    }
                 }
             }
-            await Context.User.SendMessageAsync("", embed:builder.Build());
+            if (users != "") builder.AddField($"순위({count})", users);
             await ReplyAsync("DM으로 결과를 전송했습니다.");
+            await Context.User.SendMessageAsync("", embed:builder.Build());
         }
 
         [Command("상위권")]
