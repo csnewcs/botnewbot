@@ -86,14 +86,17 @@ namespace bot
                             {
                                 case "$역할":
                                     Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
-                                    switch (forMention[1])
+                                    if (forMention.Length != 1)
                                     {
-                                        case "부여":
-                                            await role.giveRole(guildUser, msg, forMention);
-                                            break;
-                                        case "강탈":
-                                            await role.ridRole(guildUser, msg, forMention);
-                                            break;
+                                        switch (forMention[1])
+                                        {
+                                            case "부여":
+                                                await role.giveRole(guildUser, msg, forMention);
+                                                break;
+                                            case "강탈":
+                                                await role.ridRole(guildUser, msg, forMention);
+                                                break;
+                                        }
                                     }
                                 break;
                                 case "$초기설정":
