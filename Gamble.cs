@@ -18,9 +18,9 @@ namespace bot
             EmbedBuilder build = new EmbedBuilder()
             .WithTitle("도박 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
-            .AddField("제비뽑기", "1번 ~ 9번 제비를 뽑아 건 돈의 0% ~ 360%를 돌려받습니다. (사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
-            .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다. 나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다. (사용법: $도박 슬롯머신 [걸 돈])")
-            .AddField("슬롯머신(연속)", "슬롯머신과 같습니다. 단 연속으로(100번 까지) 돌립니다. 결과는 DM으로 전송됩니다.(사용법: $도박 슬롯머신 [(판당)걸 돈] [돌릴 수(0이면 일반 슬롯머신으로 간주)])");
+            .AddField("제비뽑기", "1번 ~ 9번 제비를 뽑아 건 돈의 0% ~ 360%를 돌려받습니다.\n(사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
+            .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다.\n나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다.\n(사용법: $도박 슬롯머신 [걸 돈])")
+            .AddField("슬롯머신(연속)", "슬롯머신과 같습니다. 단 연속으로(100번까지) 돌립니다.\n결과 중 일부는 DM으로 전송됩니다.\n(사용법: $도박 슬롯머신 [(판당)걸 돈] [돌릴 수(0이면 일반 슬롯머신으로 간주)])");
             await Context.User.SendMessageAsync("", embed:build.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
@@ -187,9 +187,10 @@ namespace bot
             if (result > money * loop) log = $"{program.unit(result - (money * loop))} BNB 이득";
             else log = $"{program.unit((money * loop) - result)} BNB 손해";
             string[] array = results.Split(';');
+            uint color = (uint)rd.Next(0x000000, 0xffffff);
             EmbedBuilder builder = new EmbedBuilder()
                 .WithTitle($"{program.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과")
-                .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256));
+                .WithColor(new Color(color));
             if (array.Length > 1)
             {
                 int i = 1;
@@ -205,8 +206,11 @@ namespace bot
                 builder.AddField("결과 목록", results)
                 .AddField("결론", log);
             }
+            EmbedBuilder serverSend = new EmbedBuilder()
+            .WithColor(new Color(color))
+            .AddField($"{program.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과", log);
             await msg.Author.SendMessageAsync("", embed:builder.Build());
-            await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
+            await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.", embed:serverSend.Build());
         }
         private void plusMoney(SocketGuildUser user, ulong plus)
         {
