@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using Discord;
@@ -26,6 +26,7 @@ namespace bot
         }
         public async Task giveRole(SocketGuildUser user, SocketMessage message, string[] split)
         {
+            if (!canManage(user, message.MentionedRoles)) return;
             if (split[2] == "모두") await all(message);
             else await single(message);
         }
@@ -33,7 +34,11 @@ namespace bot
         {
             var mentionedUsers = message.MentionedUsers;
             var mentionedRoles = message.MentionedRoles;
-            if (mentionedUsers.Count == 0 || mentionedRoles.Count == 0) return;
+            if (mentionedUsers.Count == 0 || mentionedRoles.Count == 0)
+            {
+                await ReplyAsync("유저와 역할을 멘션했는지 확인하세요");
+                return;
+            } 
             foreach (SocketGuildUser a in mentionedUsers)
             {
                 await a.AddRolesAsync(mentionedRoles);
@@ -109,18 +114,7 @@ namespace bot
         
         public async Task ridRole(SocketGuildUser user, SocketMessage message, string[] split)
         {
-            JObject json = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/config.json"));
-            SocketRole adminRole = user.Guild.GetRole(ulong.Parse(json["adminBot"].ToString()));
-            bool isNotAdin = true;
-            foreach (SocketRole role in user.Roles)
-            {
-                if (role == adminRole)
-                {
-                    isNotAdin = false;
-                    break;
-                }
-            }
-            if (isNotAdin) return;
+            if (!canManage(user, message.MentionedRoles)) return;
             if (split[2] == "모두") await allRid(message);
             else await singleRid(message);
         }
@@ -200,6 +194,39 @@ namespace bot
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
             }
+        }
+        private bool canManage(SocketGuildUser user, IReadOnlyCollection<SocketRole> roles)
+        {
+            bool canManage = false;
+            if (user.Id == user.Guild.OwnerId) return true;
+            foreach (var a in user.Roles)
+            {
+                if (a.Permissions.ManageRoles)
+                {
+                    canManage = true;
+                    break;
+                }
+            }
+            if (canManage)
+            {
+                return false; // 일단 역할 관리가 안되면 리턴
+            }
+            canManage = false;
+            foreach (var a in user.Roles)
+            {
+                if (canManage) break;
+                foreach (var b in roles)
+                {
+                    Console.WriteLine(a.Position + " VS " + b.Position);
+                    if (a.Position < b.Position)
+                    {
+                        canManage = true;
+                        break;
+                    }
+                }
+            }
+            if (!canManage) return false;
+            return true;
         }
     }
 }
