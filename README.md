@@ -15,7 +15,7 @@
 ### 이 봇의 개발 환경
 * 사용 언어: C#(.Net Core 3.1)
 * 사용 텍스트 에디터: Visual Studio Code
-* 사용 운영체제: Manjaro Linux ()
+* 사용 운영체제: Manjaro Linux
 ### Nuget Package
 * Discord.Net (개발 버전: 2.1.1)
 * Newtonsoft.Json (개발 버전: 12.0.3)
