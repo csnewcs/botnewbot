@@ -23,4 +23,4 @@
 > ## botnewbot 프로젝트
 >> ### 버전 2.0
 ***
-Copyright(c) 2020 hj666c2 MIT Licenced 
+Copyright(c) 2020 csnewcs MIT Licenced 
