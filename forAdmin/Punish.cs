@@ -9,6 +9,9 @@ using Newtonsoft.Json.Linq;
 
 namespace bot
 {
+    ////////////////////////////////////
+    // 여기는 처벌 관련된 명령어 사용하는 곳 //
+    ///////////////////////////////////
     class Punish
     {
         public async Task help(SocketGuildUser user, SocketMessage msg)
@@ -29,7 +32,6 @@ namespace bot
                 var muteUsers = msg.MentionedUsers;
                 if (muteUsers.Count == 0) return;
                 Random rd = new Random();
-                Program program = new Program();
                 foreach (var muteUser in muteUsers)
                 {
                     await (muteUser as SocketGuildUser).ModifyAsync(m => {m.Mute = true;});
@@ -38,14 +40,14 @@ namespace bot
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{program.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 처리가 완료되었습니다.");
+                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 처리가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
                 else 
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{program.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 처리가 완료되었습니다.");
+                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 처리가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
             }
@@ -64,19 +66,18 @@ namespace bot
                 await (kickUser as SocketGuildUser).KickAsync();
             }
             Random rd = new Random();
-            Program program = new Program();
             if (kickUsers.Count != 1)
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{program.getNickname(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
             else 
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{program.getNickname(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
         }
@@ -90,19 +91,18 @@ namespace bot
                 await (banUser as SocketGuildUser).BanAsync();
             }
             Random rd = new Random();
-            Program program = new Program();
             if (banUsers.Count != 1)
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{program.getNickname(banUsers.First() as SocketGuildUser)}외 {banUsers.Count}분의 밴 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(banUsers.First() as SocketGuildUser)}외 {banUsers.Count}분의 밴 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
             else 
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{program.getNickname(banUsers.First() as SocketGuildUser)}님의 밴 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(banUsers.First() as SocketGuildUser)}님의 밴 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
         }

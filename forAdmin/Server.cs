@@ -8,6 +8,9 @@ using Discord;
 
 namespace bot
 {
+    ///////////////////////////////
+    // 여기는 서버의 초기설정 하는 곳 ///
+    ///////////////////////////////
     class Server
     {
         Dictionary<int, string[]> saveChannel = new Dictionary<int, string[]>(); //채널들 저장할 곳

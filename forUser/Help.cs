@@ -8,6 +8,9 @@ using Newtonsoft.Json.Linq;
 
 namespace bot
 {
+    /////////////////////
+    // 여긴 도움말 보는 곳 //
+    /////////////////////
     [Group("명령어")]
     public class Help : ModuleBase<SocketCommandContext>
     {

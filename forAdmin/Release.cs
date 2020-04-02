@@ -9,6 +9,9 @@ using Discord.WebSocket;
 
 namespace bot
 {
+    ////////////////////////////
+    // 여기는 처벌을 푸는 명령어들 //
+    ///////////////////////////
     class Release
     {
         public async Task help(SocketGuildUser user, SocketMessage msg)
@@ -23,14 +26,13 @@ namespace bot
             await user.SendMessageAsync("", embed:builder.Build());
             await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
         }
-        public async Task mute(SocketGuildUser user, SocketMessage msg)
+        public async Task mute(SocketGuildUser user, SocketMessage msg) //뮤트 명령어
         {
             try
             {
                 var muteUsers = msg.MentionedUsers;
                 if (muteUsers.Count == 0) return;
                 Random rd = new Random();
-                Program program = new Program();
                 foreach (var muteUser in muteUsers)
                 {
                     await (muteUser as SocketGuildUser).ModifyAsync(m => {m.Mute = false;});
@@ -39,14 +41,14 @@ namespace bot
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{program.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 해제가 완료되었습니다.");
+                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 해제가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
                 else 
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{program.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 해제가 완료되었습니다.");
+                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 해제가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
             }
@@ -55,7 +57,7 @@ namespace bot
                 await msg.Channel.SendMessageAsync("저런 그분은 음성채팅에 있지 않아요.");
             }
         }
-        public async Task ban(SocketGuild guild, SocketMessage msg, string[] split)
+        public async Task ban(SocketGuild guild, SocketMessage msg, string[] split) //밴 명령어
         {
             if (split.Length == 2)
             {
@@ -79,7 +81,7 @@ namespace bot
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
         }
-        private async Task banList(SocketGuild guild, SocketMessage msg)
+        private async Task banList(SocketGuild guild, SocketMessage msg) //밴 명령어 리스트 뽑는 곳
         {
             int index = 1;
             var getBans = guild.GetBansAsync();
@@ -101,7 +103,7 @@ namespace bot
             await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
             await msg.Author.SendMessageAsync("", embed:builder.Build());
         }
-        private async Task allBan(SocketGuild guild, SocketMessage msg)
+        private async Task allBan(SocketGuild guild, SocketMessage msg) //밴을 해제하는 명령어
         {
             var banPeople = guild.GetBansAsync().Result;
             foreach (var banPerson in banPeople)
