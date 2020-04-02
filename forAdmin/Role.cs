@@ -27,11 +27,25 @@ namespace bot
             await Context.User.SendMessageAsync("", embed:build.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
-        public async Task giveRole(SocketGuildUser user, SocketMessage message, string[] split)
+        public async Task giveRole(SocketGuildUser user, SocketMessage message)
         {
-            if (!canManage(user, message.MentionedRoles)) return;
-            if (split[2] == "모두") await all(message);
-            else await single(message);
+            if (Program.isOver(user.Roles, message.MentionedRoles))
+            {
+                bool can = false;
+                foreach (var a in message.MentionedUsers)
+                {
+                    if (Program.isOver(user.Roles, (a as SocketGuildUser).Roles))
+                    {
+                        can = true;
+                        break;
+                    }
+                }
+                if (can)
+                {
+                    if (!canManage(user, message.MentionedRoles)) return;
+                    else await single(message);
+                }
+            }
         }
         private async Task single(SocketMessage message)
         {
@@ -85,67 +99,25 @@ namespace bot
                 }
             }
         }
-
-        private async Task all(SocketMessage message)
-        {
-            SocketGuild guild = (message.Author as SocketGuildUser).Guild;
-            var mentionedUsers = guild.Users;
-            var mentionedRoles = message.MentionedRoles;
-            if (mentionedRoles.Count == 0) return;
-            foreach (SocketGuildUser a in mentionedUsers)
-            {
-                await a.AddRolesAsync(mentionedRoles);
-            }
-            if (mentionedRoles.Count == 1)
-            {
-                Random rd = new Random();
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                .AddField("역할 부여 완료", $"모두에게 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
-                await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
-            }
-            else
-            {
-                Random rd = new Random();
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                .AddField("역할 부여 완료", $"모두에게 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
-                await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
-            }
-        }
         
-        public async Task ridRole(SocketGuildUser user, SocketMessage message, string[] split)
+        public async Task ridRole(SocketGuildUser user, SocketMessage message)
         {
-            if (!canManage(user, message.MentionedRoles)) return;
-            if (split[2] == "모두") await allRid(message);
-            else await singleRid(message);
-        }
-
-        private async Task allRid(SocketMessage message)
-        {
-            SocketGuild guild = (message.Author as SocketGuildUser).Guild;
-            var mentionedUsers = guild.Users;
-            var mentionedRoles = message.MentionedRoles;
-            if (mentionedRoles.Count == 0) return;
-            foreach (SocketGuildUser a in mentionedUsers)
+            if (Program.isOver(user.Roles, message.MentionedRoles))
             {
-                await a.RemoveRolesAsync(mentionedRoles);
-            }
-            if (mentionedRoles.Count == 1)
-            {
-                Random rd = new Random();
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("역할 강탈 완료", $"모두에게서 '{mentionedRoles.First()}'역할이 사라졌습니다.");
-                await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
-            }
-            else
-            {
-                Random rd = new Random();
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("역할 부여 완료", $"모두에게서 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할이 사라졌습니다.");
-                await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
+                bool can = false;
+                foreach (var a in message.MentionedUsers)
+                {
+                    if (Program.isOver(user.Roles, (a as SocketGuildUser).Roles))
+                    {
+                        can = true;
+                        break;
+                    }
+                }
+                if (can)
+                {
+                    if (!canManage(user, message.MentionedRoles)) return;
+                    else await singleRid(message);
+                }
             }
         }
         private async Task singleRid(SocketMessage message)
@@ -208,26 +180,8 @@ namespace bot
                     break;
                 }
             }
-            if (canManage)
-            {
-                return false; // 일단 역할 관리가 안되면 리턴
-            }
-            canManage = false;
-            foreach (var a in user.Roles)
-            {
-                if (canManage) break;
-                foreach (var b in roles)
-                {
-                    Console.WriteLine(a.Position + " VS " + b.Position);
-                    if (a.Position < b.Position)
-                    {
-                        canManage = true;
-                        break;
-                    }
-                }
-            }
             if (!canManage) return false;
-            return true;
+            return Program.isOver(user.Roles, roles);
         }
     }
 }

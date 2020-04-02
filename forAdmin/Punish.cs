@@ -14,7 +14,7 @@ namespace bot
     ///////////////////////////////////
     class Punish
     {
-        public async Task help(SocketGuildUser user, SocketMessage msg)
+        public async Task help(SocketGuildUser user, SocketMessage msg) //명령어: $처벌
         {
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("처벌 명령어 사용법")
@@ -25,7 +25,26 @@ namespace bot
             await user.SendMessageAsync("", embed:builder.Build());
             await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
         }
-        public async Task mute(SocketGuildUser user, SocketMessage msg)
+        public async Task mute(SocketGuildUser user, SocketMessage msg) //명령어: $처벌 뮤트 <누군가를 멘션>
+        {
+            if (user.Guild.OwnerId == user.Id)
+            {
+                await muteDo(user, msg);
+            }
+            else if (Program.isOver(user.Roles, msg.MentionedRoles))
+            {
+                bool manage = false;
+                foreach (var a in user.Roles)
+                {
+                    if (a.Permissions.MuteMembers) manage = true;
+                }
+                if (manage)
+                {
+                    await muteDo(user, msg);
+                }
+            }
+        }
+        private async Task muteDo(SocketGuildUser user, SocketMessage msg)
         {
             try
             {
@@ -59,6 +78,25 @@ namespace bot
 
         public async Task kick(SocketGuildUser user, SocketMessage msg)
         {
+            if (user.Guild.OwnerId == user.Id)
+            {
+                await kickDo(user, msg);
+            }
+            else if (Program.isOver(user.Roles, msg.MentionedRoles))
+            {
+                bool manage = false;
+                foreach (var a in user.Roles)
+                {
+                    if (a.Permissions.KickMembers) manage = true;
+                }
+                if (manage)
+                {
+                    await muteDo(user, msg);
+                }
+            }
+        }
+        private async Task kickDo(SocketGuildUser user, SocketMessage msg)
+        {
             var kickUsers = msg.MentionedUsers;
 
             foreach (var kickUser in  kickUsers)
@@ -81,8 +119,26 @@ namespace bot
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
         }
-        
         public async Task ban(SocketGuildUser user, SocketMessage msg)
+        {
+            if (user.Guild.OwnerId == user.Id)
+            {
+                await banDo(user, msg);
+            }
+            else if (Program.isOver(user.Roles, msg.MentionedRoles))
+            {
+                bool manage = false;
+                foreach (var a in user.Roles)
+                {
+                    if (a.Permissions.KickMembers) manage = true;
+                }
+                if (manage)
+                {
+                    await banDo(user, msg);
+                }
+            }
+        }
+        private async Task banDo(SocketGuildUser user, SocketMessage msg)
         {
             var banUsers = msg.MentionedUsers;
 

@@ -83,10 +83,10 @@ namespace bot
                                 switch (forMention[1])
                                 {
                                     case "부여":
-                                        await role.giveRole(guildUser, msg, forMention);
+                                        await role.giveRole(guildUser, msg);
                                         break;
                                     case "강탈":
-                                        await role.ridRole(guildUser, msg, forMention);
+                                        await role.ridRole(guildUser, msg);
                                         break;
                                 }
                             }
@@ -167,7 +167,7 @@ namespace bot
             user["money"] = money;
             File.WriteAllText(path, user.ToString());
         }
-        bool coolDown(ulong Id)
+        bool coolDown(ulong Id) //3초에 한 번씩
         {
             if (people.ContainsKey(Id))
             {
@@ -300,9 +300,19 @@ namespace bot
             moneyString = moneyString.Replace("0000", "");
             return moneyString;
         }
-        public static bool isOver(Role one, Role two)
+        public static bool isOver(IReadOnlyCollection<SocketRole> one, IReadOnlyCollection<SocketRole> two) //위에 있는 역할일수록 수가 큼
         {
-            return true;
+            int oneTop = 0;
+            int twoTop = 0;
+            foreach (var a in one)
+            {
+                if (a.Position > oneTop) oneTop = a.Position;
+            }
+            foreach (var a in two)
+            {
+                if (a.Position > twoTop) twoTop = a.Position;
+            }
+            return oneTop > twoTop;
         }
         private async Task reset(SocketGuildUser user)
         {
