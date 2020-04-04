@@ -59,7 +59,7 @@ namespace bot
                     if (message == null) return;
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
-                    var guildUser = guild.GetUser(msg.Author.Id);
+                    var guildUser = msg.Author as SocketGuildUser;
                     addMoney(guildUser, msg);
                     int argPos = 0;
                     if (!message.HasCharPrefix('$', ref argPos))  return; //접두사 $없으면 리턴
@@ -69,6 +69,13 @@ namespace bot
                         await Task.Delay(500);
                         await a.DeleteAsync();
                         return;
+                    }
+                    string[] split = msg.Content.Split(' ');
+                    switch(split[0])
+                    {
+                        case "$초기설정":
+                            await reset(guildUser);
+                            break;
                     }
                     SocketCommandContext context = new SocketCommandContext(client, message);
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
@@ -247,25 +254,16 @@ namespace bot
         }
         private async Task reset(SocketGuildUser user)
         {
-            var userRoles = user.Roles;
-            bool can = false;
-            foreach (var a in userRoles)
+            if (!hasPermission(user, Permission.Admin))
             {
-                if (a.Permissions.Administrator || user.Id == user.Guild.OwnerId)
-                {
-                    can = true;
-                    break;
-                }
+                return;
             }
-            if (can)
-            {
-                SocketGuild guild = user.Guild;
-                File.Delete($"servers/{guild.Id}/config.json");
-                setting.Add(user.Id, guild.Id);
-                server.Add(user.Id, new Server());
-                await user.SendMessageAsync("초기 설정을 시작합니다.");
-                server[user.Id].addServer(guild, user);
-            }
+            SocketGuild guild = user.Guild;
+            File.Delete($"servers/{guild.Id}/config.json");
+            setting.Add(user.Id, guild.Id);
+            server.Add(user.Id, new Server());
+            await user.SendMessageAsync("초기 설정을 시작합니다.");
+            server[user.Id].addServer(guild, user);
         }
         public static bool isOver(SocketGuildUser first, SocketGuildUser second) //위에 있는 역할일수록 수가 큼
         {
