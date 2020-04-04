@@ -27,7 +27,7 @@ namespace bot
             await Context.User.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
-        [Command("뮤트")]
+        [Command("뮤트", true)]
         public async Task mute() //명령어: $처벌 뮤트 <누군가를 멘션>
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
@@ -64,7 +64,7 @@ namespace bot
                 await msg.Channel.SendMessageAsync("저런 그분은 음성채팅에 있지 않아요.");
             }
         }
-        [Command("킥")]
+        [Command("킥", true)]
         public async Task kick()
         {
             SocketMessage msg = Context.Message;
@@ -90,7 +90,7 @@ namespace bot
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }   
         }
-        [Command("밴")]
+        [Command("밴", true)]
         public async Task ban()
         {
             SocketGuildUser user = Context.User as SocketGuildUser;

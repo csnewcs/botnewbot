@@ -12,9 +12,10 @@ namespace bot
     /////////////////////////////////
     // 여기는 사람들의 역할을 관리하는 곳 //
     /////////////////////////////////
+    [Group("역할")]
     public class Role : ModuleBase<SocketCommandContext>
     {
-        [Command("역할")]
+        [Command]
         public async Task helpRole()
         {
             EmbedBuilder build = new EmbedBuilder()
@@ -27,28 +28,15 @@ namespace bot
             await Context.User.SendMessageAsync("", embed:build.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
-        public async Task giveRole(SocketGuildUser user, SocketMessage message)
+        [Command("부여", true)]
+        public async Task giveRole()
         {
-            if (Program.isOver(user.Roles, message.MentionedRoles))
+            SocketGuildUser user = Context.User as SocketGuildUser;
+            SocketMessage message = Context.Message;
+            if (!(Program.isOver(user, message.MentionedRoles) && Program.hasPermission(user, Program.Permission.ManageRole)))
             {
-                bool can = false;
-                foreach (var a in message.MentionedUsers)
-                {
-                    if (Program.isOver(user.Roles, (a as SocketGuildUser).Roles))
-                    {
-                        can = true;
-                        break;
-                    }
-                }
-                if (can)
-                {
-                    if (!canManage(user, message.MentionedRoles)) return;
-                    else await single(message);
-                }
+                return;
             }
-        }
-        private async Task single(SocketMessage message)
-        {
             var mentionedUsers = message.MentionedUsers;
             var mentionedRoles = message.MentionedRoles;
             if (mentionedUsers.Count == 0 || mentionedRoles.Count == 0)
@@ -99,32 +87,19 @@ namespace bot
                 }
             }
         }
-        
-        public async Task ridRole(SocketGuildUser user, SocketMessage message)
+        [Command("강탈", true)]
+        public async Task ridRole()
         {
-            if (Program.isOver(user.Roles, message.MentionedRoles))
-            {
-                bool can = false;
-                foreach (var a in message.MentionedUsers)
-                {
-                    if (Program.isOver(user.Roles, (a as SocketGuildUser).Roles))
-                    {
-                        can = true;
-                        break;
-                    }
-                }
-                if (can)
-                {
-                    if (!canManage(user, message.MentionedRoles)) return;
-                    else await singleRid(message);
-                }
-            }
-        }
-        private async Task singleRid(SocketMessage message)
-        {
+            SocketMessage message = Context.Message;
+            SocketGuildUser user = Context.User as SocketGuildUser;
             var mentionedUsers = message.MentionedUsers;
             var mentionedRoles = message.MentionedRoles;
+            if (!(Program.hasPermission(user, Program.Permission.ManageRole) && Program.isOver(user, mentionedRoles)))
+            {
+                return;
+            }
             if (mentionedUsers.Count == 0 || mentionedRoles.Count == 0) return;
+
             foreach (SocketGuildUser a in mentionedUsers)
             {
                 await a.RemoveRolesAsync(mentionedRoles);
@@ -167,21 +142,6 @@ namespace bot
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
             }
-        }
-        private bool canManage(SocketGuildUser user, IReadOnlyCollection<SocketRole> roles)
-        {
-            bool canManage = false;
-            if (user.Id == user.Guild.OwnerId) return true;
-            foreach (var a in user.Roles)
-            {
-                if (a.Permissions.ManageRoles)
-                {
-                    canManage = true;
-                    break;
-                }
-            }
-            if (!canManage) return false;
-            return Program.isOver(user.Roles, roles);
         }
     }
 }

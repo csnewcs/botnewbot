@@ -72,6 +72,10 @@ namespace bot
                     }
                     SocketCommandContext context = new SocketCommandContext(client, message);
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
+                    if (result.Error.HasValue)
+                    {
+                        await msg.Channel.SendMessageAsync($"{result.Error}: {result.ErrorReason}");
+                    }
                 }
                 else
                 {
@@ -305,6 +309,29 @@ namespace bot
                 {
                     if (b.Position > twoTop) twoTop = b.Position;
                 }
+            }
+            return oneTop > twoTop;
+        }
+        public static bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketRole> second)
+        {
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            IReadOnlyCollection<SocketRole> one = first.Roles;
+            int oneTop = 0;
+            int twoTop = 0;
+            foreach (var a in one)
+            {
+                if (a.Position > oneTop) oneTop = a.Position;
+            }
+            foreach (var a in second)
+            {
+                if (a.Position > twoTop) twoTop = a.Position;
             }
             return oneTop > twoTop;
         }

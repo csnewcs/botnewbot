@@ -29,22 +29,15 @@ namespace bot
             await Context.User.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
-        [Command("뮤트")]
-        [Summary("뮤트된거 푸는거")]
+        [Command("뮤트", true)]
         public async Task mute()
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
-            foreach (var a in user.Roles)
+            SocketMessage msg = Context.Message;
+            if (!Program.hasPermission(user, Program.Permission.MuteUser))
             {
-                if (a.Permissions.MuteMembers) 
-                {
-                    await muteDo(user, Context.Message);
-                    return;
-                }
+                return;
             }
-        }
-        private async Task muteDo(SocketGuildUser user, SocketMessage msg) //뮤트 명령어
-        {
             try
             {
                 var muteUsers = msg.MentionedUsers;
@@ -66,28 +59,34 @@ namespace bot
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
                     .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 해제가 완료되었습니다.");
-                    await msg.Channel.SendMessageAsync("", embed:builder.Build());
+                    await ReplyAsync("", embed:builder.Build());
                 }
             }
             catch
             {
-                await msg.Channel.SendMessageAsync("저런 그분은 음성채팅에 있지 않아요.");
+                await ReplyAsync("저런 그분은 음성채팅에 있지 않아요.");
             }
         }
-        public async Task ban()
+        [Command("밴", true)]
+        public async Task ban(string next)
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
-            foreach (var a in user.Roles)
+            SocketMessage msg = Context.Message;
+            SocketGuild guild = Context.Guild;
+            if (!Program.hasPermission(user, Program.Permission.BanUser))
             {
-                if (a.Permissions.BanMembers) 
-                {
-                    await banDo(Context.Guild, Context.Message);
-                    return;
-                }
+                return;
             }
-        }
-        public async Task banDo(SocketGuild guild, SocketMessage msg) //밴 명령어
-        {
+            if (next == "목록")
+            {
+                await banList(guild, msg);
+                return;
+            }
+            else if (next == "모두")
+            {
+                await allBan(guild, msg);
+                return;
+            }
             string[] split = msg.Content.Split(' ');
             ulong id = ulong.Parse(split[2]);
             var bannedUser = guild.GetBanAsync(id).Result;
@@ -96,18 +95,21 @@ namespace bot
             EmbedBuilder builder = new EmbedBuilder()
             .AddField("작업 완료", $"{bannedUser.User.Username}님의 밴 해제가 완료되었습니다.")
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-            await msg.Channel.SendMessageAsync("", embed:builder.Build());
+            await ReplyAsync("", embed:builder.Build());
         }
-        private async Task banList() //밴 명령어 리스트 뽑는 곳
+        private async Task banList(SocketGuild guild, SocketMessage msg) //밴 명령어 리스트 뽑는 곳
         {
-            var guild = Context.Guild;
-            var msg = Context.Message;
             int index = 1;
             var getBans = guild.GetBansAsync();
             Random rd = new Random();
             uint color = (uint)rd.Next(0x00000, 0xffffff);
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color(color));
+            if (getBans.Result.Count == 0)
+            {
+                await ReplyAsync("이 섭은 밴을 당한 멤버가 없습니다만?");
+                return;
+            }
             foreach (var a in getBans.Result)
             {
                 builder.AddField(a.User.Username, $"유저ID: {a.User.Id}\n이유: {a.Reason}");
@@ -119,12 +121,17 @@ namespace bot
                     .WithColor(new Color(color));
                 }
             }
-            await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
+            await ReplyAsync("DM으로 결과를 전송했습니다.");
             await msg.Author.SendMessageAsync("", embed:builder.Build());
         }
-        private async Task allBan(SocketGuild guild, SocketMessage msg) //모든 사람의 밴을 해제하는 명령어
+        public async Task allBan(SocketGuild guild, SocketMessage msg) //모든 사람의 밴을 해제하는 명령어
         {
             var banPeople = guild.GetBansAsync().Result;
+            if (banPeople.Count == 0)
+            {
+                await ReplyAsync("이 섭은 밴을 당한 멤버가 없습니다만?");
+                return;
+            }
             foreach (var banPerson in banPeople)
             {
                 await guild.RemoveBanAsync(banPerson.User.Id);
