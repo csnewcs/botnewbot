@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using Discord.Commands;
 using Discord;
 using Discord.WebSocket;
 
@@ -12,21 +13,37 @@ namespace bot
     ////////////////////////////
     // 여기는 처벌을 푸는 명령어들 //
     ///////////////////////////
-    class Release
+    [Group("처벌해제")]
+    public class Release : ModuleBase<SocketCommandContext>
     {
-        public async Task help(SocketGuildUser user, SocketMessage msg)
+        [Command]
+        public async Task help()
         {
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("처벌해제 명령어 사용법")
             .WithColor(new Color(0xbe33ff))
             .AddField("뮤트", "지정한 사람의 뮤트를 해제합니다.\n(지정한 사람이 음성채팅방에 있어야 사용 가능)\n(사용법: $처벌해제 뮤트 [뮤트를 풀 사용자 언급(여러 명 가능)])")
-            .AddField("밴 목록", "이 서버에서 밴 당한 사람들의 목록을 보여줍니다.\n결과는 DM으로 전송됩니다.\n(사용법: $처벌해제 밴)")
+            .AddField("밴 목록", "이 서버에서 밴 당한 사람들의 목록을 보여줍니다.\n결과는 DM으로 전송됩니다.\n(사용법: $처벌해제 밴 목록)")
             .AddField("밴", "지정한 사람의 밴을 해제합니다.\n(밴 목록으로 그 사람의 ID를 알아와주세요.)\n(사용법: $처벌해제 밴 [밴을 풀 사람의 ID])")
             .AddField("밴 모두", "모든 사람의 밴을 해제합니다.\n(사용법: $처벌해제 밴 모두)");
-            await user.SendMessageAsync("", embed:builder.Build());
-            await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
+            await Context.User.SendMessageAsync("", embed:builder.Build());
+            await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
-        public async Task mute(SocketGuildUser user, SocketMessage msg) //뮤트 명령어
+        [Command("뮤트")]
+        [Summary("뮤트된거 푸는거")]
+        public async Task mute()
+        {
+            SocketGuildUser user = Context.User as SocketGuildUser;
+            foreach (var a in user.Roles)
+            {
+                if (a.Permissions.MuteMembers) 
+                {
+                    await muteDo(user, Context.Message);
+                    return;
+                }
+            }
+        }
+        private async Task muteDo(SocketGuildUser user, SocketMessage msg) //뮤트 명령어
         {
             try
             {
@@ -57,32 +74,34 @@ namespace bot
                 await msg.Channel.SendMessageAsync("저런 그분은 음성채팅에 있지 않아요.");
             }
         }
-        public async Task ban(SocketGuild guild, SocketMessage msg, string[] split) //밴 명령어
+        public async Task ban()
         {
-            if (split.Length == 2)
+            SocketGuildUser user = Context.User as SocketGuildUser;
+            foreach (var a in user.Roles)
             {
-                await banList(guild, msg);
-                return;
-            }
-            else
-            {
-                if (split[2] == "모두")
+                if (a.Permissions.BanMembers) 
                 {
-                    await allBan(guild, msg);
+                    await banDo(Context.Guild, Context.Message);
                     return;
                 }
-                ulong id = ulong.Parse(split[2]);
-                var bannedUser = guild.GetBanAsync(id).Result;
-                await guild.RemoveBanAsync(id);
-                Random rd = new Random();
-                EmbedBuilder builder = new EmbedBuilder()
-                .AddField("작업 완료", $"{bannedUser.User.Username}님의 밴 해제가 완료되었습니다.")
-                .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-                await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
         }
-        private async Task banList(SocketGuild guild, SocketMessage msg) //밴 명령어 리스트 뽑는 곳
+        public async Task banDo(SocketGuild guild, SocketMessage msg) //밴 명령어
         {
+            string[] split = msg.Content.Split(' ');
+            ulong id = ulong.Parse(split[2]);
+            var bannedUser = guild.GetBanAsync(id).Result;
+            await guild.RemoveBanAsync(id);
+            Random rd = new Random();
+            EmbedBuilder builder = new EmbedBuilder()
+            .AddField("작업 완료", $"{bannedUser.User.Username}님의 밴 해제가 완료되었습니다.")
+            .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
+            await msg.Channel.SendMessageAsync("", embed:builder.Build());
+        }
+        private async Task banList() //밴 명령어 리스트 뽑는 곳
+        {
+            var guild = Context.Guild;
+            var msg = Context.Message;
             int index = 1;
             var getBans = guild.GetBansAsync();
             Random rd = new Random();
@@ -103,7 +122,7 @@ namespace bot
             await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
             await msg.Author.SendMessageAsync("", embed:builder.Build());
         }
-        private async Task allBan(SocketGuild guild, SocketMessage msg) //밴을 해제하는 명령어
+        private async Task allBan(SocketGuild guild, SocketMessage msg) //모든 사람의 밴을 해제하는 명령어
         {
             var banPeople = guild.GetBansAsync().Result;
             foreach (var banPerson in banPeople)

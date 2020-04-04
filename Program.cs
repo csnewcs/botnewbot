@@ -70,66 +70,7 @@ namespace bot
                         await a.DeleteAsync();
                         return;
                     }
-                    JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
                     SocketCommandContext context = new SocketCommandContext(client, message);
-                    string[] forMention = msg.Content.Split(' '); //커맨드를 이용해서 안되는 것들
-                    // 관리자 전용 명령어들
-                    switch (forMention[0])
-                    {
-                        case "$역할":
-                            Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
-                            if (forMention.Length != 1)
-                            {
-                                switch (forMention[1])
-                                {
-                                    case "부여":
-                                        await role.giveRole(guildUser, msg);
-                                        break;
-                                    case "강탈":
-                                        await role.ridRole(guildUser, msg);
-                                        break;
-                                }
-                            }
-                        break;
-                        case "$초기설정":
-                            await reset(msg.Author as SocketGuildUser);
-                            break;
-                        case "$처벌":
-                            Punish punish = new Punish();
-                            if (forMention.Length == 1) await punish.help(guildUser, msg);
-                            else
-                            {    
-                                switch (forMention[1])
-                                {
-                                    case "뮤트":
-                                        await punish.mute(guildUser, msg);
-                                        break;
-                                    case "킥":
-                                        await punish.kick(guildUser, msg);
-                                        break;
-                                    case "밴":
-                                        await punish.ban(guildUser, msg);
-                                        break;
-                                }
-                            }
-                            break;
-                        case "$처벌해제":
-                            Release release = new Release();
-                            if (forMention.Length == 1) await release.help(guildUser, msg);
-                            else
-                            {
-                                switch (forMention[1])
-                                {
-                                    case "뮤트":
-                                        await release.mute(guildUser, msg);
-                                        break;
-                                    case "밴":
-                                        await release.ban(guild, msg, forMention);
-                                        break;
-                                }
-                            }
-                            break;
-                    }
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                 }
                 else
@@ -300,20 +241,6 @@ namespace bot
             moneyString = moneyString.Replace("0000", "");
             return moneyString;
         }
-        public static bool isOver(IReadOnlyCollection<SocketRole> one, IReadOnlyCollection<SocketRole> two) //위에 있는 역할일수록 수가 큼
-        {
-            int oneTop = 0;
-            int twoTop = 0;
-            foreach (var a in one)
-            {
-                if (a.Position > oneTop) oneTop = a.Position;
-            }
-            foreach (var a in two)
-            {
-                if (a.Position > twoTop) twoTop = a.Position;
-            }
-            return oneTop > twoTop;
-        }
         private async Task reset(SocketGuildUser user)
         {
             var userRoles = user.Roles;
@@ -335,6 +262,67 @@ namespace bot
                 await user.SendMessageAsync("초기 설정을 시작합니다.");
                 server[user.Id].addServer(guild, user);
             }
+        }
+        public static bool isOver(IReadOnlyCollection<SocketRole> one, IReadOnlyCollection<SocketRole> two) //위에 있는 역할일수록 수가 큼
+        {
+            int oneTop = 0;
+            int twoTop = 0;
+            foreach (var a in one)
+            {
+                if (a.Position > oneTop) oneTop = a.Position;
+            }
+            foreach (var a in two)
+            {
+                if (a.Position > twoTop) twoTop = a.Position;
+            }
+            return oneTop > twoTop;
+        }
+        public static bool hasPermission(string what, SocketGuildUser user, Permission p)
+        {
+            if (user.Guild.OwnerId == user.Id)
+            {
+                return true;
+            }
+            bool[] permissions = new bool[5];
+            foreach (var a in user.Roles) //더 빠른 알고리즘이 생각났지만 코드가 너무 더러워 질 것 같ㄷ...
+            {
+                bool change = false;
+                if (!permissions[0])
+                {
+                    permissions[0] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[1])
+                {
+                    permissions[1] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[2])
+                {
+                    permissions[2] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[3])
+                {
+                    permissions[3] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[4])
+                {
+                    permissions[4] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!change) break;
+            }
+            return permissions[(int)p];
+        }
+        public enum Permission //며칠 전에 이거 책에서 봐서 다행이네
+        {
+            BanUser,
+            KickUser,
+            MuteUser,
+            ManageRole,
+            Admin
         }
     }
 }
