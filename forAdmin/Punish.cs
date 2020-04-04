@@ -12,9 +12,11 @@ namespace bot
     ////////////////////////////////////
     // 여기는 처벌 관련된 명령어 사용하는 곳 //
     ///////////////////////////////////
-    class Punish
+    [Group("처벌")]
+    public class Punish : ModuleBase<SocketCommandContext>
     {
-        public async Task help(SocketGuildUser user, SocketMessage msg) //명령어: $처벌
+        [Command]
+        public async Task help() //명령어: $처벌
         {
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("처벌 명령어 사용법")
@@ -22,34 +24,21 @@ namespace bot
             .AddField("뮤트", "지정한 사람의 마이크를 없앱니다.\n음성채팅방에서 다른 누구도 그 사람의 목소리를 들을 수 없습니다.\n(지정한 사람이 음성채팅방에 있어야 사용 가능)\n(사용법: $처벌 뮤트 [뮤트 시킬 사용자 언급(여러 명 가능)])")
             .AddField("킥", "지정한 사람을 서버에서 쫓아냅니다.\n단 다시 들어올 수 있습니다.\n(사용법: $처벌 킥 [킥 시킬 사용자 언급(여러 명 가능)])")
             .AddField("밴", "지정한 사람을 서버에서 쫓아냅니다.\n단 밴이 풀릴 때 까지 다시 들어올 수 없습니다.\n(사용법: $처벌 밴 [밴 시킬 사용자 언급(여러 명 가능)])");
-            await user.SendMessageAsync("", embed:builder.Build());
-            await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.");
+            await Context.User.SendMessageAsync("", embed:builder.Build());
+            await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
-        public async Task mute(SocketGuildUser user, SocketMessage msg) //명령어: $처벌 뮤트 <누군가를 멘션>
+        [Command("뮤트")]
+        public async Task mute() //명령어: $처벌 뮤트 <누군가를 멘션>
         {
-            if (user.Guild.OwnerId == user.Id)
+            SocketGuildUser user = Context.User as SocketGuildUser;
+            SocketMessage msg = Context.Message;
+            var muteUsers = msg.MentionedUsers;
+            if (!(Program.hasPermission(user, Program.Permission.MuteUser) && Program.isOver(user, muteUsers)) || muteUsers.Count == 0)
             {
-                await muteDo(user, msg);
+                return;
             }
-            else if (Program.isOver(user.Roles, msg.MentionedRoles))
-            {
-                bool manage = false;
-                foreach (var a in user.Roles)
-                {
-                    if (a.Permissions.MuteMembers) manage = true;
-                }
-                if (manage)
-                {
-                    await muteDo(user, msg);
-                }
-            }
-        }
-        private async Task muteDo(SocketGuildUser user, SocketMessage msg)
-        {
             try
             {
-                var muteUsers = msg.MentionedUsers;
-                if (muteUsers.Count == 0) return;
                 Random rd = new Random();
                 foreach (var muteUser in muteUsers)
                 {
@@ -75,33 +64,15 @@ namespace bot
                 await msg.Channel.SendMessageAsync("저런 그분은 음성채팅에 있지 않아요.");
             }
         }
-
-        public async Task kick(SocketGuildUser user, SocketMessage msg)
+        [Command("킥")]
+        public async Task kick()
         {
-            if (user.Guild.OwnerId == user.Id)
-            {
-                await kickDo(user, msg);
-            }
-            else if (Program.isOver(user.Roles, msg.MentionedRoles))
-            {
-                bool manage = false;
-                foreach (var a in user.Roles)
-                {
-                    if (a.Permissions.KickMembers) manage = true;
-                }
-                if (manage)
-                {
-                    await muteDo(user, msg);
-                }
-            }
-        }
-        private async Task kickDo(SocketGuildUser user, SocketMessage msg)
-        {
+            SocketMessage msg = Context.Message;
             var kickUsers = msg.MentionedUsers;
-
-            foreach (var kickUser in  kickUsers)
+            SocketGuildUser user = Context.User as SocketGuildUser;
+            if (!(Program.hasPermission(user, Program.Permission.KickUser) && Program.isOver(user, kickUsers)) || kickUsers.Count == 0)
             {
-                await (kickUser as SocketGuildUser).KickAsync();
+                return;
             }
             Random rd = new Random();
             if (kickUsers.Count != 1)
@@ -117,34 +88,21 @@ namespace bot
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
                 .AddField("작업 완료", $"{Program.getNickname(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
-            }
+            }   
         }
-        public async Task ban(SocketGuildUser user, SocketMessage msg)
+        [Command("밴")]
+        public async Task ban()
         {
-            if (user.Guild.OwnerId == user.Id)
-            {
-                await banDo(user, msg);
-            }
-            else if (Program.isOver(user.Roles, msg.MentionedRoles))
-            {
-                bool manage = false;
-                foreach (var a in user.Roles)
-                {
-                    if (a.Permissions.KickMembers) manage = true;
-                }
-                if (manage)
-                {
-                    await banDo(user, msg);
-                }
-            }
-        }
-        private async Task banDo(SocketGuildUser user, SocketMessage msg)
-        {
+            SocketGuildUser user = Context.User as SocketGuildUser;
+            SocketMessage msg = Context.Message;
             var banUsers = msg.MentionedUsers;
-
-            foreach (var banUser in  banUsers)
+            if (!(Program.hasPermission(user, Program.Permission.BanUser) && Program.isOver(user, banUsers)) || banUsers.Count == 0)
             {
-                await (banUser as SocketGuildUser).BanAsync();
+                return;
+            }
+            foreach (var a in banUsers)
+            {
+                await (a as SocketGuildUser).BanAsync();
             }
             Random rd = new Random();
             if (banUsers.Count != 1)
@@ -152,6 +110,7 @@ namespace bot
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
                 .AddField("작업 완료", $"{Program.getNickname(banUsers.First() as SocketGuildUser)}외 {banUsers.Count}분의 밴 처리가 완료되었습니다.");
+
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
             else 

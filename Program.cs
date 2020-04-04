@@ -263,8 +263,13 @@ namespace bot
                 server[user.Id].addServer(guild, user);
             }
         }
-        public static bool isOver(IReadOnlyCollection<SocketRole> one, IReadOnlyCollection<SocketRole> two) //위에 있는 역할일수록 수가 큼
+        public static bool isOver(SocketGuildUser first, SocketGuildUser second) //위에 있는 역할일수록 수가 큼
         {
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            IReadOnlyCollection<SocketRole> one = first.Roles, two = second.Roles;
             int oneTop = 0;
             int twoTop = 0;
             foreach (var a in one)
@@ -277,7 +282,33 @@ namespace bot
             }
             return oneTop > twoTop;
         }
-        public static bool hasPermission(string what, SocketGuildUser user, Permission p)
+        public static bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketUser> second)
+        {
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            IReadOnlyCollection<SocketRole> one = first.Roles;
+            int oneTop = 0;
+            int twoTop = 0;
+            foreach (var a in one)
+            {
+                if (a.Position > oneTop) oneTop = a.Position;
+            }
+            foreach (var a in second)
+            {
+                foreach (var b in (a as SocketGuildUser).Roles)
+                {
+                    if (b.Position > twoTop) twoTop = b.Position;
+                }
+            }
+            return oneTop > twoTop;
+        }
+        public static bool hasPermission(SocketGuildUser user, Permission p)
         {
             if (user.Guild.OwnerId == user.Id)
             {
