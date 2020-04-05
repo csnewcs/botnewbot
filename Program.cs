@@ -19,6 +19,7 @@ namespace bot
         DiscordSocketClient client;
         CommandService command;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
+        
         static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
         async Task mainAsync()
         {
@@ -26,8 +27,8 @@ namespace bot
             CommandServiceConfig serviceConfig = new CommandServiceConfig{};
             command = new CommandService(serviceConfig);
             client = new DiscordSocketClient(config);
-            string token = File.ReadAllText("config.txt"); //토큰 가져오기
-            await client.LoginAsync(TokenType.Bot, token); //봇 로그인과 시작
+            string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
             await client.StartAsync();
             client.Log += log; //이벤트 설정
             client.Ready += ready;
@@ -42,7 +43,11 @@ namespace bot
             thread.Start();
             await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(),
                                         services: null);
-            await Task.Delay(-1); //봇 꺼지지 말라고 기다리기
+            while (true)
+            {
+                Console.WriteLine("공지를 날리실거면 공지를 날릴 말을 입력하세요");
+                string toSend = Console.ReadLine();
+            }
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
         {
@@ -54,10 +59,10 @@ namespace bot
                     if (message == null) return;
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
-                    var guildUser = guild.GetUser(msg.Author.Id);
+                    var guildUser = msg.Author as SocketGuildUser;
                     addMoney(guildUser, msg);
                     int argPos = 0;
-                    if (!message.HasCharPrefix('$', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))  return; //접두사 $없으면 리턴, 접두사가 언급하는거면 리턴(왜 있는거지?)
+                    if (!message.HasCharPrefix('$', ref argPos))  return; //접두사 $없으면 리턴
                     if (coolDown(msg.Author.Id))
                     {
                         var a = await msg.Channel.SendMessageAsync("아직 명령어를 입력할 수 없습니다.");
@@ -65,83 +70,19 @@ namespace bot
                         await a.DeleteAsync();
                         return;
                     }
-                    JObject config = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
-                    ulong roleId = (ulong)config["useBot"];
-                    bool hasRole = false;
-                    foreach (var role in guildUser.Roles)
+                    string[] split = msg.Content.Split(' ');
+                    switch(split[0])
                     {
-                        if (role.Id == roleId)
-                        {
-                            hasRole = true;
+                        case "$초기설정":
+                            await reset(guildUser);
                             break;
-                        }
                     }
-                    if (hasRole) //명령 수행할 부분
+                    SocketCommandContext context = new SocketCommandContext(client, message);
+                    var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
+                    if (result.Error.HasValue)
                     {
-                        SocketCommandContext context = new SocketCommandContext(client, message);
-                        string[] forMention = msg.Content.Split(' '); //커맨드를 이용해서 안되는 것들
-                        if (!isNotAdmin(msg.Author as SocketGuildUser)) //관리자만 사용 가능
-                        {
-                            switch (forMention[0])
-                            {
-                                case "$역할":
-                                    Role role = new Role(); //후에 역할 관련해서 쓸지 모르니 switch문 사용
-                                    if (forMention.Length != 1)
-                                    {
-                                        switch (forMention[1])
-                                        {
-                                            case "부여":
-                                                await role.giveRole(guildUser, msg, forMention);
-                                                break;
-                                            case "강탈":
-                                                await role.ridRole(guildUser, msg, forMention);
-                                                break;
-                                        }
-                                    }
-                                break;
-                                case "$초기설정":
-                                    await reset(msg.Author as SocketGuildUser);
-                                    break;
-                                case "$처벌":
-                                    Punish punish = new Punish();
-                                    if (forMention.Length == 1) await punish.help(guildUser, msg);
-                                    else
-                                    {    
-                                        switch (forMention[1])
-                                        {
-                                            case "뮤트":
-                                                await punish.mute(guildUser, msg);
-                                                break;
-                                            case "킥":
-                                                await punish.kick(guildUser, msg);
-                                                break;
-                                            case "밴":
-                                                await punish.ban(guildUser, msg);
-                                                break;
-                                        }
-                                    }
-                                    break;
-                                case "$처벌해제":
-                                    Release release = new Release();
-                                    if (forMention.Length == 1) await release.help(guildUser, msg);
-                                    else
-                                    {
-                                        switch (forMention[1])
-                                        {
-                                            case "뮤트":
-                                                await release.mute(guildUser, msg);
-                                                break;
-                                            case "밴":
-                                                await release.ban(guild, msg, forMention);
-                                                break;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
+                        await msg.Channel.SendMessageAsync($"{result.Error}: {result.ErrorReason}");
                     }
-                    else return;
                 }
                 else
                 {
@@ -178,7 +119,7 @@ namespace bot
             user["money"] = money;
             File.WriteAllText(path, user.ToString());
         }
-        bool coolDown(ulong Id)
+        bool coolDown(ulong Id) //3초에 한 번씩
         {
             if (people.ContainsKey(Id))
             {
@@ -289,7 +230,7 @@ namespace bot
         {
             return Task.CompletedTask;
         }
-        public string getNickname(SocketGuildUser guild)
+        public static string getNickname(SocketGuildUser guild)
         {
             if (string.IsNullOrEmpty(guild.Nickname))
             {
@@ -300,7 +241,7 @@ namespace bot
                 return guild.Nickname;
             }
         }
-        public string unit(ulong money)
+        public static string unit(ulong money)
         {
             string moneyString = money.ToString();
             int length = moneyString.Length;
@@ -313,29 +254,131 @@ namespace bot
         }
         private async Task reset(SocketGuildUser user)
         {
+            if (!hasPermission(user, Permission.Admin))
+            {
+                return;
+            }
             SocketGuild guild = user.Guild;
             File.Delete($"servers/{guild.Id}/config.json");
-            Console.WriteLine(user.Id);
             setting.Add(user.Id, guild.Id);
             server.Add(user.Id, new Server());
             await user.SendMessageAsync("초기 설정을 시작합니다.");
             server[user.Id].addServer(guild, user);
         }
-        public bool isNotAdmin(SocketGuildUser user)
+        public static bool isOver(SocketGuildUser first, SocketGuildUser second) //위에 있는 역할일수록 수가 큼
         {
-            bool notAdmin = true;
-            SocketGuild guild = user.Guild;
-            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
-            SocketRole adminRole = guild.GetRole(ulong.Parse(json["adminBot"].ToString()));
-            foreach (SocketRole role in guild.Roles)
+            if (first.Id == first.Guild.OwnerId)
             {
-                if (role == adminRole)
+                return true;
+            }
+            IReadOnlyCollection<SocketRole> one = first.Roles, two = second.Roles;
+            int oneTop = 0;
+            int twoTop = 0;
+            foreach (var a in one)
+            {
+                if (a.Position > oneTop) oneTop = a.Position;
+            }
+            foreach (var a in two)
+            {
+                if (a.Position > twoTop) twoTop = a.Position;
+            }
+            return oneTop > twoTop;
+        }
+        public static bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketUser> second)
+        {
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            IReadOnlyCollection<SocketRole> one = first.Roles;
+            int oneTop = 0;
+            int twoTop = 0;
+            foreach (var a in one)
+            {
+                if (a.Position > oneTop) oneTop = a.Position;
+            }
+            foreach (var a in second)
+            {
+                foreach (var b in (a as SocketGuildUser).Roles)
                 {
-                    notAdmin = false;
-                    break;
+                    if (b.Position > twoTop) twoTop = b.Position;
                 }
             }
-            return notAdmin;
+            return oneTop > twoTop;
+        }
+        public static bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketRole> second)
+        {
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            if (first.Id == first.Guild.OwnerId)
+            {
+                return true;
+            }
+            IReadOnlyCollection<SocketRole> one = first.Roles;
+            int oneTop = 0;
+            int twoTop = 0;
+            foreach (var a in one)
+            {
+                if (a.Position > oneTop) oneTop = a.Position;
+            }
+            foreach (var a in second)
+            {
+                if (a.Position > twoTop) twoTop = a.Position;
+            }
+            return oneTop > twoTop;
+        }
+        public static bool hasPermission(SocketGuildUser user, Permission p)
+        {
+            if (user.Guild.OwnerId == user.Id)
+            {
+                return true;
+            }
+            bool[] permissions = new bool[5];
+            foreach (var a in user.Roles) //더 빠른 알고리즘이 생각났지만 코드가 너무 더러워 질 것 같ㄷ...
+            {
+                bool change = false;
+                if (!permissions[0])
+                {
+                    permissions[0] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[1])
+                {
+                    permissions[1] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[2])
+                {
+                    permissions[2] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[3])
+                {
+                    permissions[3] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!permissions[4])
+                {
+                    permissions[4] = a.Permissions.BanMembers;
+                    change = true;
+                }
+                if (!change) break;
+            }
+            return permissions[(int)p];
+        }
+        public enum Permission //며칠 전에 이거 책에서 봐서 다행이네
+        {
+            BanUser,
+            KickUser,
+            MuteUser,
+            ManageRole,
+            Admin
         }
     }
 }

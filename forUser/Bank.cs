@@ -8,6 +8,9 @@ using Newtonsoft.Json.Linq;
 
 namespace bot
 {
+    ///////////////////////
+    // 여기는 은행 관련된 곳 //
+    ///////////////////////
     [Group("은행")]
     public class Bank : ModuleBase<SocketCommandContext>
     {
@@ -17,9 +20,8 @@ namespace bot
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
             JObject json = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
-            Program program = new Program();
-            string nickname = program.getNickname(user);
-            string moneyString = program.unit((ulong)json["money"]);
+            string nickname = Program.getNickname(user);
+            string moneyString = Program.unit((ulong)json["money"]);
             Random rd = new Random();
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256))

@@ -10,6 +10,9 @@ using Newtonsoft.Json.Linq;
 
 namespace bot
 {
+    ////////////////////////////
+    // 여긴 사람들의 순위를 보는 곳 //
+    ////////////////////////////
     [Group("순위")]
     public class Rank : ModuleBase<SocketCommandContext>
     {
@@ -46,7 +49,7 @@ namespace bot
             }
             Random rd = new Random();
             Program program = new Program();
-            string nickName = program.getNickname(Context.User as SocketGuildUser);
+            string nickName = Program.getNickname(Context.User as SocketGuildUser);
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
             .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
@@ -64,12 +67,11 @@ namespace bot
             .WithTitle($"{Context.Guild.Name}서버의 순위")
             .WithColor(new Color(color));
             int count = 0;
-            Program program = new Program();
             string users = "";
             foreach (var a in allRank)
             {
-                string nickName = program.getNickname(Context.Guild.GetUser(ulong.Parse(a.Value.Key)));
-                users += a.Key + "등" + "\n" +  nickName + ": (" + program.unit((ulong)a.Value.Value["money"]) + " BNB)\n\n";
+                string nickName = Program.getNickname(Context.Guild.GetUser(ulong.Parse(a.Value.Key)));
+                users += a.Key + "등" + "\n" +  nickName + ": (" + Program.unit((ulong)a.Value.Value["money"]) + " BNB)\n\n";
                 if (a.Key % 20 == 0 && a.Key != allRank.Count)
                 {
                     builder.AddField($"순위({count})", users);
@@ -98,13 +100,12 @@ namespace bot
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle($"{Context.Guild.Name}서버의 순위")
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-            Program program = new Program();
             for (int i = 1; i <= 5; i++)
             {
                 try
                 {
-                    string nickName = program.getNickname(Context.Guild.GetUser(ulong.Parse(allRank[i].Key)));
-                    builder.AddField(i + "등", nickName + ": (" + program.unit((ulong)allRank[i].Value["money"]) + " BNB)");
+                    string nickName = Program.getNickname(Context.Guild.GetUser(ulong.Parse(allRank[i].Key)));
+                    builder.AddField(i + "등", nickName + ": (" + Program.unit((ulong)allRank[i].Value["money"]) + " BNB)");
                 }
                 catch
                 {
