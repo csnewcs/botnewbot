@@ -245,12 +245,34 @@ namespace bot
         {
             string moneyString = money.ToString();
             int length = moneyString.Length;
-            if (length > 4) moneyString = moneyString.Insert(length - 4,"만 ");
-            if (length > 8) moneyString = moneyString.Insert(length - 10,"억 ");
-            if (length > 12) moneyString = moneyString.Insert(length - 18,"조 ");
-            if (length > 16) moneyString = moneyString.Insert(length - 28,"경 ");
-            moneyString = moneyString.Replace("0000", "");
-            return moneyString;
+            List<string> array = new List<string>();
+            string temp = "";
+            int start = length % 4;
+            for (int i = 0; i < start; i++) //4로 정확히 나눠지지 않을거니까
+            {
+                temp += moneyString[i];
+            }
+            array.Add(temp);
+            for (int i = 0; i < length / 4; i++) //4개씩 묶기
+            {
+                array.Add($"{moneyString[i * 4 + start]}{moneyString[i * 4 + 1 + start]}{moneyString[i * 4 + 2 + start]}{moneyString[i * 4 + 3 + start]}");
+            }
+            string unitString = "만억조경";
+            temp = "";
+            for (int i = 0; i < array.Count; i++) //단위 붙이기
+            {
+                if (array[i] == "0000")
+                {
+                    continue;
+                }
+                temp += (int.Parse(array[i]).ToString());
+                if (i != array.Count - 1) 
+                {
+                    temp += unitString[array.Count - i - 2]; //Count니까 1빼고, 일, 십, 백, 천 빠졌으니 또 1빠짐
+                }
+                temp += " ";
+            }
+            return temp;
         }
         private async Task reset(SocketGuildUser user)
         {
