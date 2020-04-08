@@ -45,8 +45,21 @@ namespace bot
                                         services: null);
             while (true)
             {
-                Console.WriteLine("공지를 날리실거면 공지를 날릴 말을 입력하세요");
-                string toSend = Console.ReadLine();
+                Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
+                Console.ReadKey();
+                Console.WriteLine();
+                DirectoryInfo dir = new DirectoryInfo("servers");
+                foreach (var a in dir.GetDirectories())
+                {
+                    JObject server = JObject.Parse(File.ReadAllText($"servers/{a.Name}/config.json"));
+                    if ((ulong)server["noticeBot"] != 0)
+                    {
+                        SocketGuild guild = client.GetGuild(ulong.Parse(a.Name));
+                        SocketTextChannel channel = guild.GetChannel((ulong)server["noticeBot"]) as SocketTextChannel;
+                        await channel.SendMessageAsync(File.ReadAllText("notice.txt"));
+                    }
+                }
+                File.WriteAllText("notice.txt", "");
             }
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
