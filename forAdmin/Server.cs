@@ -64,7 +64,7 @@ namespace bot
             {
                 try //제대로 된 값을 인식했을 때 수행
                 {
-                    save.Add("editMessage", saveChannel[int.Parse(message)][0]);
+                    save.Add("editMessage", ulong.Parse(saveChannel[int.Parse(message)][0]));
                     File.WriteAllText($"servers/{guild.Id}/config.json", save.ToString());
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor(new Color(0x00881d))
@@ -102,7 +102,7 @@ namespace bot
             {
                 try
                 {
-                    save.Add("deleteMessage", saveChannel[int.Parse(message)][0]);
+                    save.Add("deleteMessage", ulong.Parse(saveChannel[int.Parse(message)][0]));
                     File.WriteAllText($"servers/{guild.Id}/config.json", save.ToString());
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor(new Color(0x00881d))
@@ -138,7 +138,7 @@ namespace bot
             {
                 try
                 {
-                    save.Add("noticeBot", saveChannel[int.Parse(message)][0]);
+                    save.Add("noticeBot", ulong.Parse(saveChannel[int.Parse(message)][0]));
                     File.WriteAllText($"servers/{guild.Id}/config.json", save.ToString());
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor(new Color(0x00881d))
