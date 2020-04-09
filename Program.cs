@@ -7,6 +7,7 @@ using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Collections;
+using System.Threading;
 using Discord.Commands;
 using System.Reflection;
 
@@ -39,8 +40,11 @@ namespace bot
             client.JoinedGuild += joinedGuild;
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
-            System.Threading.Thread thread = new System.Threading.Thread(new System.Threading.ThreadStart(minus));
+            Thread thread = new Thread(minus);
+            Season ss = new Season();
+            Thread mkdt = new Thread(() => ss.mkdt(client));
             thread.Start();
+            mkdt.Start();
             await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(),
                                         services: null);
             while (true)
@@ -60,6 +64,7 @@ namespace bot
                     }
                 }
                 File.WriteAllText("notice.txt", "");
+                Console.WriteLine("공지 전송 완료");
             }
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
