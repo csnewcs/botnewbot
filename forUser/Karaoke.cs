@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -8,7 +9,7 @@ using Discord.Commands;
 namespace bot
 {
     [Group("노래방")]
-    class Karaoke : ModuleBase<SocketCommandContext>
+    public class Karaoke : ModuleBase<SocketCommandContext>
     {
         [Command]
         public async Task help()
@@ -20,12 +21,28 @@ namespace bot
             .AddField("재생", "등록된 노래들을 재생합니다.")
             .AddField("정지", "재생중인 노래를 일지정지합니다.")
             .AddField("다음", "다음 노래로 넘깁니다.")
+            .AddField("초기화", "재생목록의 모든 곡을 삭제합니다.")
             .AddField("종료", "노래방을 종료합니다. 재생목록이 사라집니다.")
             .WithColor(new Color(0xbe33ff));
+            await Context.User.SendMessageAsync("", embed:builder.Build());
+            await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
         struct ServerSoundList
         {
-            
+            SocketGuildChannel channel;
+            string search;
+            List<string> playlist;
+            public ServerSoundList(SocketGuildChannel soundChannel, string searchText)
+            {
+                channel = soundChannel;
+                search = searchText;
+                playlist = new List<string>();
+            }
+            public void clear()
+            {
+                search = "";
+                playlist.Clear();
+            }
         }
     }
 }
