@@ -66,7 +66,7 @@ namespace bot
                         Console.WriteLine("{0} 저장 완료", name);
                     }
                 }
-                Thread.Sleep(360); //1시간
+                Thread.Sleep(3600000); //1시간
             }
         }
     }
