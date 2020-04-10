@@ -18,8 +18,8 @@ namespace bot
             while (true)
             {
                 DateTime time = DateTime.Now;
-                int now = time.Second;
-                if ((now == 3 || now == 6 || now == 9 || now == 12) && now != last)
+                int now = time.Year;
+                if ((now == 4 || now == 7 || now == 11 || now == 1) && now != last)
                 {
                     DirectoryInfo servers = new DirectoryInfo("servers");
                     foreach (DirectoryInfo server in servers.GetDirectories()) //
@@ -40,20 +40,30 @@ namespace bot
                         {
                             save = JArray.Parse(File.ReadAllText($"servers/{server.Name}/season.json"));
                         }
-                        finally
+                        catch
                         {
-                            string date = $"{time.Year}.{time.Month}.{time.Day}";
-                            SocketGuild guild = client.GetGuild(ulong.Parse(server.Name));
-                            SocketGuildUser guildUser = guild.GetUser((ulong)list.GetByIndex(1));
-                            JObject single = new JObject();
-                            single.Add("date", date);
-                            single.Add("username", Program.getNickname(guildUser));
-                            single.Add("money", (ulong)list.GetKey(1));
-                            save.Add(single);
-                            File.WriteAllText($"servers/{server.Name}/season.json", save.ToString());
+                            
                         }
+                        string date = $"{time.Year}.{time.Month}.{time.Day}";
+                        SocketGuild guild = client.GetGuild(ulong.Parse(server.Name));
+                        SocketGuildUser guildUser = guild.GetUser((ulong)list.GetByIndex(1));
+                        JObject single = new JObject();
+                        single.Add("date", date);
+                        int four = now / 3;
+                        int year = time.Year;
+                        if (four == 0) 
+                        {
+                            four = 4;
+                            year--;
+                        }
+                        string name = $"{year}년 {four}/4 분기 시즌";
+                        single.Add("name", name);
+                        single.Add("username", Program.getNickname(guildUser));
+                        single.Add("money", (ulong)list.GetKey(1));
+                        save.Add(single);
+                        File.WriteAllText($"servers/{server.Name}/season.json", save.ToString());
                         last = now;
-                        Console.WriteLine("{0}자 시즌 저장 완료", time.Second);
+                        Console.WriteLine("{0} 저장 완료", name);
                     }
                 }
                 Thread.Sleep(360); //1시간
