@@ -99,6 +99,7 @@ namespace bot
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     if (result.Error.HasValue)
                     {
+                        Console.WriteLine($"{result.Error}: {result.ErrorReason}");
                         await msg.Channel.SendMessageAsync($"{result.Error}: {result.ErrorReason}");
                     }
                 }
