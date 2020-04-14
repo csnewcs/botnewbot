@@ -194,6 +194,10 @@ namespace bot
             {
                 SocketGuild guild = (editedMessageChannel as SocketTextChannel).Guild;
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                if (afterMsg.Embeds.Count > 0 && beforeMsg.Value.Embeds.Count <= 0)
+                {
+                    return;
+                }
                 if (json["editMessage"].ToString() != "0" && !string.IsNullOrEmpty(afterMsg.Content)) 
                 {
                     if (beforeMsg.Value.Author.IsBot) return;

@@ -1,27 +1,28 @@
 using System;
-using System.Net;
 using System.Text;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
+using Discord.Audio;
+using Google.Apis.Services;
+using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
 
 namespace bot
 {
     [Group("노래방")]
     public class Karaoke : ModuleBase<SocketCommandContext>
     {
-        Dictionary<ulong, Playlist> servers = new Dictionary<ulong, Playlist>();
-        
         [Command]
         public async Task help()
         {
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("노래방 명령어 도움말")
             .AddField("시작", "봇을 음성채팅방으로 초대합니다. 가장 먼저 이것을 먼저 해야 다른 노래방 명령어를 사용 가능합니다.")
-            .AddField("등록 [검색어나 URL]", "노래를 재생목록에 추가합니다. Youtube와 Spotify에서 검색합니다. (Spotify가 우선)")
-            .AddField("등록 [y/s] [검색어나 URL]", "노래를 재생목록에 추가합니다. Youtube와 Spotify에서 검색합니다. (y는 Youtube, s는 Spotify)")
+            .AddField("등록 [검색어나 URL]", "노래를 재생목록에 추가합니다. Youtube에서 검색합니다.")
             .AddField("재생", "등록된 노래들을 재생합니다.")
             .AddField("정지", "재생중인 노래를 일지정지합니다.")
             .AddField("다음", "다음 노래로 넘깁니다.")
@@ -37,10 +38,15 @@ namespace bot
             try
             {
                 SocketGuildUser user = Context.User as SocketGuildUser;
-                
                 SocketVoiceChannel channel = Context.Guild.GetVoiceChannel(user.VoiceChannel.Id);
+                if (allPlaylist.addPlaylist(Context.Guild.Id, channel))
+                {
+                    await ReplyAsync("이미 등록되어 있습니다");
+                    return;
+                }
                 await ReplyAsync("음성채팅방으로 들어갔습니다.");
                 await channel.ConnectAsync(false, false, true);
+                
             }
             catch
             {
@@ -63,32 +69,94 @@ namespace bot
                 await ReplyAsync("아직 들어간 음성채팅방이 없습니다.");
             }
         }
+
+        [Command("등록", true)]
+        public async Task add()
+        {
+            string title = "";
+            string[] split = Context.Message.Content.Split(' ');
+            string urlOrSearch = "";
+            string imageUrl = "";
+            for (int i = 2; i < split.Length; i++)
+            {
+                urlOrSearch += split[i] + " ";
+            }
+            if (allPlaylist.addMusic(Context.Guild.Id, urlOrSearch, out title, out imageUrl))
+            {
+                Random random = new Random();
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor((uint)random.Next(0x000000, 0xffffff))
+                .AddField(title + " 추가 완료", Program.getNickname(Context.User as SocketGuildUser) + "님에 의해 노래 추가 완료")
+                .WithImageUrl(imageUrl);
+                
+                await ReplyAsync("", embed: builder.Build());
+            }
+            else
+            {
+                await ReplyAsync("실패");
+            }
+        }
     }
-    struct Playlist
+    static class allPlaylist
     {
+        static ConcurrentDictionary<ulong, Playlist> servers = new ConcurrentDictionary<ulong, Playlist>();
+        public static bool addPlaylist(ulong guildId, SocketVoiceChannel channel)
+        {
+            return !servers.TryAdd(guildId, new Playlist(channel, guildId));
+        }
+        public static bool addMusic(ulong guildId, string urlOrSearch, out string title, out string url)
+        {
+            return servers[guildId].Add(urlOrSearch, out title, out url);
+        }
+    }
+    class Playlist
+    {
+        ulong guildId;
         SocketGuildChannel channel;
         List<string> playlist;
-        public Playlist(SocketGuildChannel soundChannel)
+        public Playlist(SocketGuildChannel soundChannel, ulong id)
         {
             channel = soundChannel;
             playlist = new List<string>();
+            guildId = id;
         }
-        public bool Add(string urlOrSearch, out string title)
+        public bool Add(string urlOrSearch, out string title, out string imageUrl)
         {
-            WebClient client = new WebClient();
-            client.Encoding = Encoding.UTF8;
+            var youtubeService = new YouTubeService(new BaseClientService.Initializer() {
+            ApiKey = System.IO.File.ReadAllLines("config.txt")[2],
+            ApplicationName = "botnewbot"
+            });
+            bool re = false;
+            string tempTitle = "";
+            string tempUrl = "";
+            // 유튜브 검색 설정
+            tempTitle = "Youtube";
+            var listRequest = youtubeService.Search.List("snippet");
+            listRequest.MaxResults = 50;
+            listRequest.Q = urlOrSearch;
             try
             {
-                string download = client.DownloadString(urlOrSearch);
-                playlist.Add(download);
+                // 검색
+                var searchResult = listRequest.Execute();
+                foreach (var search in searchResult.Items)
+                {
+                    if (search.Id.Kind == "youtube#video")
+                    {
+                        title = tempTitle = search.Snippet.Title;
+                        tempUrl = search.Snippet.Thumbnails.Default__.Url;
+                        playlist.Add(search.Id.VideoId.ToString());
+                        break;
+                    }
+                }
+                re = true;
             }
-            catch
+            catch (Exception e)
             {
-
+                Console.WriteLine(e);
             }
-            title = "";
-            return false;
-            
+            imageUrl = tempUrl;
+            title = tempTitle;
+            return re;
         }
     }    
 }
