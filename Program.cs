@@ -1,20 +1,25 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Discord;
-using System.Threading.Tasks;
-using Discord.WebSocket;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Collections;
 using System.Threading;
-using Discord.Commands;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+
+using Newtonsoft.Json.Linq;
+
+using Lavalink4NET;
+using Lavalink4NET.DiscordNet;
 
 namespace bot
 {
     public class Program : ModuleBase <SocketCommandContext>
     {
+        const string version = "1.0";
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
@@ -47,6 +52,8 @@ namespace bot
             mkdt.Start();
             await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(),
                                         services: null);
+            
+
             while (true)
             {
                 Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
@@ -81,6 +88,7 @@ namespace bot
                     addMoney(guildUser, msg);
                     int argPos = 0;
                     if (!message.HasCharPrefix('$', ref argPos))  return; //접두사 $없으면 리턴
+                    GC.Collect();
                     if (coolDown(msg.Author.Id))
                     {
                         var a = await msg.Channel.SendMessageAsync("아직 명령어를 입력할 수 없습니다.");

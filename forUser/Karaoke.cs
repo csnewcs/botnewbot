@@ -1,15 +1,21 @@
 using System;
 using System.Text;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Discord.Audio;
+
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
-using Google.Apis.YouTube.v3.Data;
+
+using Lavalink4NET;
+using Lavalink4NET.DiscordNet;
+
 
 namespace bot
 {
@@ -96,6 +102,13 @@ namespace bot
                 await ReplyAsync("실패");
             }
         }
+        [Command("재생")]
+        public async Task play()
+        {
+            var audioService = new LavalinkNode(new LavalinkNodeOptions(), new DiscordClientWrapper(Context.Client));
+            audioService.InitializeAsync();
+            var asdf = audioService.GetTrackAsync("");
+        }
     }
     static class allPlaylist
     {
@@ -109,7 +122,7 @@ namespace bot
             return servers[guildId].Add(urlOrSearch, out title, out url);
         }
     }
-    class Playlist
+    struct Playlist
     {
         ulong guildId;
         SocketGuildChannel channel;
@@ -123,7 +136,7 @@ namespace bot
         public bool Add(string urlOrSearch, out string title, out string imageUrl)
         {
             var youtubeService = new YouTubeService(new BaseClientService.Initializer() {
-            ApiKey = System.IO.File.ReadAllLines("config.txt")[2],
+            ApiKey = System.IO.File.ReadAllLines("config.txt")[1],
             ApplicationName = "botnewbot"
             });
             bool re = false;
@@ -142,11 +155,16 @@ namespace bot
                 {
                     if (search.Id.Kind == "youtube#video")
                     {
-                        title = tempTitle = search.Snippet.Title;
+                        tempTitle = search.Snippet.Title;
                         tempUrl = search.Snippet.Thumbnails.Default__.Url;
                         playlist.Add(search.Id.VideoId.ToString());
                         break;
                     }
+                    // else if (search.Id.Kind == "youtube#playlist")
+                    // {
+                    //     tempTitle = search.Snippet.Title;
+                    //     tempUrl = search.Snippet.Thumbnails.Default__.Url;
+                    // }
                 }
                 re = true;
             }
@@ -157,6 +175,11 @@ namespace bot
             imageUrl = tempUrl;
             title = tempTitle;
             return re;
+        }
+        public async Task playMusic(DiscordSocketClient client)
+        {
+            
+
         }
     }    
 }
