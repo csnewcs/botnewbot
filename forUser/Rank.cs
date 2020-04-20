@@ -48,8 +48,7 @@ namespace bot
                 }
             }
             Random rd = new Random();
-            Program program = new Program();
-            string nickName = Program.getNickname(Context.User as SocketGuildUser);
+            string nickName = botnewbot.getNickname(Context.User as SocketGuildUser);
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
             .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
@@ -70,8 +69,8 @@ namespace bot
             string users = "";
             foreach (var a in allRank)
             {
-                string nickName = Program.getNickname(Context.Guild.GetUser(ulong.Parse(a.Value.Key)));
-                users += a.Key + "등" + "\n" +  nickName + ": (" + Program.unit((ulong)a.Value.Value["money"]) + " BNB)\n\n";
+                string nickName = botnewbot.getNickname(Context.Guild.GetUser(ulong.Parse(a.Value.Key)));
+                users += a.Key + "등" + "\n" +  nickName + ": (" + botnewbot.unit((ulong)a.Value.Value["money"]) + " BNB)\n\n";
                 if (a.Key % 20 == 0 && a.Key != allRank.Count)
                 {
                     builder.AddField($"순위({count})", users);
@@ -104,8 +103,8 @@ namespace bot
             {
                 try
                 {
-                    string nickName = Program.getNickname(Context.Guild.GetUser(ulong.Parse(allRank[i].Key)));
-                    builder.AddField(i + "등", nickName + ": (" + Program.unit((ulong)allRank[i].Value["money"]) + " BNB)");
+                    string nickName = botnewbot.getNickname(Context.Guild.GetUser(ulong.Parse(allRank[i].Key)));
+                    builder.AddField(i + "등", nickName + ": (" + botnewbot.unit((ulong)allRank[i].Value["money"]) + " BNB)");
                 }
                 catch
                 {

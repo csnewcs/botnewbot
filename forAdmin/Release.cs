@@ -34,7 +34,7 @@ namespace bot
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
             SocketMessage msg = Context.Message;
-            if (!Program.hasPermission(user, Program.Permission.MuteUser))
+            if (!botnewbot.hasPermission(user, botnewbot.Permission.MuteUser))
             {
                 return;
             }
@@ -51,14 +51,14 @@ namespace bot
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 해제가 완료되었습니다.");
+                    .AddField("작업 완료", $"{botnewbot.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 해제가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
                 else 
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 해제가 완료되었습니다.");
+                    .AddField("작업 완료", $"{botnewbot.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 해제가 완료되었습니다.");
                     await ReplyAsync("", embed:builder.Build());
                 }
             }
@@ -73,7 +73,7 @@ namespace bot
             SocketGuildUser user = Context.User as SocketGuildUser;
             SocketMessage msg = Context.Message;
             SocketGuild guild = Context.Guild;
-            if (!Program.hasPermission(user, Program.Permission.BanUser))
+            if (!botnewbot.hasPermission(user, botnewbot.Permission.BanUser))
             {
                 return;
             }

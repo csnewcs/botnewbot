@@ -13,30 +13,101 @@ using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 
 using Lavalink4NET;
+using Lavalink4NET.Logging;
 using Lavalink4NET.DiscordNet;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace bot
 {
-    public class Program : ModuleBase <SocketCommandContext>
+    public class Program
     {
-        const string version = "1.0";
+        private static void Main() => RunAsync().GetAwaiter().GetResult();
+        private static async Task RunAsync()
+        {
+            using (var serviceProvider = ConfigureServices())
+            {
+                var bot = serviceProvider.GetRequiredService<botnewbot>();
+                var audio = serviceProvider.GetRequiredService<IAudioService>();
+                var logger = serviceProvider.GetRequiredService<ILogger>() as EventLogger;
+                logger.LogMessage += Log;
+
+                await bot.mainAsync();
+                await audio.InitializeAsync();
+
+                logger.Log(bot, "Example Bot is running. Press [Q] to stop.");
+
+                await Task.Delay(-1);
+            }
+        }
+        private static void Log(object sender, LogMessageEventArgs args)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"[{args.Source.GetType().Name} {args.Level}] ");
+
+            Console.ResetColor();
+            Console.WriteLine(args.Message);
+
+            if (args.Exception != null)
+            {
+                Console.WriteLine(args.Exception);
+            }
+        }
+        private static ServiceProvider ConfigureServices() => new ServiceCollection()
+            // Bot
+            .AddSingleton<botnewbot>()
+
+            // Discord
+            .AddSingleton<DiscordSocketClient>()
+            .AddSingleton<CommandService>()
+
+            // Lavalink
+            .AddSingleton<IAudioService, LavalinkNode>()
+            .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
+            .AddSingleton<ILogger, EventLogger>()
+
+            .AddSingleton(new LavalinkNodeOptions
+            {
+                // Your Node Configuration
+            })
+
+            // Request Caching for Lavalink
+
+            .BuildServiceProvider();
+    }
+    public class botnewbot : ModuleBase<SocketCommandContext>
+    {
+        const string version = "1.0"; // 버전을 저장, 파일에 저장할까도 고민중
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
         CommandService command;
+        IServiceProvider provider;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
-        
-        static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
-        async Task mainAsync()
+
+        public botnewbot(IServiceProvider provider)
+        {
+            client = provider.GetRequiredService<DiscordSocketClient>();
+            command = provider.GetRequiredService<CommandService>();
+            this.provider = provider;
+        }
+
+        public async Task mainAsync() //기본 세팅
         {
             DiscordSocketConfig config = new DiscordSocketConfig{MessageCacheSize = 100};
             CommandServiceConfig serviceConfig = new CommandServiceConfig{};
             command = new CommandService(serviceConfig);
             client = new DiscordSocketClient(config);
+
             string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
             await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
             await client.StartAsync();
-            client.Log += log; //이벤트 설정
+
+            
+            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: provider);
+
+            //----------이벤트 설정-----------\\
+            client.Log += log; 
             client.Ready += ready;
             client.GuildAvailable += guildAvailable;
             client.MessageReceived += messageReceived;
@@ -45,15 +116,15 @@ namespace bot
             client.JoinedGuild += joinedGuild;
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
+
             Thread thread = new Thread(minus);
             Season ss = new Season();
             Thread mkdt = new Thread(() => ss.mkdt(client));
             thread.Start();
             mkdt.Start();
-            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(),
-                                        services: null);
             
-
+            
+            //--------공지 날리기---------\\
             while (true)
             {
                 Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
@@ -76,18 +147,24 @@ namespace bot
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
         {
-            if (!msg.Author.IsBot)
+            if (!msg.Author.IsBot) //봇이면 바로 보내고
             {
                 if (msg.Channel is SocketGuildChannel) //기본적으로 서버만 지원
                 {
                     SocketUserMessage message = msg as SocketUserMessage;
                     if (message == null) return;
+
+
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
                     var guildUser = msg.Author as SocketGuildUser;
+
                     addMoney(guildUser, msg);
+
                     int argPos = 0;
                     if (!message.HasCharPrefix('$', ref argPos))  return; //접두사 $없으면 리턴
+
+
                     GC.Collect();
                     if (coolDown(msg.Author.Id))
                     {
@@ -96,6 +173,8 @@ namespace bot
                         await a.DeleteAsync();
                         return;
                     }
+
+
                     string[] split = msg.Content.Split(' ');
                     switch(split[0])
                     {
@@ -104,7 +183,8 @@ namespace bot
                             break;
                     }
                     SocketCommandContext context = new SocketCommandContext(client, message);
-                    var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
+
+                    var result = await command.ExecuteAsync(context: context, argPos: argPos, services: provider);
                     if (result.Error.HasValue)
                     {
                         Console.WriteLine($"{result.Error}: {result.ErrorReason}");
@@ -146,7 +226,7 @@ namespace bot
             user["money"] = money;
             File.WriteAllText(path, user.ToString());
         }
-        bool coolDown(ulong Id) //3초에 한 번씩
+        bool coolDown(ulong Id) //명령어는 3초에 한 번씩
         {
             if (people.ContainsKey(Id))
             {
@@ -176,7 +256,7 @@ namespace bot
         }
         async Task messageDeleted(Cacheable<IMessage, ulong> msg, ISocketMessageChannel deletedMessageChannel) //메세지 삭제될 때
         {
-            if (deletedMessageChannel is SocketGuildChannel) //서비인지 확인
+            if (deletedMessageChannel is SocketGuildChannel) //서버인지 확인
             {
                 SocketGuild guild = (deletedMessageChannel as SocketTextChannel).Guild;
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
@@ -433,5 +513,8 @@ namespace bot
             ManageRole,
             Admin
         }
+
+
+        
     }
 }

@@ -58,7 +58,7 @@ namespace bot
                         }
                         string name = $"{year}년 {four}/4 분기 시즌";
                         single.Add("name", name);
-                        single.Add("username", Program.getNickname(guildUser));
+                        single.Add("username", botnewbot.getNickname(guildUser));
                         single.Add("money", (ulong)list.GetKey(1));
                         save.Add(single);
                         File.WriteAllText($"servers/{server.Name}/season.json", save.ToString());
