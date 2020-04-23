@@ -50,8 +50,7 @@ namespace bot
             .AddSingleton<ILogger, EventLogger>()
             .AddSingleton(new LavalinkNodeOptions
             {
-                RestUri = "http://localhost:8080/",
-                WebSocketUri = "ws://localhost:8080/",
+                Password = "youshallnotpass",
                 DisconnectOnStop = false
             })
             

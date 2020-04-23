@@ -44,7 +44,7 @@ namespace bot
         [Command("종료")]
         public async Task disconnect()
         {
-            var player = await GetPlayerAsync();
+            var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
             
             if (player == null)
             {
@@ -57,38 +57,48 @@ namespace bot
         [Command("등록")]
         public async Task play([Remainder]string urlOrSearch)
         {
-            var player = await GetPlayerAsync();
-            if (player == null)
+            Console.WriteLine(Context.Guild.Id);   
+            try
             {
-                return;
+
+                var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
+                if (player == null)
+                {
+                    return;
+                }
+                
+                var track = await audioService.GetTrackAsync(urlOrSearch, SearchMode.YouTube);
+                if (track == null)
+                {
+                    await ReplyAsync("결과가 없습니다. URL이나 검색어를 바꿔주세요");
+                    return;
+                }
+                var position = await player.PlayAsync(track, enqueue: true);
+                Random rd = new Random();
+                if (position == 0)
+                {
+                    EmbedBuilder builder = new EmbedBuilder()
+                    .AddField("노래 재생 시작", botnewbot.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + " 재생 시작")
+                    .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
+                }
+                else
+                {
+                    EmbedBuilder builder = new EmbedBuilder()
+                    .AddField("노래를 재생목록에 추가", botnewbot.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + "을 재생 목록에 추가")
+                    .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
             
-            var track = await audioService.GetTrackAsync(urlOrSearch, SearchMode.YouTube);
-            if (track == null)
-            {
-                await ReplyAsync("결과가 없습니다. URL이나 검색어를 바꿔주세요");
-                return;
-            }
-            var position = await player.PlayAsync(track, enqueue: true);
-            Random rd = new Random();
-            if (position == 0)
-            {
-                EmbedBuilder builder = new EmbedBuilder()
-                .AddField("노래 재생 시작", botnewbot.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + " 재생 시작")
-                .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-            }
-            else
-            {
-                EmbedBuilder builder = new EmbedBuilder()
-                .AddField("노래를 재생목록에 추가", botnewbot.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + "을 재생 목록에 추가")
-                .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-            }
         }
         
         [Command("정지")]
         public async Task stop()
         {
-            var player = await GetPlayerAsync();
+            var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
             await player.PauseAsync();
             await ReplyAsync("일시정지 완료");
         }
@@ -96,7 +106,7 @@ namespace bot
         [Command("재생")]
         public async Task restart()
         {
-            var player = await GetPlayerAsync();
+            var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
             await player.ReplayAsync();
             await ReplyAsync("재생 시작");
         }
@@ -107,17 +117,20 @@ namespace bot
             await ReplyAsync(track.Player.CurrentTrack.Title + "재생 시작");
         }
 
-        private async Task<VoteLavalinkPlayer> GetPlayerAsync(bool connectToVoiceChannel = true)
+        private async Task<VoteLavalinkPlayer> GetPlayerAsync(SocketGuild guild, ulong userId, bool connectToVoiceChannel = true)
         {
-            var player = audioService.GetPlayer<VoteLavalinkPlayer>(Context.Guild.Id);
+            Console.WriteLine(guild.Id);
+            await audioService.InitializeAsync();
+            var player = audioService.GetPlayer<VoteLavalinkPlayer>(guild.Id);
 
             if (player != null && player.State != PlayerState.NotConnected && player.State != PlayerState.Destroyed)
             {
                 return player;
             }
 
-            var user = Context.Guild.GetUser(Context.User.Id);
-            return await audioService.JoinAsync<VoteLavalinkPlayer>(Context.Guild.Id, user.VoiceChannel.Id);
+            var user = guild.GetUser(Context.User.Id);
+            Console.WriteLine(user.VoiceChannel.Id);
+            return await audioService.JoinAsync<VoteLavalinkPlayer>(guild.Id, user.VoiceChannel.Id);
         }
         static class Channels
         {
