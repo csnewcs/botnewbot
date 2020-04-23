@@ -65,14 +65,7 @@ namespace bot
             .AddSingleton<IAudioService, LavalinkNode>()
             .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
             .AddSingleton<ILogger, EventLogger>()
-
-            .AddSingleton(new LavalinkNodeOptions
-            {
-                // Your Node Configuration
-            })
-
-            // Request Caching for Lavalink
-
+            
             .BuildServiceProvider();
     }
     public class botnewbot : ModuleBase<SocketCommandContext>
