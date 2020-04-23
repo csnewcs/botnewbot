@@ -22,7 +22,6 @@ namespace bot
         public Karaoke(IAudioService service)
         {
             audioService = service ?? throw new ArgumentNullException(nameof(audioService));
-            audioService.InitializeAsync();
             audioService.TrackStarted += startTrack;
         }
         

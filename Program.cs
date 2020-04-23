@@ -29,28 +29,11 @@ namespace bot
             {
                 var bot = serviceProvider.GetRequiredService<botnewbot>();
                 var audio = serviceProvider.GetRequiredService<IAudioService>();
-                var logger = serviceProvider.GetRequiredService<ILogger>() as EventLogger;
-                logger.LogMessage += Log;
 
                 await bot.mainAsync();
                 await audio.InitializeAsync();
 
-                logger.Log(bot, "Example Bot is running. Press [Q] to stop.");
-
                 await Task.Delay(-1);
-            }
-        }
-        private static void Log(object sender, LogMessageEventArgs args)
-        {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write($"[{args.Source.GetType().Name} {args.Level}] ");
-
-            Console.ResetColor();
-            Console.WriteLine(args.Message);
-
-            if (args.Exception != null)
-            {
-                Console.WriteLine(args.Exception);
             }
         }
         private static ServiceProvider ConfigureServices() => new ServiceCollection()
@@ -65,6 +48,12 @@ namespace bot
             .AddSingleton<IAudioService, LavalinkNode>()
             .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
             .AddSingleton<ILogger, EventLogger>()
+            .AddSingleton(new LavalinkNodeOptions
+            {
+                RestUri = "http://localhost:8080/",
+                WebSocketUri = "ws://localhost:8080/",
+                DisconnectOnStop = false
+            })
             
             .BuildServiceProvider();
     }
