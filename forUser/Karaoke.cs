@@ -129,9 +129,8 @@ namespace bot
                     WebSocketUri = "ws://localhost:8080"
                 }, new DiscordClientWrapper(client));
                 audioService.TrackStarted += startTrack;
-                await audioService.InitializeAsync();
+                // await audioService.InitializeAsync();
                 player = audioService.GetPlayer<VoteLavalinkPlayer>(guild.Id);
-                
             }
 
             if (player != null && player.State != PlayerState.NotConnected && player.State != PlayerState.Destroyed)
