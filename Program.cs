@@ -20,58 +20,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace bot
 {
-    public class Program
-    {
-        private static void Main() => RunAsync().GetAwaiter().GetResult();
-        private static async Task RunAsync()
-        {
-            using (var serviceProvider = ConfigureServices())
-            {
-                var bot = serviceProvider.GetRequiredService<botnewbot>();
-                var audio = serviceProvider.GetRequiredService<IAudioService>();
-
-                await bot.mainAsync();
-                await audio.InitializeAsync();
-
-                await Task.Delay(-1);
-            }
-        }
-        private static ServiceProvider ConfigureServices() => new ServiceCollection()
-            // Bot
-            .AddSingleton<botnewbot>()
-
-            // Discord
-            .AddSingleton<DiscordSocketClient>()
-            .AddSingleton<CommandService>()
-
-            // Lavalink
-            .AddSingleton<IAudioService, LavalinkNode>()
-            .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
-            .AddSingleton<ILogger, EventLogger>()
-            .AddSingleton(new LavalinkNodeOptions
-            {
-                Password = "youshallnotpass",
-                DisconnectOnStop = false
-            })
-            
-            .BuildServiceProvider();
-    }
-    public class botnewbot : ModuleBase<SocketCommandContext>
+    public sealed class Program
     {
         const string version = "1.0"; // 버전을 저장, 파일에 저장할까도 고민중
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
         CommandService command;
-        IServiceProvider provider;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
 
-        public botnewbot(IServiceProvider provider)
-        {
-            client = provider.GetRequiredService<DiscordSocketClient>();
-            command = provider.GetRequiredService<CommandService>();
-            this.provider = provider;
-        }
+        private static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
 
         public async Task mainAsync() //기본 세팅
         {
@@ -79,14 +37,6 @@ namespace bot
             CommandServiceConfig serviceConfig = new CommandServiceConfig{};
             command = new CommandService(serviceConfig);
             client = new DiscordSocketClient(config);
-
-            string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
-            await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
-            await client.StartAsync();
-
-            
-            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: provider);
-
             //----------이벤트 설정-----------\\
             client.Log += log; 
             client.Ready += ready;
@@ -98,12 +48,18 @@ namespace bot
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
 
+            string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
+            await client.StartAsync();
+            
             Thread thread = new Thread(minus);
             Season ss = new Season();
             Thread mkdt = new Thread(() => ss.mkdt(client));
             thread.Start();
             mkdt.Start();
             
+            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: null);
+
             
             //--------공지 날리기---------\\
             while (true)
@@ -165,7 +121,7 @@ namespace bot
                     }
                     SocketCommandContext context = new SocketCommandContext(client, message);
 
-                    var result = await command.ExecuteAsync(context: context, argPos: argPos, services: provider);
+                    var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     if (result.Error.HasValue)
                     {
                         Console.WriteLine($"{result.Error}: {result.ErrorReason}");

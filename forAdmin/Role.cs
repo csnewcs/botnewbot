@@ -33,7 +33,7 @@ namespace bot
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
             SocketMessage message = Context.Message;
-            if (!(botnewbot.isOver(user, message.MentionedRoles) && botnewbot.hasPermission(user, botnewbot.Permission.ManageRole)))
+            if (!(Program.isOver(user, message.MentionedRoles) && Program.hasPermission(user, Program.Permission.ManageRole)))
             {
                 return;
             }
@@ -55,7 +55,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
+                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
                 else
@@ -63,7 +63,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
+                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
             }
@@ -74,7 +74,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
+                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
                 else
@@ -82,7 +82,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
+                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
             }
@@ -94,7 +94,7 @@ namespace bot
             SocketGuildUser user = Context.User as SocketGuildUser;
             var mentionedUsers = message.MentionedUsers;
             var mentionedRoles = message.MentionedRoles;
-            if (!(botnewbot.hasPermission(user, botnewbot.Permission.ManageRole) && botnewbot.isOver(user, mentionedRoles)))
+            if (!(Program.hasPermission(user, Program.Permission.ManageRole) && Program.isOver(user, mentionedRoles)))
             {
                 return;
             }
@@ -111,7 +111,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 강탈 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님의 '{mentionedRoles.First()}'역할이 사라졌습니다.");
+                    .AddField("역할 강탈 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님의 '{mentionedRoles.First()}'역할이 사라졌습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
                 else
@@ -119,7 +119,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 강탈 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님의 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할들의 사라졌습니다.");
+                    .AddField("역할 강탈 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님의 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할들의 사라졌습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
             }
@@ -130,7 +130,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 강탈 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들의 '{mentionedRoles.First()}'역할이 사라졌습니다.");
+                    .AddField("역할 강탈 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들의 '{mentionedRoles.First()}'역할이 사라졌습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
                 else
@@ -138,7 +138,7 @@ namespace bot
                     Random rd = new Random();
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 강탈 완료", $"{botnewbot.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들의 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할들이 사라졌습니다.");
+                    .AddField("역할 강탈 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들의 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할들이 사라졌습니다.");
                     await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
                 }
             }

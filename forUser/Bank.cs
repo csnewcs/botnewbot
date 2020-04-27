@@ -20,8 +20,8 @@ namespace bot
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
             JObject json = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
-            string nickname = botnewbot.getNickname(user);
-            string moneyString = botnewbot.unit((ulong)json["money"]);
+            string nickname = Program.getNickname(user);
+            string moneyString = Program.unit((ulong)json["money"]);
             Random rd = new Random();
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256))

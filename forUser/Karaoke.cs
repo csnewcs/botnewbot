@@ -17,13 +17,7 @@ namespace bot
     [Group("노래방")]
     public class Karaoke : ModuleBase<SocketCommandContext>
     {
-        IAudioService audioService;
-        
-        public Karaoke(IAudioService service)
-        {
-            audioService = service ?? throw new ArgumentNullException(nameof(audioService));
-            audioService.TrackStarted += startTrack;
-        }
+        LavalinkNode audioService;
         
         [Command]
         public async Task help()
@@ -44,7 +38,7 @@ namespace bot
         [Command("종료")]
         public async Task disconnect()
         {
-            var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
+            var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
             
             if (player == null)
             {
@@ -61,7 +55,7 @@ namespace bot
             try
             {
 
-                var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
+                var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
                 if (player == null)
                 {
                     return;
@@ -78,13 +72,13 @@ namespace bot
                 if (position == 0)
                 {
                     EmbedBuilder builder = new EmbedBuilder()
-                    .AddField("노래 재생 시작", botnewbot.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + " 재생 시작")
+                    .AddField("노래 재생 시작", Program.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + " 재생 시작")
                     .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
                 }
                 else
                 {
                     EmbedBuilder builder = new EmbedBuilder()
-                    .AddField("노래를 재생목록에 추가", botnewbot.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + "을 재생 목록에 추가")
+                    .AddField("노래를 재생목록에 추가", Program.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + "을 재생 목록에 추가")
                     .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
                 }
             }
@@ -98,7 +92,7 @@ namespace bot
         [Command("정지")]
         public async Task stop()
         {
-            var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
+            var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
             await player.PauseAsync();
             await ReplyAsync("일시정지 완료");
         }
@@ -106,7 +100,7 @@ namespace bot
         [Command("재생")]
         public async Task restart()
         {
-            var player = await GetPlayerAsync(Context.Guild, Context.User.Id);
+            var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
             await player.ReplayAsync();
             await ReplyAsync("재생 시작");
         }
@@ -117,11 +111,28 @@ namespace bot
             await ReplyAsync(track.Player.CurrentTrack.Title + "재생 시작");
         }
 
-        private async Task<VoteLavalinkPlayer> GetPlayerAsync(SocketGuild guild, ulong userId, bool connectToVoiceChannel = true)
+        private async Task<VoteLavalinkPlayer> GetPlayerAsync(SocketGuild guild, ulong userId, DiscordSocketClient client, bool connectToVoiceChannel = true)
         {
             Console.WriteLine(guild.Id);
-            await audioService.InitializeAsync();
-            var player = audioService.GetPlayer<VoteLavalinkPlayer>(guild.Id);
+            VoteLavalinkPlayer player = null;
+            try
+            {
+                player = audioService.GetPlayer<VoteLavalinkPlayer>(guild.Id);
+            }
+            catch
+            {
+                audioService = new LavalinkNode(new LavalinkNodeOptions{
+                    Password = "youshallnotpass",
+                    DisconnectOnStop = false,
+                    BufferSize = 1024 * 1024,
+                    RestUri = "http://localhost:8080",
+                    WebSocketUri = "ws://localhost:8080"
+                }, new DiscordClientWrapper(client));
+                audioService.TrackStarted += startTrack;
+                await audioService.InitializeAsync();
+                player = audioService.GetPlayer<VoteLavalinkPlayer>(guild.Id);
+                
+            }
 
             if (player != null && player.State != PlayerState.NotConnected && player.State != PlayerState.Destroyed)
             {

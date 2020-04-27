@@ -60,7 +60,7 @@ namespace bot
             ulong result = money / 100 * (ulong)multi[select - 1];
             plusMoney(Context.User as SocketGuildUser, result);
             EmbedBuilder builder = new EmbedBuilder()
-            .AddField(botnewbot.getNickname(Context.User as SocketGuildUser) + "님의 제비뽑기 결과", $"× {multi[select - 1]}%를 뽑으셔서 {botnewbot.unit(money)}BNB가 {botnewbot.unit(result)}BNB가 되었습니다.")
+            .AddField(Program.getNickname(Context.User as SocketGuildUser) + "님의 제비뽑기 결과", $"× {multi[select - 1]}%를 뽑으셔서 {Program.unit(money)}BNB가 {Program.unit(result)}BNB가 되었습니다.")
             .WithColor(rd.Next(0, 255), rd.Next(0, 255), rd.Next(0, 255));
             await ReplyAsync("", embed:builder.Build());
         }
@@ -98,7 +98,7 @@ namespace bot
                 if (one == 6) result = money * 100;
                 else result = money * ((ulong)one + 3) * ((ulong)one + 3); 
                 plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {botnewbot.unit(money * 3)} BNB가 {botnewbot.unit(result)} BNB가 되어 돌아갑니다!");
+                builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {Program.unit(money * 3)} BNB가 {Program.unit(result)} BNB가 되어 돌아갑니다!");
             }
             else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
             {
@@ -106,7 +106,7 @@ namespace bot
                 if (one == 6) result = money * 15;
                 else result = money * (avg + 4); //1 ~ 9배
                 plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {botnewbot.unit(money * 3)} BNB가 {botnewbot.unit(result)} BNB가 되어 돌아갑니다.");
+                builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {Program.unit(money * 3)} BNB가 {Program.unit(result)} BNB가 되어 돌아갑니다.");
             }
             else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
             {
@@ -114,11 +114,11 @@ namespace bot
                 if (two == 7) result = money * 15;
                 else result = money * (avg + 2);
                 plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다.", $"숫자 2개를 {two + 1}으로 맞추셨습니다. 거셨던 {botnewbot.unit(money * 3)} BNB가 {botnewbot.unit(result)} BNB가 되어 돌아갑니다.");
+                builder.AddField("축하 드립니다.", $"숫자 2개를 {two + 1}으로 맞추셨습니다. 거셨던 {Program.unit(money * 3)} BNB가 {Program.unit(result)} BNB가 되어 돌아갑니다.");
             }
             else
             {
-                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {botnewbot.unit(money * 3)} BNB가 소멸 되었습니다.");
+                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {Program.unit(money * 3)} BNB가 소멸 되었습니다.");
             }
             await ReplyAsync("", embed:builder.Build());
         }
@@ -158,7 +158,7 @@ namespace bot
                     if (one == 6) temp = money * 130;
                     else temp = money * ((ulong)one + 2) * ((ulong) one + 2); //4 ~ 100배
                     result += temp;
-                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {botnewbot.unit(temp)} BNB)\n";
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {Program.unit(temp)} BNB)\n";
                 }
                 else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
                 {
@@ -167,7 +167,7 @@ namespace bot
                     if (one == 6) temp = money * 15;
                     else temp = money * (avg + 3);
                     result += temp;
-                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {botnewbot.unit(temp)} BNB)\n";
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {Program.unit(temp)} BNB)\n";
                 }
                 else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
                 {
@@ -176,7 +176,7 @@ namespace bot
                     if (two == 6) temp = money * 15;
                     else temp = money * (avg + 3);
                     result += temp;
-                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {botnewbot.unit(temp)} BNB)\n";
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {Program.unit(temp)} BNB)\n";
                 }
                 else
                 {
@@ -187,12 +187,12 @@ namespace bot
             plusMoney(user, result);
             string log = "";
             money *= 3;
-            if (result > money * loop) log = $"{botnewbot.unit(result - (money * loop))} BNB 이득";
-            else log = $"{botnewbot.unit((money * loop) - result)} BNB 손해";
+            if (result > money * loop) log = $"{Program.unit(result - (money * loop))} BNB 이득";
+            else log = $"{Program.unit((money * loop) - result)} BNB 손해";
             string[] array = results.Split(';');
             uint color = (uint)rd.Next(0x000000, 0xffffff);
             EmbedBuilder builder = new EmbedBuilder()
-                .WithTitle($"{botnewbot.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과")
+                .WithTitle($"{Program.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과")
                 .WithColor(new Color(color));
             if (array.Length > 1)
             {
@@ -211,7 +211,7 @@ namespace bot
             }
             EmbedBuilder serverSend = new EmbedBuilder()
             .WithColor(new Color(color))
-            .AddField($"{botnewbot.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과", log);
+            .AddField($"{Program.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과", log);
             await msg.Author.SendMessageAsync("", embed:builder.Build());
             await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.", embed:serverSend.Build());
         }

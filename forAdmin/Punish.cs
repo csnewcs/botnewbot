@@ -33,7 +33,7 @@ namespace bot
             SocketGuildUser user = Context.User as SocketGuildUser;
             SocketMessage msg = Context.Message;
             var muteUsers = msg.MentionedUsers;
-            if (!(botnewbot.hasPermission(user, botnewbot.Permission.MuteUser) && botnewbot.isOver(user, muteUsers)) || muteUsers.Count == 0)
+            if (!(Program.hasPermission(user, Program.Permission.MuteUser) && Program.isOver(user, muteUsers)) || muteUsers.Count == 0)
             {
                 return;
             }
@@ -48,14 +48,14 @@ namespace bot
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{botnewbot.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 처리가 완료되었습니다.");
+                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 처리가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
                 else 
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{botnewbot.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 처리가 완료되었습니다.");
+                    .AddField("작업 완료", $"{Program.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 처리가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
             }
@@ -70,7 +70,7 @@ namespace bot
             SocketMessage msg = Context.Message;
             var kickUsers = msg.MentionedUsers;
             SocketGuildUser user = Context.User as SocketGuildUser;
-            if (!(botnewbot.hasPermission(user, botnewbot.Permission.KickUser) && botnewbot.isOver(user, kickUsers)) || kickUsers.Count == 0)
+            if (!(Program.hasPermission(user, Program.Permission.KickUser) && Program.isOver(user, kickUsers)) || kickUsers.Count == 0)
             {
                 return;
             }
@@ -79,14 +79,14 @@ namespace bot
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{botnewbot.getNickname(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
             else 
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{botnewbot.getNickname(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }   
         }
@@ -96,7 +96,7 @@ namespace bot
             SocketGuildUser user = Context.User as SocketGuildUser;
             SocketMessage msg = Context.Message;
             var banUsers = msg.MentionedUsers;
-            if (!(botnewbot.hasPermission(user, botnewbot.Permission.BanUser) && botnewbot.isOver(user, banUsers)) || banUsers.Count == 0)
+            if (!(Program.hasPermission(user, Program.Permission.BanUser) && Program.isOver(user, banUsers)) || banUsers.Count == 0)
             {
                 return;
             }
@@ -109,7 +109,7 @@ namespace bot
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{botnewbot.getNickname(banUsers.First() as SocketGuildUser)}외 {banUsers.Count}분의 밴 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(banUsers.First() as SocketGuildUser)}외 {banUsers.Count}분의 밴 처리가 완료되었습니다.");
 
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
@@ -117,7 +117,7 @@ namespace bot
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{botnewbot.getNickname(banUsers.First() as SocketGuildUser)}님의 밴 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{Program.getNickname(banUsers.First() as SocketGuildUser)}님의 밴 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
         }
