@@ -33,6 +33,7 @@ namespace bot
 
         public async Task mainAsync() //기본 세팅
         {
+            Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
             DiscordSocketConfig config = new DiscordSocketConfig{MessageCacheSize = 100};
             CommandServiceConfig serviceConfig = new CommandServiceConfig{};
             command = new CommandService(serviceConfig);
@@ -64,7 +65,6 @@ namespace bot
             //--------공지 날리기---------\\
             while (true)
             {
-                Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
                 Console.ReadKey();
                 Console.WriteLine();
                 DirectoryInfo dir = new DirectoryInfo("servers");
@@ -80,6 +80,7 @@ namespace bot
                 }
                 File.WriteAllText("notice.txt", "");
                 Console.WriteLine("공지 전송 완료");
+                Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
             }
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
