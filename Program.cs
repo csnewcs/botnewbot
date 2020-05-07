@@ -1,36 +1,46 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Linq;
-using Discord;
-using System.Threading.Tasks;
-using Discord.WebSocket;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Collections;
-using Discord.Commands;
+using System.Threading;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+
+using Newtonsoft.Json.Linq;
+
+using Lavalink4NET;
+using Lavalink4NET.Logging;
+using Lavalink4NET.DiscordNet;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace bot
 {
-    public class Program : ModuleBase <SocketCommandContext>
+    public sealed class Program
     {
+        const int version = 1; // 버전을 저장, 파일에 저장할까도 고민중
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
         CommandService command;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
-        
-        static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
-        async Task mainAsync()
+
+        private static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
+
+        public async Task mainAsync() //기본 세팅
         {
+            Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
             DiscordSocketConfig config = new DiscordSocketConfig{MessageCacheSize = 100};
             CommandServiceConfig serviceConfig = new CommandServiceConfig{};
             command = new CommandService(serviceConfig);
             client = new DiscordSocketClient(config);
-            string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
-            await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
-            await client.StartAsync();
-            client.Log += log; //이벤트 설정
+            //----------이벤트 설정-----------\\
+            client.Log += log; 
             client.Ready += ready;
             client.GuildAvailable += guildAvailable;
             client.MessageReceived += messageReceived;
@@ -39,16 +49,46 @@ namespace bot
             client.JoinedGuild += joinedGuild;
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
-            System.Threading.Thread thread = new System.Threading.Thread(new System.Threading.ThreadStart(minus));
+
+            string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
+            await client.StartAsync();
+            
+            Thread thread = new Thread(minus);
+            Season ss = new Season();
+            Thread mkdt = new Thread(() => ss.mkdt(client));
+            Thread version = new Thread(checkVersion);
             thread.Start();
-            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(),
-                                        services: null);
+            mkdt.Start();
+            version.Start();
+            
+            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: null);
+
+            
+            //--------공지 날리기---------\\
             while (true)
             {
-                Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
                 Console.ReadKey();
                 Console.WriteLine();
-                DirectoryInfo dir = new DirectoryInfo("servers");
+                sendNotice();
+                Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
+            }
+        }
+        void sendNotice(string send = "")
+        {
+            
+            if (string.IsNullOrEmpty(send))
+            {
+                try
+                {
+                    send = File.ReadAllText("notice.txt");
+                }
+                catch
+                {
+                    Console.WriteLine("공지를 전송 할 수 없습니다. ./notice.txt 파일을 확인해 주세요");
+                }
+            }
+            DirectoryInfo dir = new DirectoryInfo("servers");
                 foreach (var a in dir.GetDirectories())
                 {
                     JObject server = JObject.Parse(File.ReadAllText($"servers/{a.Name}/config.json"));
@@ -56,26 +96,37 @@ namespace bot
                     {
                         SocketGuild guild = client.GetGuild(ulong.Parse(a.Name));
                         SocketTextChannel channel = guild.GetChannel((ulong)server["noticeBot"]) as SocketTextChannel;
-                        await channel.SendMessageAsync(File.ReadAllText("notice.txt"));
+                        try
+                        {
+                            channel.SendMessageAsync(send);
+                        }
+                        catch {}
                     }
                 }
                 File.WriteAllText("notice.txt", "");
-            }
+                Console.WriteLine("공지 전송 완료");
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
         {
-            if (!msg.Author.IsBot)
+            if (!msg.Author.IsBot) //봇이면 바로 보내고
             {
                 if (msg.Channel is SocketGuildChannel) //기본적으로 서버만 지원
                 {
                     SocketUserMessage message = msg as SocketUserMessage;
                     if (message == null) return;
+
+
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
                     var guildUser = msg.Author as SocketGuildUser;
+
                     addMoney(guildUser, msg);
+
                     int argPos = 0;
                     if (!message.HasCharPrefix('$', ref argPos))  return; //접두사 $없으면 리턴
+
+
+                    GC.Collect();
                     if (coolDown(msg.Author.Id))
                     {
                         var a = await msg.Channel.SendMessageAsync("아직 명령어를 입력할 수 없습니다.");
@@ -83,6 +134,8 @@ namespace bot
                         await a.DeleteAsync();
                         return;
                     }
+
+
                     string[] split = msg.Content.Split(' ');
                     switch(split[0])
                     {
@@ -91,9 +144,11 @@ namespace bot
                             break;
                     }
                     SocketCommandContext context = new SocketCommandContext(client, message);
+
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     if (result.Error.HasValue)
                     {
+                        Console.WriteLine($"{result.Error}: {result.ErrorReason}");
                         await msg.Channel.SendMessageAsync($"{result.Error}: {result.ErrorReason}");
                     }
                 }
@@ -132,7 +187,7 @@ namespace bot
             user["money"] = money;
             File.WriteAllText(path, user.ToString());
         }
-        bool coolDown(ulong Id) //3초에 한 번씩
+        bool coolDown(ulong Id) //명령어는 3초에 한 번씩
         {
             if (people.ContainsKey(Id))
             {
@@ -162,7 +217,7 @@ namespace bot
         }
         async Task messageDeleted(Cacheable<IMessage, ulong> msg, ISocketMessageChannel deletedMessageChannel) //메세지 삭제될 때
         {
-            if (deletedMessageChannel is SocketGuildChannel) //서비인지 확인
+            if (deletedMessageChannel is SocketGuildChannel) //서버인지 확인
             {
                 SocketGuild guild = (deletedMessageChannel as SocketTextChannel).Guild;
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
@@ -188,6 +243,10 @@ namespace bot
             {
                 SocketGuild guild = (editedMessageChannel as SocketTextChannel).Guild;
                 JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                if (afterMsg.Embeds.Count > 0 && beforeMsg.Value.Embeds.Count <= 0)
+                {
+                    return;
+                }
                 if (json["editMessage"].ToString() != "0" && !string.IsNullOrEmpty(afterMsg.Content)) 
                 {
                     if (beforeMsg.Value.Author.IsBot) return;
@@ -414,6 +473,26 @@ namespace bot
             MuteUser,
             ManageRole,
             Admin
+        }
+
+        private void checkVersion()
+        {
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+            while(true)
+            {
+                Thread.Sleep(10000);
+                client.Headers.Add("user-agent", "botnewbot");
+                string download = client.DownloadString("https://api.github.com/repos/csnewcs/botnewbot/tags");
+                if (string.IsNullOrEmpty(download)) continue;
+                JArray tags = JArray.Parse(download);
+                if (tags.Count > version)
+                {
+                    Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
+                    sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
+                    break;
+                }
+            }
         }
     }
 }

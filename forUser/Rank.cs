@@ -48,7 +48,6 @@ namespace bot
                 }
             }
             Random rd = new Random();
-            Program program = new Program();
             string nickName = Program.getNickname(Context.User as SocketGuildUser);
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))

@@ -1,0 +1,11 @@
+server:
+  port: 8080
+  address: localhost
+lavalink:
+  server:
+    password: "youshallnotpass"
+    sources:
+      youtube: true
+      soundcloud: true
+      http: true
+      
