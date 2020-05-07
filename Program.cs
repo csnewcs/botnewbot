@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Linq;
 using System.Threading;
 using System.Reflection;
@@ -22,7 +23,7 @@ namespace bot
 {
     public sealed class Program
     {
-        const string version = "1.0"; // 버전을 저장, 파일에 저장할까도 고민중
+        const int version = 1; // 버전을 저장, 파일에 저장할까도 고민중
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
@@ -56,8 +57,10 @@ namespace bot
             Thread thread = new Thread(minus);
             Season ss = new Season();
             Thread mkdt = new Thread(() => ss.mkdt(client));
+            Thread version = new Thread(checkVersion);
             thread.Start();
             mkdt.Start();
+            version.Start();
             
             await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: null);
 
@@ -67,7 +70,25 @@ namespace bot
             {
                 Console.ReadKey();
                 Console.WriteLine();
-                DirectoryInfo dir = new DirectoryInfo("servers");
+                sendNotice();
+                Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
+            }
+        }
+        void sendNotice(string send = "")
+        {
+            
+            if (string.IsNullOrEmpty(send))
+            {
+                try
+                {
+                    send = File.ReadAllText("notice.txt");
+                }
+                catch
+                {
+                    Console.WriteLine("공지를 전송 할 수 없습니다. ./notice.txt 파일을 확인해 주세요");
+                }
+            }
+            DirectoryInfo dir = new DirectoryInfo("servers");
                 foreach (var a in dir.GetDirectories())
                 {
                     JObject server = JObject.Parse(File.ReadAllText($"servers/{a.Name}/config.json"));
@@ -75,13 +96,15 @@ namespace bot
                     {
                         SocketGuild guild = client.GetGuild(ulong.Parse(a.Name));
                         SocketTextChannel channel = guild.GetChannel((ulong)server["noticeBot"]) as SocketTextChannel;
-                        await channel.SendMessageAsync(File.ReadAllText("notice.txt"));
+                        try
+                        {
+                            channel.SendMessageAsync(send);
+                        }
+                        catch {}
                     }
                 }
                 File.WriteAllText("notice.txt", "");
                 Console.WriteLine("공지 전송 완료");
-                Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
-            }
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
         {
@@ -452,7 +475,24 @@ namespace bot
             Admin
         }
 
-
-        
+        private void checkVersion()
+        {
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+            while(true)
+            {
+                Thread.Sleep(10000);
+                client.Headers.Add("user-agent", "botnewbot");
+                string download = client.DownloadString("https://api.github.com/repos/csnewcs/botnewbot/tags");
+                if (string.IsNullOrEmpty(download)) continue;
+                JArray tags = JArray.Parse(download);
+                if (tags.Count > version)
+                {
+                    Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
+                    sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
+                    break;
+                }
+            }
+        }
     }
 }
