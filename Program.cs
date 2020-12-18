@@ -29,6 +29,7 @@ namespace bot
         DiscordSocketClient client;
         CommandService command;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
+        string prefix = "";
 
         private static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
 
@@ -50,10 +51,27 @@ namespace bot
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
 
-            string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            string[] botConfig = new string[0];
+            try
+            {
+                botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            }
+            catch
+            {
+                FileStream fs = new FileStream("config.txt", FileMode.OpenOrCreate);
+                StreamWriter writer = new StreamWriter(fs);
+                Console.WriteLine("봇 초기 설정을 시작합니다.\n봇의 토큰을 입력하세요.");
+                writer.WriteLine(Console.ReadLine());
+                Console.WriteLine("봇 사용 시 사용할 접두사를 입력하세요.");
+                writer.WriteLine(Console.ReadLine());
+                writer.Close();
+                fs.Close();
+                botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            }
             await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
             await client.StartAsync();
             
+            prefix = botConfig[1];
             Thread thread = new Thread(minus);
             Season ss = new Season();
             Thread mkdt = new Thread(() => ss.mkdt(client));
@@ -123,7 +141,7 @@ namespace bot
                     addMoney(guildUser, msg);
 
                     int argPos = 0;
-                    if (!message.HasCharPrefix('$', ref argPos))  return; //접두사 $없으면 리턴
+                    if (!message.HasStringPrefix(prefix, ref argPos))  return; //접두사 $없으면 리턴
 
 
                     GC.Collect();
@@ -137,19 +155,14 @@ namespace bot
 
 
                     string[] split = msg.Content.Split(' ');
-                    switch(split[0])
-                    {
-                        case "$초기설정":
-                            await reset(guildUser);
-                            break;
-                    }
+                    if (split[0] == prefix + "초기설정") await reset(guildUser);
                     SocketCommandContext context = new SocketCommandContext(client, message);
 
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
                     if (result.Error.HasValue)
                     {
                         Console.WriteLine($"{result.Error}: {result.ErrorReason}");
-                        await msg.Channel.SendMessageAsync($"{result.Error}: {result.ErrorReason}");
+                        await msg.Channel.SendMessageAsync($"{result.Error}: {result.Error.Value}");
                     }
                 }
                 else
@@ -483,16 +496,23 @@ namespace bot
             client.Encoding = System.Text.Encoding.UTF8;
             while(true)
             {
-                Thread.Sleep(10000);
-                client.Headers.Add("user-agent", "botnewbot");
-                string download = client.DownloadString("https://api.github.com/repos/csnewcs/botnewbot/tags");
-                if (string.IsNullOrEmpty(download)) continue;
-                JArray tags = JArray.Parse(download);
-                if (tags.Count > version)
+                try
                 {
-                    Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
-                    sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
-                    break;
+                    Thread.Sleep(1000 * 60 * 60); //1시간 기다리기
+                    client.Headers.Add("user-agent", "botnewbot");
+                    string download = client.DownloadString("https://api.github.com/repos/csnewcs/botnewbot/tags");
+                    if (string.IsNullOrEmpty(download)) continue;
+                    JArray tags = JArray.Parse(download);
+                    if (tags.Count > version)
+                    {
+                        Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
+                        sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
+                        break;
+                    }
+                }
+                catch
+                {
+                    Thread.Sleep(1000 * 60 * 60 * 6); //6시간 기다리기
                 }
             }
         }
