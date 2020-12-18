@@ -274,12 +274,14 @@ namespace bot
             setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
             server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
             Directory.CreateDirectory("servers/" + guild.Id.ToString()); //servers/서버 ID가 이름인 디렉터리 생성
-            await guild.Owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
+            // Console.WriteLine(guild.OwnerId);
+            SocketGuildUser owner = guild.GetUser(guild.OwnerId);
+            await owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
             foreach (SocketGuildUser user in guild.Users) //유저 추가
             {
                 if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
             }
-            await guild.Owner.SendMessageAsync("초기 설정을 시작합니다.");
+            await owner.SendMessageAsync("초기 설정을 시작합니다.");
 
             server[guild.OwnerId].addServer(guild, guild.Owner);
         }
