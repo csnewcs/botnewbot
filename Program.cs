@@ -29,6 +29,7 @@ namespace bot
         DiscordSocketClient client;
         CommandService command;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
+        string prefix = "";
 
         private static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
 
@@ -50,10 +51,27 @@ namespace bot
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
 
-            string[] botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            string[] botConfig = new string[0];
+            try
+            {
+                botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            }
+            catch
+            {
+                FileStream fs = new FileStream("config.txt", FileMode.OpenOrCreate);
+                StreamWriter writer = new StreamWriter(fs);
+                Console.WriteLine("봇 초기 설정을 시작합니다.\n봇의 토큰을 입력하세요.");
+                writer.WriteLine(Console.ReadLine());
+                Console.WriteLine("봇 사용 시 사용할 접두사를 입력하세요.");
+                writer.WriteLine(Console.ReadLine());
+                writer.Close();
+                fs.Close();
+                botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+            }
             await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
             await client.StartAsync();
             
+            prefix = botConfig[1];
             Thread thread = new Thread(minus);
             Season ss = new Season();
             Thread mkdt = new Thread(() => ss.mkdt(client));
@@ -123,7 +141,7 @@ namespace bot
                     addMoney(guildUser, msg);
 
                     int argPos = 0;
-                    if (!message.HasCharPrefix('$', ref argPos))  return; //접두사 $없으면 리턴
+                    if (!message.HasStringPrefix(prefix, ref argPos))  return; //접두사 $없으면 리턴
 
 
                     GC.Collect();
@@ -137,20 +155,10 @@ namespace bot
 
 
                     string[] split = msg.Content.Split(' ');
-                    switch(split[0])
-                    {
-                        case "$초기설정":
-                            await reset(guildUser);
-                            break;
-                    }
+                    if (split[0] == prefix + "초기설정") await reset(guildUser);
                     SocketCommandContext context = new SocketCommandContext(client, message);
 
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
-                    if (result.Error.HasValue)
-                    {
-                        Console.WriteLine($"{result.Error}: {result.ErrorReason}");
-                        await msg.Channel.SendMessageAsync($"{result.Error}: {result.ErrorReason}");
-                    }
                 }
                 else
                 {
@@ -179,8 +187,7 @@ namespace bot
         {
             Random random = new Random();
             int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) / (random.Next(3, 16)) + 1;
-            Console.WriteLine("바이트 수: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length));
-            Console.WriteLine("실제 얻은거: " + getByte);
+            Console.WriteLine("bytes: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length) + "     get BNB: " + getByte);
             string path = $"servers/{guildUser.Guild.Id}/{guildUser.Id}";
             JObject user = JObject.Parse(File.ReadAllText(path));
             ulong money = (ulong)user["money"] + (ulong)getByte;
@@ -274,12 +281,14 @@ namespace bot
             setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
             server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
             Directory.CreateDirectory("servers/" + guild.Id.ToString()); //servers/서버 ID가 이름인 디렉터리 생성
-            await guild.Owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
+            // Console.WriteLine(guild.OwnerId);
+            SocketGuildUser owner = guild.GetUser(guild.OwnerId);
+            await owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
             foreach (SocketGuildUser user in guild.Users) //유저 추가
             {
                 if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
             }
-            await guild.Owner.SendMessageAsync("초기 설정을 시작합니다.");
+            await owner.SendMessageAsync("초기 설정을 시작합니다.");
 
             server[guild.OwnerId].addServer(guild, guild.Owner);
         }
@@ -329,6 +338,7 @@ namespace bot
             {
                 array.Add($"{moneyString[i * 4 + start]}{moneyString[i * 4 + 1 + start]}{moneyString[i * 4 + 2 + start]}{moneyString[i * 4 + 3 + start]}");
             }
+            foreach (var a in array) Console.WriteLine(a);
             string unitString = "만억조경";
             temp = "";
             for (int i = 0; i < array.Count; i++) //단위 붙이기
@@ -337,6 +347,7 @@ namespace bot
                 {
                     continue;
                 }
+                if (array[i] == "") continue;
                 temp += (int.Parse(array[i]).ToString());
                 if (i != array.Count - 1) 
                 {
@@ -481,16 +492,23 @@ namespace bot
             client.Encoding = System.Text.Encoding.UTF8;
             while(true)
             {
-                Thread.Sleep(10000);
-                client.Headers.Add("user-agent", "botnewbot");
-                string download = client.DownloadString("https://api.github.com/repos/csnewcs/botnewbot/tags");
-                if (string.IsNullOrEmpty(download)) continue;
-                JArray tags = JArray.Parse(download);
-                if (tags.Count > version)
+                try
                 {
-                    Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
-                    sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
-                    break;
+                    Thread.Sleep(1000 * 60 * 60); //1시간 기다리기
+                    client.Headers.Add("user-agent", "botnewbot");
+                    string download = client.DownloadString("https://api.github.com/repos/csnewcs/botnewbot/tags");
+                    if (string.IsNullOrEmpty(download)) continue;
+                    JArray tags = JArray.Parse(download);
+                    if (tags.Count > version)
+                    {
+                        Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
+                        sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
+                        break;
+                    }
+                }
+                catch
+                {
+                    Thread.Sleep(1000 * 60 * 60 * 6); //6시간 기다리기
                 }
             }
         }

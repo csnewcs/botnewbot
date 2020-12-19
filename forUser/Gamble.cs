@@ -21,7 +21,7 @@ namespace bot
             EmbedBuilder build = new EmbedBuilder()
             .WithTitle("도박 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
-            .AddField("제비뽑기", "1번 ~ 9번 제비를 뽑아 건 돈의 0% ~ 360%를 돌려받습니다.\n(사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
+            .AddField("제비뽑기", "1번 ~ 9번 제비를 뽑아 건 돈의 0% ~ 220%를 돌려받습니다.\n(사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
             .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다.\n나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다.\n(사용법: $도박 슬롯머신 [걸 돈])")
             .AddField("슬롯머신(연속)", "슬롯머신과 같습니다. 단 연속으로(100번까지) 돌립니다.\n결과 중 일부는 DM으로 전송됩니다.\n(사용법: $도박 슬롯머신 [(판당)걸 돈] [돌릴 수(0이면 일반 슬롯머신으로 간주)])");
             await Context.User.SendMessageAsync("", embed:build.Build());
@@ -30,39 +30,45 @@ namespace bot
         [Command("제비뽑기")]
         public async Task draw(ulong money, ulong select) //제비뽑기
         {
-            if (select < 1 || select > 9)
+            try
             {
-                await ReplyAsync("제비는 1~9번까지 있습니다.");
-                return;
+
+                await ReplyAsync($"{money} / {select}");
+                if (select < 1 || select > 9)
+                {
+                    await ReplyAsync("제비는 1~9번까지 있습니다.");
+                    return;
+                }
+                if (money % 100 != 0 || money == 0)
+                {
+                    await ReplyAsync("100BNB 단위로만 도박이 가능합니다.");
+                    return;
+                }
+                
+                if (minusMoney(Context.User as SocketGuildUser, money))
+                {
+                    await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
+                    return;
+                }
+                int[] multi = new int[] {0, 5, 10, 20, 40, 80, 120, 175, 220};
+                Random rd = new Random();
+                int temp = 0;
+                foreach (int i in multi) //그냥 랜덤으로 한번에 끝내려다가 그래도 제비뽑기니까 섞음
+                {
+                    int rd1 = rd.Next(0, 9);
+                    int rd2 = rd.Next(0, 9);
+                    temp = multi[rd1];
+                    multi[rd1] = multi[rd2];
+                    multi[rd2] = temp;
+                }
+                ulong result = money / 100 * (ulong)multi[select - 1];
+                plusMoney(Context.User as SocketGuildUser, result);
+                EmbedBuilder builder = new EmbedBuilder()
+                .AddField(Program.getNickname(Context.User as SocketGuildUser) + "님의 제비뽑기 결과", $"× {multi[select - 1]}%를 뽑으셔서 {Program.unit(money)}BNB가 {Program.unit(result)}BNB가 되었습니다.")
+                .WithColor(rd.Next(0, 255), rd.Next(0, 255), rd.Next(0, 255));
+                await ReplyAsync("", embed:builder.Build());
             }
-            if (money % 100 != 0 || money == 0)
-            {
-                await ReplyAsync("100BNB 단위로만 도박이 가능합니다.");
-                return;
-            }
-            
-            if (minusMoney(Context.User as SocketGuildUser, money))
-            {
-                await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
-                return;
-            }
-            int[] multi = new int[] {0, 5, 10, 20, 40, 80, 120, 200, 360};
-            Random rd = new Random();
-            int temp = 0;
-            foreach (int i in multi) //그냥 랜덤으로 한번에 끝내려다가 그래도 제비뽑기니까 섞음
-            {
-                int rd1 = rd.Next(0, 9);
-                int rd2 = rd.Next(0, 9);
-                temp = multi[rd1];
-                multi[rd1] = multi[rd2];
-                multi[rd2] = temp;
-            }
-            ulong result = money / 100 * (ulong)multi[select - 1];
-            plusMoney(Context.User as SocketGuildUser, result);
-            EmbedBuilder builder = new EmbedBuilder()
-            .AddField(Program.getNickname(Context.User as SocketGuildUser) + "님의 제비뽑기 결과", $"× {multi[select - 1]}%를 뽑으셔서 {Program.unit(money)}BNB가 {Program.unit(result)}BNB가 되었습니다.")
-            .WithColor(rd.Next(0, 255), rd.Next(0, 255), rd.Next(0, 255));
-            await ReplyAsync("", embed:builder.Build());
+            catch (Exception e) {await ReplyAsync(e.ToString());}
         }
         [Command("슬롯머신")]
         public async Task slot(ulong money, uint loop = 0) //슬롯머신
