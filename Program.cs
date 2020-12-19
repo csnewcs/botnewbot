@@ -159,11 +159,6 @@ namespace bot
                     SocketCommandContext context = new SocketCommandContext(client, message);
 
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
-                    if (result.Error.HasValue)
-                    {
-                        Console.WriteLine($"{result.Error}: {result.ErrorReason}");
-                        await msg.Channel.SendMessageAsync($"{result.Error}: {result.Error.Value}");
-                    }
                 }
                 else
                 {
@@ -192,8 +187,7 @@ namespace bot
         {
             Random random = new Random();
             int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) / (random.Next(3, 16)) + 1;
-            Console.WriteLine("바이트 수: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length));
-            Console.WriteLine("실제 얻은거: " + getByte);
+            Console.WriteLine("bytes: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length) + "     get BNB: " + getByte);
             string path = $"servers/{guildUser.Guild.Id}/{guildUser.Id}";
             JObject user = JObject.Parse(File.ReadAllText(path));
             ulong money = (ulong)user["money"] + (ulong)getByte;
@@ -344,6 +338,7 @@ namespace bot
             {
                 array.Add($"{moneyString[i * 4 + start]}{moneyString[i * 4 + 1 + start]}{moneyString[i * 4 + 2 + start]}{moneyString[i * 4 + 3 + start]}");
             }
+            foreach (var a in array) Console.WriteLine(a);
             string unitString = "만억조경";
             temp = "";
             for (int i = 0; i < array.Count; i++) //단위 붙이기
@@ -352,6 +347,7 @@ namespace bot
                 {
                     continue;
                 }
+                if (array[i] == "") continue;
                 temp += (int.Parse(array[i]).ToString());
                 if (i != array.Count - 1) 
                 {
