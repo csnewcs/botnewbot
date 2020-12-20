@@ -17,7 +17,7 @@ namespace bot
     public class Rank : ModuleBase<SocketCommandContext>
     {
         JObject json = new JObject();
-        SortedDictionary<int, KeyValuePair<string, JToken>> allRank = new SortedDictionary<int, KeyValuePair<string, JToken>>();
+        KeyValuePair<ulong, ulong>[] people;
 
         [Command]
         public async Task help()
@@ -37,15 +37,11 @@ namespace bot
         {
             makeJson(Context.Guild.Id);
             sort();
-            KeyValuePair<string, JToken> find = new KeyValuePair<string, JToken>(Context.User.Id.ToString(), json["money"]);
-            int rank = 0;
-            foreach (var a in allRank)
+            int rank = 1;
+            foreach (var a in people)
             {
-                if (a.Value.Key == find.Key)
-                {
-                    rank = a.Key;
-                    break;
-                }
+                if (Context.User.Id == a.Key) break;
+                rank++;
             }
             Random rd = new Random();
             string nickName = Program.getNickname(Context.User as SocketGuildUser);
@@ -66,12 +62,14 @@ namespace bot
             .WithTitle($"{Context.Guild.Name}서버의 순위")
             .WithColor(new Color(color));
             int count = 0;
+            int index = 0;
             string users = "";
-            foreach (var a in allRank)
+            foreach (var a in people)
             {
-                string nickName = Program.getNickname(Context.Guild.GetUser(ulong.Parse(a.Value.Key)));
-                users += a.Key + "등" + "\n" +  nickName + ": (" + Program.unit((ulong)a.Value.Value["money"]) + " BNB)\n\n";
-                if (a.Key % 20 == 0 && a.Key != allRank.Count)
+                string nickName = Program.getNickname(Context.Guild.GetUser(a.Key)); //해당 사람의 닉네임 얻기
+                users += $"{count+1}등\n{nickName}: ({Program.unit(a.Value)} BNB)\n\n"; 
+
+                if (index % 20 == 0 && index != users.Length - 1)
                 {
                     builder.AddField($"순위({count})", users);
                     users = "";
@@ -84,6 +82,7 @@ namespace bot
                         .WithColor(new Color(color));
                     }
                 }
+
             }
             if (users != "") builder.AddField($"순위({count})", users);
             await ReplyAsync("DM으로 결과를 전송했습니다.");
@@ -99,16 +98,16 @@ namespace bot
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle($"{Context.Guild.Name}서버의 순위")
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-            for (int i = 1; i <= 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 try
                 {
-                    string nickName = Program.getNickname(Context.Guild.GetUser(ulong.Parse(allRank[i].Key)));
-                    builder.AddField(i + "등", nickName + ": (" + Program.unit((ulong)allRank[i].Value["money"]) + " BNB)");
+                    string nickName = Program.getNickname(Context.Guild.GetUser(people[i].Key));
+                    builder.AddField($"{i + 1}등", $"{nickName}: {Program.unit(people[i].Value)} BNB");
                 }
                 catch
                 {
-                    builder.AddField(i + "등", "사람이... 읎어요!");
+                    builder.AddField($"{i+1}등", "사람이... 읎어요!");
                 }
             }
             await ReplyAsync("", embed:builder.Build());
@@ -123,35 +122,31 @@ namespace bot
                 if (fileName.Name != $"config.json")
                 {
                     string temp = File.ReadAllText($"{dirPath}/{fileName.Name}");
-                    json.Add(fileName.Name, JObject.Parse(temp));
+                    json.Add(fileName.Name, JObject.Parse(temp)); //ID: {"money":1234}
                 }
             }
         }
         private void sort()
         {
-            foreach (var person in json)
+            people =  new KeyValuePair<ulong, ulong>[json.Count];//rank-1: {ID:MONEY}
+            int i = 0;
+            foreach(var person in json)
             {
-                ulong first = (ulong)person.Value["money"];
-                int rank = 1;
-                foreach (var file in json)
+                people[i] = new KeyValuePair<ulong, ulong>(ulong.Parse(person.Key), (ulong)person.Value["money"]);
+            }
+            for (i = 1; i < people.Length; i++) //삽입 정렬
+            {
+                for (int j = 0; j < i; j++)
                 {
-                    ulong money = (ulong)file.Value["money"];
-                    if (money > first)
-                    {
-                        rank++;
-                        first = money;
-                    }
-                }
-                while(true)
-                {
-                    try
-                    {
-                        allRank.Add(rank, person);
-                        break;
-                    }
-                    catch {rank++;}
+                    if (people[i].Value < people[j].Value) swap(i, j);
                 }
             }
+        }
+        private void swap(int a, int b)
+        {
+            KeyValuePair<ulong, ulong> temp = people[a];
+            people[a] = people[b];
+            people[b] = temp;
         }
     }
 }
