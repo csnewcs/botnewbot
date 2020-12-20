@@ -135,20 +135,26 @@ namespace bot
                     var guildUser = msg.Author as SocketGuildUser;
 
                     DirectoryInfo dtinfo = new DirectoryInfo($"servers/{guild.Id}");
-                    if (!dtinfo.Exists)
+                    FileInfo finfo = new FileInfo($"servers/{guild.Id}/{guildUser.Id}");
+                    if (!finfo.Exists)
                     {
-                        dtinfo.Create();
-                        File.WriteAllText(dtinfo.FullName + "/config.json", @"{
-                            ""editMessage"": 0,
-                            ""deleteMessage"": 0,
-                            ""noticeBot"": 0
-                        }");
-                        foreach (var a in guild.Users)
+                        if (!dtinfo.Exists)
                         {
-                            File.WriteAllText($"servers/{guild.Id}/{a.Id}", @"{
-                            ""money"": 100
+                            dtinfo.Create();
+                            File.WriteAllText(dtinfo.FullName + "/config.json", @"{
+                                ""editMessage"": 0,
+                                ""deleteMessage"": 0,
+                                ""noticeBot"": 0
                             }");
+                            foreach (var a in guild.Users)
+                            {
+                                if (a.IsBot) continue;
+                                File.WriteAllText($"servers/{guild.Id}/{a.Id}", @"{
+                                ""money"": 100
+                                }");
+                            }
                         }
+                        else File.WriteAllText(finfo.FullName, @"{""editMessage"": 0,""deleteMessage"": 0,""noticeBot"": 0}");
                     }
 
                     addMoney(guildUser, msg);
