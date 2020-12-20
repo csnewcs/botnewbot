@@ -13,11 +13,6 @@ using Discord.WebSocket;
 
 using Newtonsoft.Json.Linq;
 
-using Lavalink4NET;
-using Lavalink4NET.Logging;
-using Lavalink4NET.DiscordNet;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace bot
 {
@@ -29,7 +24,7 @@ namespace bot
         DiscordSocketClient client;
         CommandService command;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
-        string prefix = "";
+        static string prefix = "";
 
         private static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
 
@@ -274,6 +269,12 @@ namespace bot
         Task log(LogMessage log) //로그 출력
         {
             Console.WriteLine(log);
+            using (FileStream fs = new FileStream("log.txt", FileMode.OpenOrCreate))
+            {
+                StreamWriter sw = new StreamWriter(fs);
+                sw.WriteLine(log.ToString());
+                sw.Close();
+            }
             return Task.CompletedTask;
         }
         async Task joinedGuild(SocketGuild guild) //서버에 처음 들어갔을 때
@@ -338,7 +339,6 @@ namespace bot
             {
                 array.Add($"{moneyString[i * 4 + start]}{moneyString[i * 4 + 1 + start]}{moneyString[i * 4 + 2 + start]}{moneyString[i * 4 + 3 + start]}");
             }
-            foreach (var a in array) Console.WriteLine(a);
             string unitString = "만억조경";
             temp = "";
             for (int i = 0; i < array.Count; i++) //단위 붙이기
@@ -479,6 +479,7 @@ namespace bot
         }
         public enum Permission //며칠 전에 이거 책에서 봐서 다행이네
         {
+            DeleteMessage,
             BanUser,
             KickUser,
             MuteUser,
