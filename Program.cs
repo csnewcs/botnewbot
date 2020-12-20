@@ -130,11 +130,26 @@ namespace bot
                 {
                     SocketUserMessage message = msg as SocketUserMessage;
                     if (message == null) return;
-
-
                     var channel = msg.Channel as SocketGuildChannel;
                     var guild = channel.Guild;
                     var guildUser = msg.Author as SocketGuildUser;
+
+                    DirectoryInfo dtinfo = new DirectoryInfo($"servers/{guild.Id}");
+                    if (!dtinfo.Exists)
+                    {
+                        dtinfo.Create();
+                        File.WriteAllText(dtinfo.FullName + "/config.json", @"{
+                            ""editMessage"": 0,
+                            ""deleteMessage"": 0,
+                            ""noticeBot"": 0
+                        }");
+                        foreach (var a in guild.Users)
+                        {
+                            File.WriteAllText($"servers/{guild.Id}/{a.Id}", @"{
+                            ""money"": 100
+                            }");
+                        }
+                    }
 
                     addMoney(guildUser, msg);
 
