@@ -291,6 +291,11 @@ namespace bot
             {
                 if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
             }
+            File.WriteAllText("servers/" + guild.Id.ToString() + "/config.json", @"{
+                ""editMessage"": 0,
+                ""deleteMessage"": 0,
+                ""noticeBot"": 0
+            }");
             await guild.DefaultChannel.SendMessageAsync($"안녕하세요? botnewbot입니다. 이 봇의 접두사는 '{prefix}' 이며, '{prefix}명령어' 로 사용 가능한 명령어를 확인할 수 있습니다.\n서버의 관리자들은 '{prefix}명령어 관리자' 로 서버 관리에 관한 명령어를 확인할 수 있습니다.");
             // await owner.SendMessageAsync("초기 설정을 시작합니다.");
 

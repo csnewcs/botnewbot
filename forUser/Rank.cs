@@ -62,19 +62,20 @@ namespace bot
             .WithTitle($"{Context.Guild.Name}서버의 순위")
             .WithColor(new Color(color));
             int count = 0;
-            int index = 0;
+            int fields = 1;
             string users = "";
             foreach (var a in people)
             {
                 string nickName = Program.getNickname(Context.Guild.GetUser(a.Key)); //해당 사람의 닉네임 얻기
                 users += $"{count+1}등\n{nickName}: ({Program.unit(a.Value)} BNB)\n\n"; 
+                count++;
 
-                if (index % 20 == 0 && index != users.Length - 1)
+                if (count % 20 == 0 && count != users.Length - 1)
                 {
-                    builder.AddField($"순위({count})", users);
+                    builder.AddField($"순위({fields})", users);
                     users = "";
-                    count++;
-                    if (count % 20 == 0)
+                    fields++;
+                    if (fields % 5 == 0)
                     {
                         await Context.User.SendMessageAsync("", embed:builder.Build());
                         builder = new EmbedBuilder()
@@ -122,7 +123,8 @@ namespace bot
                 if (fileName.Name != $"config.json")
                 {
                     string temp = File.ReadAllText($"{dirPath}/{fileName.Name}");
-                    json.Add(fileName.Name, JObject.Parse(temp)); //ID: {"money":1234}
+                    JToken token = JToken.Parse(temp);
+                    json.Add(fileName.Name, token); //ID: {"money":1234}
                 }
             }
         }
@@ -133,17 +135,20 @@ namespace bot
             foreach(var person in json)
             {
                 people[i] = new KeyValuePair<ulong, ulong>(ulong.Parse(person.Key), (ulong)person.Value["money"]);
+                i++;
             }
             for (i = 1; i < people.Length; i++) //삽입 정렬
             {
-                for (int j = 0; j < i; j++)
+                // Console.WriteLine(people[i]);
+                for (int j = 0; j  < i; j++)
                 {
-                    if (people[i].Value < people[j].Value) swap(i, j);
+                    if (people[i].Value > people[j].Value) swap(i, j);
                 }
             }
         }
         private void swap(int a, int b)
         {
+            // Console.WriteLine(people[a] + "<>" + people[b]);
             KeyValuePair<ulong, ulong> temp = people[a];
             people[a] = people[b];
             people[b] = temp;
