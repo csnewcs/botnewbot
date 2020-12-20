@@ -13,11 +13,6 @@ using Discord.WebSocket;
 
 using Newtonsoft.Json.Linq;
 
-using Lavalink4NET;
-using Lavalink4NET.Logging;
-using Lavalink4NET.DiscordNet;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace bot
 {
@@ -29,7 +24,7 @@ namespace bot
         DiscordSocketClient client;
         CommandService command;
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
-        string prefix = "";
+        static string prefix = "";
 
         private static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
 
@@ -50,11 +45,13 @@ namespace bot
             client.JoinedGuild += joinedGuild;
             client.LeftGuild += leftGuild;
             client.UserJoined += personJoinedGuild;
+            
 
             string[] botConfig = new string[0];
             try
             {
                 botConfig = File.ReadAllLines("config.txt"); //봇의 정보 가져오기
+                prefix = botConfig[1];
             }
             catch
             {
@@ -70,6 +67,7 @@ namespace bot
             }
             await client.LoginAsync(TokenType.Bot, botConfig[0]); //봇 로그인과 시작
             await client.StartAsync();
+            await client.SetGameAsync($"'{prefix}명령어'로 명령어 확인!");
             
             prefix = botConfig[1];
             Thread thread = new Thread(minus);
@@ -273,24 +271,35 @@ namespace bot
         }
         Task log(LogMessage log) //로그 출력
         {
+            FileStream fs = new FileStream("log.txt", FileMode.OpenOrCreate);
+            StreamWriter sw = new StreamWriter(fs);
             Console.WriteLine(log);
+            sw.WriteLine(log);
+            sw.Close();
+            fs.Close();
             return Task.CompletedTask;
         }
         async Task joinedGuild(SocketGuild guild) //서버에 처음 들어갔을 때
         {
-            setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
-            server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
+            // setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
+            // server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
             Directory.CreateDirectory("servers/" + guild.Id.ToString()); //servers/서버 ID가 이름인 디렉터리 생성
             // Console.WriteLine(guild.OwnerId);
-            SocketGuildUser owner = guild.GetUser(guild.OwnerId);
-            await owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
+            // SocketGuildUser owner = guild.GetUser(guild.OwnerId);
+            // await owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
             foreach (SocketGuildUser user in guild.Users) //유저 추가
             {
                 if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
             }
-            await owner.SendMessageAsync("초기 설정을 시작합니다.");
+            File.WriteAllText("servers/" + guild.Id.ToString() + "/config.json", @"{
+                ""editMessage"": 0,
+                ""deleteMessage"": 0,
+                ""noticeBot"": 0
+            }");
+            await guild.DefaultChannel.SendMessageAsync($"안녕하세요? botnewbot입니다. 이 봇의 접두사는 '{prefix}' 이며, '{prefix}명령어' 로 사용 가능한 명령어를 확인할 수 있습니다.\n서버의 관리자들은 '{prefix}명령어 관리자' 로 서버 관리에 관한 명령어를 확인할 수 있습니다.");
+            // await owner.SendMessageAsync("초기 설정을 시작합니다.");
 
-            server[guild.OwnerId].addServer(guild, guild.Owner);
+            // server[guild.OwnerId].addServer(guild, guild.Owner);
         }
         Task personJoinedGuild(SocketGuildUser user)
         {
@@ -338,7 +347,6 @@ namespace bot
             {
                 array.Add($"{moneyString[i * 4 + start]}{moneyString[i * 4 + 1 + start]}{moneyString[i * 4 + 2 + start]}{moneyString[i * 4 + 3 + start]}");
             }
-            foreach (var a in array) Console.WriteLine(a);
             string unitString = "만억조경";
             temp = "";
             for (int i = 0; i < array.Count; i++) //단위 붙이기
@@ -479,6 +487,7 @@ namespace bot
         }
         public enum Permission //며칠 전에 이거 책에서 봐서 다행이네
         {
+            DeleteMessage,
             BanUser,
             KickUser,
             MuteUser,
