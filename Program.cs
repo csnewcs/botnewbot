@@ -13,6 +13,9 @@ using Discord.WebSocket;
 
 using Newtonsoft.Json.Linq;
 
+using Victoria;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace bot
 {
@@ -23,6 +26,9 @@ namespace bot
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         DiscordSocketClient client;
         CommandService command;
+        LavaNode lavaNode;
+        ServiceProvider _services;
+
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
         static string prefix = "";
 
@@ -30,11 +36,28 @@ namespace bot
 
         public async Task mainAsync() //기본 세팅
         {
-            Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
             DiscordSocketConfig config = new DiscordSocketConfig{MessageCacheSize = 100};
             CommandServiceConfig serviceConfig = new CommandServiceConfig{};
-            command = new CommandService(serviceConfig);
-            client = new DiscordSocketClient(config);
+            
+            _services = new ServiceCollection()
+                .AddSingleton<DiscordSocketClient>(new DiscordSocketClient(config))
+                .AddSingleton<CommandService>(new CommandService(serviceConfig))
+		        // Other services DiscordSocketClient, CommandService, etc
+                .AddLavaNode(x => {
+                    x.SelfDeaf = false;
+                }).BuildServiceProvider();
+            client = _services.GetRequiredService<DiscordSocketClient>();
+            command = _services.GetRequiredService<CommandService>();
+            lavaNode = _services.GetRequiredService<LavaNode>();
+            lavaNode.OnLog += log;
+            
+
+            Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
+
+
+
+            // command = new CommandService(serviceConfig);
+            // client = new DiscordSocketClient(config);
             //----------이벤트 설정-----------\\
             client.Log += log; 
             client.Ready += ready;
@@ -78,7 +101,7 @@ namespace bot
             mkdt.Start();
             version.Start();
             
-            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: null);
+            await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: _services);
 
             
             //--------공지 날리기---------\\
@@ -177,7 +200,8 @@ namespace bot
                     if (split[0] == prefix + "초기설정") await reset(guildUser);
                     SocketCommandContext context = new SocketCommandContext(client, message);
 
-                    var result = await command.ExecuteAsync(context: context, argPos: argPos, services: null);
+                    var result = await command.ExecuteAsync(context: context, argPos: argPos, services: _services);
+                    if (!result.IsSuccess) await msg.Channel.SendMessageAsync(result.Error.ToString());
                 }
                 else
                 {
@@ -339,8 +363,14 @@ namespace bot
         }
         Task ready()
         {
+            if (!lavaNode.IsConnected) 
+            {
+                lavaNode.ConnectAsync();
+            }
             return Task.CompletedTask;
         }
+        
+        
         public static string getNickname(SocketGuildUser guild)
         {
             if (string.IsNullOrEmpty(guild.Nickname))
