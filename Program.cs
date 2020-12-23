@@ -229,7 +229,7 @@ namespace bot
         void addMoney(SocketGuildUser guildUser, SocketMessage msg)
         {
             Random random = new Random();
-            int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) / (random.Next(3, 16)) + 1;
+            int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) * (random.Next(3, 16)) + 1;
             Console.WriteLine("bytes: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length) + "     get BNB: " + getByte);
             string path = $"servers/{guildUser.Guild.Id}/{guildUser.Id}";
             JObject user = JObject.Parse(File.ReadAllText(path));

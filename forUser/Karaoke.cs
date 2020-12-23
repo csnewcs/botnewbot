@@ -16,6 +16,7 @@ namespace bot
     public class Karaoke : ModuleBase<SocketCommandContext>
     {
         private readonly LavaNode _lavaNode;
+        Dictionary<ulong, List<string>> queue = new Dictionary<ulong, List<string>>(); //대기열 [음성채널 ID, 음악 링크들]
 
         public Karaoke(LavaNode lavaNode)
         {
@@ -53,12 +54,18 @@ namespace bot
             try 
             {
                 await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
+                queue.Add(voiceState.VoiceChannel.Id, new List<string>());
                 await ReplyAsync($"{voiceState.VoiceChannel.Name}에 들어가는데 성공했습니다!");
             }
             catch (Exception exception) 
             {
                 await ReplyAsync( "에러\n```"+ exception.Message + "```");
             }
+        }
+        [Command("등록")]
+        public async Task addSong(string url)
+        {
+            await ReplyAsync("준비 중인 기능입니다.");
         }
     }
 }
