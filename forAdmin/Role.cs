@@ -31,60 +31,68 @@ namespace bot
         [Command("부여", true)]
         public async Task giveRole()
         {
-            SocketGuildUser user = Context.User as SocketGuildUser;
-            SocketMessage message = Context.Message;
-            if (!(Program.isOver(user, message.MentionedRoles) && Program.hasPermission(user, Program.Permission.ManageRole)))
+            try
             {
-                return;
-            }
-            var mentionedUsers = message.MentionedUsers;
-            var mentionedRoles = message.MentionedRoles;
-            if (mentionedUsers.Count == 0 || mentionedRoles.Count == 0)
-            {
-                await ReplyAsync("유저와 역할을 멘션했는지 확인하세요");
-                return;
-            } 
-            foreach (SocketGuildUser a in mentionedUsers)
-            {
-                await a.AddRolesAsync(mentionedRoles);
-            }
-            if (mentionedUsers.Count == 1)
-            {
-                if (mentionedRoles.Count == 1)
+                SocketGuildUser user = Context.User as SocketGuildUser;
+                SocketMessage message = Context.Message;
+                if (!(Program.isOver(user, message.MentionedRoles) && Program.hasPermission(user, Program.Permission.ManageRole)))
                 {
-                    Random rd = new Random();
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                    .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
-                    await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
+                    await ReplyAsync("봇의 권한이 없거나 명령어를 사용하는 사람의 권한이 없어요.");
+                    return;
+                }
+                var mentionedUsers = message.MentionedUsers;
+                var mentionedRoles = message.MentionedRoles;
+                if (mentionedUsers.Count == 0 || mentionedRoles.Count == 0)
+                {
+                    await ReplyAsync("유저와 역할을 멘션했는지 확인하세요");
+                    return;
+                } 
+                foreach (SocketGuildUser a in mentionedUsers)
+                {
+                    await a.AddRolesAsync(mentionedRoles);
+                }
+                if (mentionedUsers.Count == 1)
+                {
+                    if (mentionedRoles.Count == 1)
+                    {
+                        Random rd = new Random();
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
+                        .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
+                        await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
+                    }
+                    else
+                    {
+                        Random rd = new Random();
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
+                        .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
+                        await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
+                    }
                 }
                 else
                 {
-                    Random rd = new Random();
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                    .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
-                    await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
+                    if (mentionedRoles.Count == 1)
+                    {
+                        Random rd = new Random();
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
+                        .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
+                        await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
+                    }
+                    else
+                    {
+                        Random rd = new Random();
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
+                        .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
+                        await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
+                    }
                 }
             }
-            else
+            catch (Exception e)
             {
-                if (mentionedRoles.Count == 1)
-                {
-                    Random rd = new Random();
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                    .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}'역할 부여가 완료되었습니다.");
-                    await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
-                }
-                else
-                {
-                    Random rd = new Random();
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                    .WithColor(rd.Next(0, 256),rd.Next(0, 256),rd.Next(0, 256))
-                    .AddField("역할 부여 완료", $"{Program.getNickname(mentionedUsers.First() as SocketGuildUser)}님 외 {mentionedUsers.Count - 1} 분들께 '{mentionedRoles.First()}' 외 {mentionedRoles.Count - 1}개의 역할 부여가 완료되었습니다.");
-                    await message.Channel.SendMessageAsync("", embed:embedBuilder.Build());
-                }
+                await ReplyAsync("```" + e.ToString() + "```");
             }
         }
         [Command("강탈", true)]
