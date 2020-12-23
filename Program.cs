@@ -480,10 +480,6 @@ namespace bot
             {
                 return true;
             }
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
             IReadOnlyCollection<SocketRole> one = first.Roles;
             int oneTop = 0;
             int twoTop = 0;
@@ -503,38 +499,34 @@ namespace bot
             {
                 return true;
             }
-            bool[] permissions = new bool[5];
+            bool has = false;
             foreach (var a in user.Roles) //더 빠른 알고리즘이 생각났지만 코드가 너무 더러워 질 것 같ㄷ...
             {
-                bool change = false;
-                if (!permissions[0])
+                if (a.Permissions.Administrator)
                 {
-                    permissions[0] = a.Permissions.BanMembers;
-                    change = true;
+                    has = true;
                 }
-                if (!permissions[1])
-                {
-                    permissions[1] = a.Permissions.BanMembers;
-                    change = true;
-                }
-                if (!permissions[2])
-                {
-                    permissions[2] = a.Permissions.BanMembers;
-                    change = true;
-                }
-                if (!permissions[3])
-                {
-                    permissions[3] = a.Permissions.BanMembers;
-                    change = true;
-                }
-                if (!permissions[4])
-                {
-                    permissions[4] = a.Permissions.BanMembers;
-                    change = true;
-                }
-                if (!change) break;
+               switch (p)
+               {
+                    case Permission.BanUser:
+                        if (a.Permissions.BanMembers) has = true;
+                        break;
+                    case Permission.KickUser:
+                        if (a.Permissions.KickMembers) has = true;
+                        break;
+                    case Permission.DeleteMessage:
+                        if (a.Permissions.ManageMessages) has = true;
+                        break;
+                    case Permission.ManageRole:
+                        if (a.Permissions.ManageRoles) has = true;
+                        break;
+                    case Permission.MuteUser:
+                        if (a.Permissions.MuteMembers) has = true;
+                        break;
+               }
+               if (has) break;
             }
-            return permissions[(int)p];
+            return has;
         }
         public enum Permission //며칠 전에 이거 책에서 봐서 다행이네
         {
