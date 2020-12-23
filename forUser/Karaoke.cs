@@ -1,165 +1,64 @@
-// using System;
-// using System.Threading.Tasks;
-// using System.Collections;
-// using System.Collections.Generic;
-// using System.Collections.Concurrent;
-// using Discord;
-// using Discord.Commands;
-// using Discord.WebSocket;
-// using Lavalink4NET;
-// using Lavalink4NET.Rest;
-// using Lavalink4NET.Player;
-// using Lavalink4NET.DiscordNet;
-// using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading.Tasks;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Victoria;
+using Microsoft.Extensions.DependencyInjection;
 
 
-// namespace bot
-// {
-//     [Group("노래방")]
-//     public class Karaoke : ModuleBase<SocketCommandContext>
-//     {
-//         IAudioService audioService;
-        
-//         [Command]
-//         public async Task help()
-//         {
-//             EmbedBuilder builder = new EmbedBuilder()
-//             .WithTitle("노래방 명령어 도움말")
-//             .AddField("등록 [검색어나 URL]", "노래를 재생목록에 추가합니다. Youtube에서 검색합니다.")
-//             .AddField("재생", "등록된 노래들을 재생합니다.")
-//             .AddField("정지", "재생중인 노래를 일지정지합니다.")
-//             .AddField("다음", "다음 노래로 넘깁니다.")
-//             .AddField("초기화", "재생목록의 모든 곡을 삭제합니다.")
-//             .AddField("종료", "노래방을 종료합니다. 재생목록이 사라집니다.")
-//             .WithColor(new Color(0xbe33ff));
-//             await Context.User.SendMessageAsync("", embed:builder.Build());
-//             await ReplyAsync("DM으로 결과를 전송했습니다.");
-//         }
+namespace bot
+{
+    [Group("노래방")]
+    public class Karaoke : ModuleBase<SocketCommandContext>
+    {
+        private readonly LavaNode _lavaNode;
 
-//         [Command("종료")]
-//         public async Task disconnect()
-//         {
-//             var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
-            
-//             if (player == null)
-//             {
-//                 return;
-//             }
-//             await player.StopAsync(true);
-//             await ReplyAsync("종료됨");
-//         }
-        
-//         [Command("등록")]
-//         public async Task play([Remainder]string urlOrSearch)
-//         {
-//             Console.WriteLine(Context.Guild.Id);   
-//             try
-//             {
+        public Karaoke(LavaNode lavaNode)
+        {
+            _lavaNode = lavaNode;
+        }
 
-//                 var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
-//                 if (player == null)
-//                 {
-//                     return;
-//                 }
-                
-//                 var track = await audioService.GetTrackAsync(urlOrSearch, SearchMode.YouTube);
-//                 if (track == null)
-//                 {
-//                     await ReplyAsync("결과가 없습니다. URL이나 검색어를 바꿔주세요");
-//                     return;
-//                 }
-//                 var position = await player.PlayAsync(track, enqueue: true);
-//                 Random rd = new Random();
-//                 if (position == 0)
-//                 {
-//                     EmbedBuilder builder = new EmbedBuilder()
-//                     .AddField("노래 재생 시작", Program.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + " 재생 시작")
-//                     .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-//                 }
-//                 else
-//                 {
-//                     EmbedBuilder builder = new EmbedBuilder()
-//                     .AddField("노래를 재생목록에 추가", Program.getNickname(Context.User as SocketGuildUser) + "님에 의해 " + track.Title + "을 재생 목록에 추가")
-//                     .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)));
-//                 }
-//             }
-//             catch (Exception e)
-//             {
-//                 Console.WriteLine(e);
-//             }
-            
-//         }
-        
-//         [Command("정지")]
-//         public async Task stop()
-//         {
-//             var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
-//             await player.PauseAsync();
-//             await ReplyAsync("일시정지 완료");
-//         }
+        [Command]
+        public async Task help()
+        {
+            EmbedBuilder builder = new EmbedBuilder()
+            .WithTitle("노래방 명령어 도움말")
+            .AddField("들어와", "사용자가 있는 음성채팅방에 봇이 들어갑니다. 음악을 등록하기 전에 해야합니다.")
+            .WithColor(new Color(0xbe33ff));
+            await Context.User.SendMessageAsync("", embed:builder.Build());
+            await ReplyAsync("DM으로 결과를 전송했습니다.");
+        }
 
-//         [Command("재생")]
-//         public async Task restart()
-//         {
-//             var player = await GetPlayerAsync(Context.Guild, Context.User.Id, Context.Client);
-//             await player.ReplayAsync();
-//             await ReplyAsync("재생 시작");
-//         }
-        
-//         private async Task startTrack(object sender, Lavalink4NET.Events.TrackStartedEventArgs track)
-//         {
-//             var channel = Channels.getChannel(track.Player.GuildId);
-//             await ReplyAsync(track.Player.CurrentTrack.Title + "재생 시작");
-//         }
+        [Command("들어와")]
+        public async Task JoinAsync() 
+        {
+            Console.WriteLine("명령어 인식");
+            if (_lavaNode.HasPlayer(Context.Guild)) 
+            {
+                await ReplyAsync("이미 다른 음성 채널에 들어가 있습니다.");
+                return;
+            }
 
-//         private async Task<VoteLavalinkPlayer> GetPlayerAsync(SocketGuild guild, ulong userId, DiscordSocketClient client, bool connectToVoiceChannel = true)
-//         {
-//             Console.WriteLine(guild.Id);
-//             VoteLavalinkPlayer player = null;
-            
-//             try
-//             {
-//                 player = audioService.GetPlayer<VoteLavalinkPlayer>(guild.Id);
-//             }
-//             catch
-//             {
-//                 var serviceProvider = new ServiceCollection()
-//                     .AddSingleton<DiscordSocketClient>()
-//                     .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
-//                     .AddSingleton<IAudioService, LavalinkNode>()
-//                     .AddSingleton(new LavalinkNodeOptions{
-//                         Password = "youshallnotpass",
-//                         DisconnectOnStop = false,
-//                         BufferSize = 1024 * 1024,
-//                         RestUri = "http://localhost:8080",
-//                         WebSocketUri = "ws://localhost:8080"
-//                     }).BuildServiceProvider();
-//                 audioService = serviceProvider.GetRequiredService<IAudioService>();
-//                 await audioService.InitializeAsync();
-//                 audioService.TrackStarted += startTrack;
-//                 player = audioService.GetPlayer<VoteLavalinkPlayer>(guild.Id);
-//             }
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null) 
+            {
+                await ReplyAsync("먼저 음성채팅방에 들어가 주세요.");
+                return;
+            }
 
-//             if (player != null && player.State != PlayerState.NotConnected && player.State != PlayerState.Destroyed)
-//             {
-//                 return player;
-//             }
-
-//             var user = guild.GetUser(Context.User.Id);
-//             Console.WriteLine(user.VoiceChannel.Id);
-//             return await audioService.JoinAsync<VoteLavalinkPlayer>(guild.Id, user.VoiceChannel.Id);
-//         }
-//         static class Channels
-//         {
-//             static Dictionary<ulong, SocketGuildChannel> dict = new Dictionary<ulong, SocketGuildChannel>();
-//             public static void addChannel(SocketGuildChannel ch)
-//             {
-//                 dict.Add(ch.Guild.Id, ch);
-//             }
-//             public static SocketGuildChannel getChannel(ulong guild)
-//             {
-//                 return dict[guild];
-//             }
-//         }
-//     }
-// }
+            try 
+            {
+                await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
+                await ReplyAsync($"{voiceState.VoiceChannel.Name}에 들어가는데 성공했습니다!");
+            }
+            catch (Exception exception) 
+            {
+                await ReplyAsync( "에러\n```"+ exception.Message + "```");
+            }
+        }
+    }
+}
