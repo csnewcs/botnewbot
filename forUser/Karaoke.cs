@@ -31,7 +31,7 @@ namespace bot
             .WithTitle("노래방 명령어 도움말")
             .AddField("들어와", "사용자가 있는 음성채팅방에 봇이 들어갑니다. 음악을 등록하기 전에 해야합니다.")
             .AddField("등록 (검색어|주소)", "유튜브에서 검색해 음악을 등록합니다. 검색어 대신 주소를 입력해 등록할 수도 있습니다.")
-            .AddField("볼륨 (0~100)", "음악의 볼륨을 설정합니다. 0%~100% 사이로 설정할 수 있습니다.")
+            // .AddField("볼륨 (0~100)", "음악의 볼륨을 설정합니다. 0%~100% 사이로 설정할 수 있습니다.")
             .AddField("나와", "들어가 있던 음성채팅방에서 나옵니다.")
             .WithColor(new Color(0xbe33ff));
             await Context.User.SendMessageAsync("", embed:builder.Build());
@@ -123,35 +123,35 @@ namespace bot
                 await ReplyAsync("", false, builder.Build());                     
             }
         }
-        [Command("볼륨")]
-        public async Task setVolumeAsync(ushort volume)
-        {
-            if (volume > 100)
-            {
-                await ReplyAsync("볼륨은 0~100까지 설정할 수 있습니다.");
-                return;
-            }
-            Random rd = new Random();
-            EmbedBuilder builder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff));
-            try
-            {
-                var player = _lavaNode.GetPlayer(Context.Guild);
-                if (player == null)
-                {
-                    await ReplyAsync("현재 들어가 있는 음성채널이 없습니다.");
-                    return;
-                }
-                await player.UpdateVolumeAsync(volume);
-                builder.AddField("성공", $"플레이어의 볼륨을 {volume} (으)로 설정했습니다.");
-                await ReplyAsync("", false, builder.Build());
-            }
-            catch(Exception e)
-            {
-                builder.WithTitle("오류 발생");
-                builder.AddField("오류 참조",e.ToString());
-                await ReplyAsync("", false, builder.Build());
-            }
-        }
+        // [Command("볼륨")]
+        // public async Task setVolumeAsync(ushort volume)
+        // {
+        //     if (volume > 100)
+        //     {
+        //         await ReplyAsync("볼륨은 0~100까지 설정할 수 있습니다.");
+        //         return;
+        //     }
+        //     Random rd = new Random();
+        //     EmbedBuilder builder = new EmbedBuilder()
+        //         .WithColor((uint)rd.Next(0x000000, 0xffffff));
+        //     try
+        //     {
+        //         var player = _lavaNode.GetPlayer(Context.Guild);
+        //         if (player == null)
+        //         {
+        //             await ReplyAsync("현재 들어가 있는 음성채널이 없습니다.");
+        //             return;
+        //         }
+        //         await player.UpdateVolumeAsync(volume);
+        //         builder.AddField("성공", $"플레이어의 볼륨을 {volume} (으)로 설정했습니다.");
+        //         await ReplyAsync("", false, builder.Build());
+        //     }
+        //     catch(Exception e)
+        //     {
+        //         builder.WithTitle("오류 발생");
+        //         builder.AddField("오류 참조",e.ToString());
+        //         await ReplyAsync("", false, builder.Build());
+        //     }
+        // }
     }
 }
