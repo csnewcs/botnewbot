@@ -2,3 +2,4 @@ bin/
 obj/
 servers/
 config.txt
+log.txt
