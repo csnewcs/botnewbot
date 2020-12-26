@@ -50,6 +50,8 @@ namespace bot
             command = _services.GetRequiredService<CommandService>();
             lavaNode = _services.GetRequiredService<LavaNode>();
             lavaNode.OnLog += log;
+            LavaLinkEvents events = new LavaLinkEvents();
+            lavaNode.OnTrackEnded += events.TrackEnded;
             
 
             Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
