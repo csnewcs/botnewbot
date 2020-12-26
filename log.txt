@@ -1,0 +1,17 @@
+12:51:21 Victoria    {"playingPlayers":0,"op":"stats","memory":{"reservable":1944059904,"used":626144480,"free":416140064,"allocated":1042284544},"players":1,"cpu":{"cores":16,"systemLoad":0.14035329837151533,"lavalinkLoad":0.0035208333333333333},"uptime":7624744}
+AHeW91dHViZQAAAAAAALp8","guildId":"557874265765052436"}
+"guildId":"557874265765052436"}
+52436"}
+1dHViZQAAAAAABAsU","guildId":"557874265765052436"}
+n(String path, OpenFlags flags, Int32 mode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options)
+   at System.IO.StreamReader.ValidateArgsAndOpenPath(String path, Encoding encoding, Int32 bufferSize)
+   at System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks)
+   at System.IO.File.InternalReadAllText(String path, Encoding encoding)
+   at System.IO.File.ReadAllText(String path)
+   at bot.Program.messageEdited(Cacheable`2 beforeMsg, SocketMessage afterMsg, ISocketMessageChannel editedMessageChannel) in /home/csnewcs/Desktop/programming/git/botnewbot/Program.cs:line 295
+   at Discord.EventExtensions.InvokeAsync[T1,T2,T3](AsyncEvent`1 eventHandler, T1 arg1, T2 arg2, T3 arg3)
+   at Discord.WebSocket.DiscordSocketClient.TimeoutWrap(String name, Func`1 action)
+in /home/csnewcs/Desktop/programming/git/botnewbot/Program.cs:line 154
+   at Discord.EventExtensions.InvokeAsync[T](AsyncEvent`1 eventHandler, T arg)
+   at Discord.WebSocket.DiscordSocketClient.TimeoutWrap(String name, Func`1 action)
