@@ -14,14 +14,15 @@ namespace bot
     [Group("은행")]
     public class Bank : ModuleBase<SocketCommandContext>
     {
+        Support support = new Support();
         [Command]
         [Summary("자기 돈 확인하기")]
         public async Task bank()
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
             JObject json = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
-            string nickname = Program.getNickname(user);
-            string moneyString = Program.unit((ulong)json["money"]);
+            string nickname = support.getNickname(user);
+            string moneyString = support.unit((ulong)json["money"]);
             Random rd = new Random();
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256))

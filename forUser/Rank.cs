@@ -16,6 +16,7 @@ namespace bot
     [Group("순위")]
     public class Rank : ModuleBase<SocketCommandContext>
     {
+        Support support = new Support();
         JObject json = new JObject();
         KeyValuePair<ulong, ulong>[] people;
 
@@ -44,7 +45,7 @@ namespace bot
                 rank++;
             }
             Random rd = new Random();
-            string nickName = Program.getNickname(Context.User as SocketGuildUser);
+            string nickName = support.getNickname(Context.User as SocketGuildUser);
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
             .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
@@ -66,8 +67,8 @@ namespace bot
             string users = "";
             foreach (var a in people)
             {
-                string nickName = Program.getNickname(Context.Guild.GetUser(a.Key)); //해당 사람의 닉네임 얻기
-                users += $"{count+1}등\n{nickName}: ({Program.unit(a.Value)} BNB)\n\n"; 
+                string nickName = support.getNickname(Context.Guild.GetUser(a.Key)); //해당 사람의 닉네임 얻기
+                users += $"{count+1}등\n{nickName}: ({support.unit(a.Value)} BNB)\n\n"; 
                 count++;
 
                 if (count % 20 == 0 && count != users.Length - 1)
@@ -103,8 +104,8 @@ namespace bot
             {
                 try
                 {
-                    string nickName = Program.getNickname(Context.Guild.GetUser(people[i].Key));
-                    builder.AddField($"{i + 1}등", $"{nickName}: {Program.unit(people[i].Value)} BNB");
+                    string nickName = support.getNickname(Context.Guild.GetUser(people[i].Key));
+                    builder.AddField($"{i + 1}등", $"{nickName}: {support.unit(people[i].Value)} BNB");
                 }
                 catch
                 {

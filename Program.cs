@@ -22,12 +22,12 @@ namespace bot
     public sealed class Program
     {
         const int version = 1; // 버전을 저장, 파일에 저장할까도 고민중
-        Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
-        Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
+        
         DiscordSocketClient client;
         CommandService command;
         LavaNode lavaNode;
         ServiceProvider _services;
+        Support support = new Support();
 
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
         static string prefix = "";
@@ -199,7 +199,7 @@ namespace bot
 
 
                     string[] split = msg.Content.Split(' ');
-                    if (split[0] == prefix + "초기설정") await reset(guildUser);
+                    if (split[0] == prefix + "초기설정") await support.reset(guildUser);
                     SocketCommandContext context = new SocketCommandContext(client, message);
 
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: _services);
@@ -207,24 +207,24 @@ namespace bot
                 }
                 else
                 {
-                    if (setting.ContainsKey(msg.Author.Id)) //세팅 값에 있는지 확인 후 있으면 설정 이어가기
-                    {
-                        SocketGuild guild = client.GetGuild(setting[msg.Author.Id]);
-                        ulong guildId = guild.Id;
-                        if (server[msg.Author.Id].addServer(guild, msg.Author, msg.Content))
-                        {
-                            JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json")); //설정 json가져오기
-                            await msg.Author.SendMessageAsync("설정이 완료되었습니다. 그럼 이제 서버원들과 함께 즐기세요!\n당신은 이 봇의 관리자이며 \"$명령어 관리자\" 를 통해 관리자 전용 명령어를 확인할 수 있습니다.");
-                            if (json["noticeBot"].ToString() != "0") //봇이 공지를 할 수 있으면
-                            {
-                                IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["noticeBot"].ToString()));
-                                await channel.SendMessageAsync("@everyone\n이 봇을 데려와주셔서 감사드립니다. 명령어를 사용하기 위한 접두사는 \"$\"이며 명령어들은 \"$명령어\"를 통해 확인하실 수 있습니다.");
-                            }
-                            setting.Remove(msg.Author.Id);
-                        }
-                        else return;
-                    }
-                    else return;
+                    // if (support.setting.ContainsKey(msg.Author.Id)) //세팅 값에 있는지 확인 후 있으면 설정 이어가기
+                    // {
+                    //     SocketGuild guild = client.GetGuild(support.setting[msg.Author.Id]);
+                    //     ulong guildId = guild.Id;
+                    //     if (support.server[msg.Author.Id].addServer(guild, msg.Author, msg.Content))
+                    //     {
+                    //         JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json")); //설정 json가져오기
+                    //         await msg.Author.SendMessageAsync("설정이 완료되었습니다. 그럼 이제 서버원들과 함께 즐기세요!\n당신은 이 봇의 관리자이며 \"$명령어 관리자\" 를 통해 관리자 전용 명령어를 확인할 수 있습니다.");
+                    //         if (json["noticeBot"].ToString() != "0") //봇이 공지를 할 수 있으면
+                    //         {
+                    //             IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["noticeBot"].ToString()));
+                    //             await channel.SendMessageAsync("@everyone\n이 봇을 데려와주셔서 감사드립니다. 명령어를 사용하기 위한 접두사는 \"$\"이며 명령어들은 \"$명령어\"를 통해 확인하실 수 있습니다.");
+                    //         }
+                    //         support.setting.Remove(msg.Author.Id);
+                    //     }
+                    //     else return;
+                    // }
+                    return;
                 }
             }
         }
@@ -278,7 +278,7 @@ namespace bot
                     if (msg.Value.Author.IsBot) return;
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
                     SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
-                    string nickname = getNickname(user);
+                    string nickname = support.getNickname(user);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle($"{nickname}님의 메세지가 삭제됨")
                     .WithColor(new Color(0xff0000)) //빨간색
@@ -304,7 +304,7 @@ namespace bot
                     if (beforeMsg.Value.Author.IsBot) return;
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["editMessage"].ToString()));
                     SocketGuildUser user = guild.GetUser(beforeMsg.Value.Author.Id);
-                    string nickname = getNickname(user);
+                    string nickname = support.getNickname(user);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle($"{nickname}님의 메세지가 수정됨")
                     .WithColor(new Color(0x880088))
@@ -372,173 +372,6 @@ namespace bot
             return Task.CompletedTask;
         }
         
-        
-        public static string getNickname(SocketGuildUser guild)
-        {
-            if (string.IsNullOrEmpty(guild.Nickname))
-            {
-                return guild.Username;
-            }
-            else
-            {
-                return guild.Nickname;
-            }
-        }
-        public static string unit(ulong money)
-        {
-            string moneyString = money.ToString();
-            int length = moneyString.Length;
-            List<string> array = new List<string>();
-            string temp = "";
-            int start = length % 4;
-            for (int i = 0; i < start; i++) //4로 정확히 나눠지지 않을거니까
-            {
-                temp += moneyString[i];
-            }
-            array.Add(temp);
-            for (int i = 0; i < length / 4; i++) //4개씩 묶기
-            {
-                array.Add($"{moneyString[i * 4 + start]}{moneyString[i * 4 + 1 + start]}{moneyString[i * 4 + 2 + start]}{moneyString[i * 4 + 3 + start]}");
-            }
-            string unitString = "만억조경";
-            temp = "";
-            for (int i = 0; i < array.Count; i++) //단위 붙이기
-            {
-                if (array[i] == "0000")
-                {
-                    continue;
-                }
-                if (array[i] == "") continue;
-                temp += (int.Parse(array[i]).ToString());
-                if (i != array.Count - 1) 
-                {
-                    temp += unitString[array.Count - i - 2]; //Count니까 1빼고, 일, 십, 백, 천 빠졌으니 또 1빠짐
-                }
-                temp += " ";
-            }
-            return temp;
-        }
-        private async Task reset(SocketGuildUser user)
-        {
-            if (!hasPermission(user, Permission.Admin))
-            {
-                return;
-            }
-            SocketGuild guild = user.Guild;
-            File.Delete($"servers/{guild.Id}/config.json");
-            setting.Add(user.Id, guild.Id);
-            server.Add(user.Id, new Server());
-            await user.SendMessageAsync("초기 설정을 시작합니다.");
-            server[user.Id].addServer(guild, user);
-        }
-        public static bool isOver(SocketGuildUser first, SocketGuildUser second) //위에 있는 역할일수록 수가 큼
-        {
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            IReadOnlyCollection<SocketRole> one = first.Roles, two = second.Roles;
-            int oneTop = 0;
-            int twoTop = 0;
-            foreach (var a in one)
-            {
-                if (a.Position > oneTop) oneTop = a.Position;
-            }
-            foreach (var a in two)
-            {
-                if (a.Position > twoTop) twoTop = a.Position;
-            }
-            return oneTop > twoTop;
-        }
-        public static bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketUser> second)
-        {
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            IReadOnlyCollection<SocketRole> one = first.Roles;
-            int oneTop = 0;
-            int twoTop = 0;
-            foreach (var a in one)
-            {
-                if (a.Position > oneTop) oneTop = a.Position;
-            }
-            foreach (var a in second)
-            {
-                foreach (var b in (a as SocketGuildUser).Roles)
-                {
-                    if (b.Position > twoTop) twoTop = b.Position;
-                }
-            }
-            return oneTop > twoTop;
-        }
-        public static bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketRole> second)
-        {
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            IReadOnlyCollection<SocketRole> one = first.Roles;
-            int oneTop = 0;
-            int twoTop = 0;
-            foreach (var a in one)
-            {
-                if (a.Position > oneTop) oneTop = a.Position;
-            }
-            foreach (var a in second)
-            {
-                if (a.Position > twoTop) twoTop = a.Position;
-            }
-            return oneTop > twoTop;
-        }
-        public static bool hasPermission(SocketGuildUser user, Permission p)
-        {
-            if (user.Guild.OwnerId == user.Id)
-            {
-                return true;
-            }
-            bool has = false;
-            foreach (var a in user.Roles) //더 빠른 알고리즘이 생각났지만 코드가 너무 더러워 질 것 같ㄷ...
-            {
-                if (a.Permissions.Administrator)
-                {
-                    has = true;
-                }
-               switch (p)
-               {
-                    case Permission.BanUser:
-                        if (a.Permissions.BanMembers) has = true;
-                        break;
-                    case Permission.KickUser:
-                        if (a.Permissions.KickMembers) has = true;
-                        break;
-                    case Permission.DeleteMessage:
-                        if (a.Permissions.ManageMessages) has = true;
-                        break;
-                    case Permission.ManageRole:
-                        if (a.Permissions.ManageRoles) has = true;
-                        break;
-                    case Permission.MuteUser:
-                        if (a.Permissions.MuteMembers) has = true;
-                        break;
-               }
-               if (has) break;
-            }
-            return has;
-        }
-        public enum Permission //며칠 전에 이거 책에서 봐서 다행이네
-        {
-            DeleteMessage,
-            BanUser,
-            KickUser,
-            MuteUser,
-            ManageRole,
-            Admin
-        }
 
         private void checkVersion()
         {

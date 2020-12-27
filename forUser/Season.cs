@@ -12,6 +12,7 @@ namespace bot
 {
     class Season : ModuleBase<SocketCommandContext>
     {
+        Support support = new Support();
         public void mkdt(DiscordSocketClient client)
         {
             int last = 0;
@@ -58,7 +59,7 @@ namespace bot
                         }
                         string name = $"{year}년 {four}/4 분기 시즌";
                         single.Add("name", name);
-                        single.Add("username", Program.getNickname(guildUser));
+                        single.Add("username", support.getNickname(guildUser));
                         single.Add("money", (ulong)list.GetKey(1));
                         save.Add(single);
                         File.WriteAllText($"servers/{server.Name}/season.json", save.ToString());
