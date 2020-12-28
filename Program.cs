@@ -31,7 +31,7 @@ namespace bot
         Support support = new Support();
 
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
-        static string prefix = "";
+        public static string prefix = "";
 
         private static void Main(string[] args) => new Program().mainAsync().GetAwaiter().GetResult();
 

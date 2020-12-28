@@ -18,13 +18,15 @@ namespace bot
         [Summary("기본 명령어 도움말")]
         public async Task help()
         {
+            var prefix = Program.prefix;
             SocketUser user = Context.User; 
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color(0xbe33ff))
             .WithTitle("이 봇이 사용 가능한 명령어")
-            .AddField("은행", "가지고 있는 돈이 얼마나 있는지 알려줍니다. (단위: BNB)")
-            .AddField("도박", "돈을 걸고 간단한 게임을 하는 것입니다. 도박이니 당연히 운입니다.\n(자세한 도움말: $도박)")
-            .AddField("순위", "서버 내에서 순위를 확인하는 것입니다.\n공동순위일 경우 ID순으로 정렬됩니다.\n(자세한 도움말: $순위)")
+            .AddField($"{prefix}은행", "```가지고 있는 돈이 얼마나 있는지 알려줍니다. (단위: BNB)```")
+            .AddField($"{prefix}도박", $"```돈을 걸고 간단한 게임을 하는 것입니다. 도박이니 당연히 운입니다.\n자세한 도움말: {prefix}도박```")
+            .AddField($"{prefix}순위", $"```서버 내에서 순위를 확인하는 것입니다.\n공동순위일 경우 ID순으로 정렬됩니다.\n자세한 도움말: {prefix}순위```")
+            .AddField($"{prefix}노래방", $"이 봇으로 노래를 들을 수 있습니다.\n자세한 도움말: {prefix}노래방")
             .WithUrl("https://github.com/csnewcs/botnewbot/wiki/%EB%AA%85%EB%A0%B9%EC%96%B4");
             await user.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
