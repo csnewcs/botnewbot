@@ -18,7 +18,8 @@ namespace bot
     public class Karaoke : ModuleBase<SocketCommandContext>
     {
         private readonly LavaNode _lavaNode;
-
+        // public static Dictionary<IGuild, SocketGuildChannel> notice = new Dictionary<IGuild, SocketGuildChannel>();
+        
         public Karaoke(LavaNode lavaNode)
         {
             _lavaNode = lavaNode;
@@ -57,7 +58,7 @@ namespace bot
             try 
             {
                 await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
-                // if (Context.Client.)
+                
                 await ReplyAsync($"{voiceState.VoiceChannel.Name}에 들어가는데 성공했습니다!");
             }
             catch (Exception exception) 
@@ -82,19 +83,18 @@ namespace bot
         public async Task addSongAsync()
         {
             var player = _lavaNode.GetPlayer(Context.Guild);
+            var message = await ReplyAsync("잠시만 기다려 주세요 검색 중 입니다....");
             string query = Context.Message.ToString().Substring(8);
             try
             {
-                // await ReplyAsync("준비 중인 기능입니다.");
-                var result = Uri.IsWellFormedUriString(query, UriKind.Absolute) ? _lavaNode.SearchAsync(query).Result : _lavaNode.SearchYouTubeAsync(query).Result;
-                if (result.Tracks.Count == 0)
-                {
-                    await ReplyAsync("검색 결과가 없습니다. 검색어를 수정해 주세요"); 
-                    return;
-                } 
-                LavaTrack track = result.Tracks.FirstOrDefault();
+                LavaTrack track = searchSong(player, query);
                 Random rd = new Random();
 
+                if (track == null)
+                {
+                    await ReplyAsync("검색 결과가 없습니다. 검색어를 확인해 주세요");
+                    return;
+                }
                 if (track.Duration.Minutes > 15)
                 {
                     await ReplyAsync("16분 이상의 음악은 등록할 수 없습니다.");
@@ -113,16 +113,111 @@ namespace bot
                 {
                     embedBuilder.AddField("대기열 추가됨", $"{track.Title} 을(를) {player.Queue.Count}번째 순서로 등록");
                 }
-                await ReplyAsync("", false, embedBuilder.Build());
+                await message.ModifyAsync(msg => {msg.Content = "";  msg.Embed = embedBuilder.Build();});
             }
             catch(Exception e)
             {
                 EmbedBuilder builder = new EmbedBuilder()
                      .WithTitle("오류 발생")
                      .AddField("에러 참조", e.ToString());
-                await ReplyAsync("", false, builder.Build());                     
+                await message.ModifyAsync(msg => {msg.Content = ""; msg.Embed = builder.Build();});             
             }
         }
+
+       [Command("일괄등록", true)]
+        public async Task addManySongsAsync()
+       {
+           string[] querys = Context.Message.ToString().Substring(10).Split(',');
+           var message = await ReplyAsync($"잠시만 기다려 주세요 검색 중 입니다....");
+           if (querys.Length > 25)
+           {
+               await ReplyAsync("한 번에 25곡 까지만 등록 가능합니다.");
+               return;
+           }
+           LavaTrack[] tracks = new LavaTrack[querys.Length];
+           bool started = false;
+
+           Random rd = new Random();
+           EmbedBuilder builder = new EmbedBuilder()
+           .WithTitle("작업 완료")
+           .WithColor((uint)rd.Next(0, 0xffffff));
+            LavaPlayer player = _lavaNode.GetPlayer(Context.Guild);
+            bool isFirst = player.Queue.Count == 0;
+           int index=0;
+           foreach (var a in querys)
+           {
+               await message.ModifyAsync(msg => msg.Content = $"잠시만 기다려 주세요 검색 중 입니다.... ({index + 1}/{querys.Length})");
+               tracks[index] = searchSong(player, a);
+               if (tracks[index] == null)
+               {
+                    builder.AddField($"{index+1} {a}", $"```추가 실패, 이유: 검색 결과 없음```");
+                    player.Queue.Remove(tracks[index]);
+               }
+               else if (tracks[index].Duration.Minutes > 15)
+               {
+                   builder.AddField($"{index+1} {a}", $"```추가 실패, 이유: 16분 이상의 긴 음악```");
+                   player.Queue.Remove(tracks[index]);
+               }
+               else
+               {
+                   builder.AddField($"{index+1} {a}", $"```추가 성공, {tracks[index].Title} ({tracks[index].Duration.Minutes}:{tracks[index].Duration.Seconds})```");
+                    if (player.Queue.Count == 1) 
+                    {
+                        await player.PlayAsync(tracks[index]);
+                        started = true;
+                    }
+               }
+                index++;
+           }
+           if (isFirst && !started) await player.PlayAsync(player.Queue.First());
+            await message.ModifyAsync(msg => {
+                msg.Content = "";
+                msg.Embed = builder.Build();
+            });
+       }
+       
+       [Command("재생목록")]
+       public async Task queue()
+       {
+           var player = _lavaNode.GetPlayer(Context.Guild);
+           string output = "```";
+
+           int index = 0;
+           int totalSeconds = 0;
+           foreach (var a in player.Queue)
+           {
+               output = index == 0 ? output + $"현재 재생 중: {a.Title} ({a.Duration.Minutes}:{a.Duration.Seconds})\n" : output + $"\n{index}: {a.Title} ({a.Duration.Minutes}:{a.Duration.Seconds})";
+               totalSeconds += (int)a.Duration.TotalSeconds;
+               index++;
+           }
+           output += "```";
+           Random rd = new Random();
+           EmbedBuilder builder = new EmbedBuilder()
+           .AddField($"{Context.Guild.Name} 서버의 재생목록", output)
+           .WithColor((uint)rd.Next(0x000000, 0xffffff))
+           .WithFooter($"전체: {totalSeconds / 60}분 {totalSeconds % 60}초");
+            await ReplyAsync("", false, builder.Build());
+       }
+       [Command("건너뛰기")]
+       public async Task skip()
+       {
+           var player = _lavaNode.GetPlayer(Context.Guild);
+            await player.StopAsync();
+            // player.Queue.Remove(player.Queue.FirstOrDefault());
+            // if (player.Queue.Count != 0) await player.PlayAsync(player.Queue.FirstOrDefault());
+        //    await ReplyAsync("", false, new EmbedBuilder().AddField("완료", "다음 음악으로 넘겼습니다.").Build());
+       }
+       private LavaTrack searchSong(LavaPlayer player, string query)
+       {
+           LavaTrack track = null; //일단 비어있는 트랙 생성
+           var result = Uri.IsWellFormedUriString(query, UriKind.Absolute) ? _lavaNode.SearchAsync(query).Result : _lavaNode.SearchYouTubeAsync(query).Result;
+           if (result.Tracks.Count == 0) return track;
+           track = result.Tracks.FirstOrDefault();
+           player.Queue.Enqueue(track);
+           return track;
+       }
+        
+        
         // [Command("볼륨")]
         // public async Task setVolumeAsync(ushort volume)
         // {

@@ -14,6 +14,7 @@ using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 
 using Victoria;
+using Victoria.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
 
 

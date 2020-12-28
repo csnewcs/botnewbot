@@ -19,6 +19,11 @@ namespace bot
             {
                 await e.Player.PlayAsync(e.Player.Queue.FirstOrDefault());
             }
+            Random rd = new Random();
+            Embed embed = new EmbedBuilder()
+            .WithColor((uint)rd.Next(0, 0xffffff))
+            .AddField("재생 시작", $"{e.Player.Queue.FirstOrDefault().Title} ({e.Player.Queue.FirstOrDefault().Duration.Minutes} : {e.Player.Queue.FirstOrDefault().Duration.Seconds})").Build();
+            await e.Player.TextChannel.SendMessageAsync("", false, embed);
         }
     }
 }
