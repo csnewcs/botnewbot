@@ -96,14 +96,15 @@ namespace bot
                 if (track == null)
                 {
                     await ReplyAsync("검색 결과가 없습니다. 검색어를 확인해 주세요");
+                    player.Queue.Remove(track);
                     return;
                 }
                 if (track.Duration.Minutes > 15)
                 {
                     await ReplyAsync("16분 이상의 음악은 등록할 수 없습니다.");
+                    player.Queue.Remove(track);
                     return;
                 }
-                player.Queue.Enqueue(track);
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle("추가 성공")
                     .WithColor((uint)rd.Next(0x000000, 0xffffff));
