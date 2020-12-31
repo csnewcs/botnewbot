@@ -222,35 +222,35 @@ namespace bot
        }
         
         
-        [Command("볼륨")]
-        public async Task setVolumeAsync(ushort volume)
-        {
-            if (volume > 100)
-            {
-                await ReplyAsync("볼륨은 0~100까지 설정할 수 있습니다.");
-                return;
-            }
-            Random rd = new Random();
-            EmbedBuilder builder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff));
-            try
-            {
-                var player = _lavaNode.GetPlayer(Context.Guild);
-                if (player == null)
-                {
-                    await ReplyAsync("현재 들어가 있는 음성채널이 없습니다.");
-                    return;
-                }
-                await player.UpdateVolumeAsync(volume);
-                builder.AddField("성공", $"플레이어의 볼륨을 {volume} (으)로 설정했습니다.");
-                await ReplyAsync("", false, builder.Build());
-            }
-            catch(Exception e)
-            {
-                builder.WithTitle("오류 발생");
-                builder.AddField("오류 참조",e.ToString());
-                await ReplyAsync("", false, builder.Build());
-            }
-        }
+        // [Command("볼륨")]
+        // public async Task setVolumeAsync(ushort volume)
+        // {
+        //     if (volume > 100)
+        //     {
+        //         await ReplyAsync("볼륨은 0~100까지 설정할 수 있습니다.");
+        //         return;
+        //     }
+        //     Random rd = new Random();
+        //     EmbedBuilder builder = new EmbedBuilder()
+        //         .WithColor((uint)rd.Next(0x000000, 0xffffff));
+        //     try
+        //     {
+        //         var player = _lavaNode.GetPlayer(Context.Guild);
+        //         if (player == null)
+        //         {
+        //             await ReplyAsync("현재 들어가 있는 음성채널이 없습니다.");
+        //             return;
+        //         }
+        //         await player.UpdateVolumeAsync(volume);
+        //         builder.AddField("성공", $"플레이어의 볼륨을 {volume} (으)로 설정했습니다.");
+        //         await ReplyAsync("", false, builder.Build());
+        //     }
+        //     catch(Exception e)
+        //     {
+        //         builder.WithTitle("오류 발생");
+        //         builder.AddField("오류 참조",e.ToString());
+        //         await ReplyAsync("", false, builder.Build());
+        //     }
+        // }
     }
 }
