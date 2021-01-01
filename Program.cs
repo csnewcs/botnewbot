@@ -180,7 +180,7 @@ namespace bot
                                 }");
                             }
                         }
-                        else File.WriteAllText(finfo.FullName, @"{""editMessage"": 0,""deleteMessage"": 0,""noticeBot"": 0}");
+                        else File.WriteAllText(finfo.FullName, @"{""money"": 100}");
                     }
 
                     addMoney(guildUser, msg);
