@@ -211,6 +211,25 @@ namespace bot
             // if (player.Queue.Count != 0) await player.PlayAsync(player.Queue.FirstOrDefault());
         //    await ReplyAsync("", false, new EmbedBuilder().AddField("완료", "다음 음악으로 넘겼습니다.").Build());
        }
+       [Command("다시들어와")]
+       public async Task reJoin()
+       {
+           var player = _lavaNode.GetPlayer(Context.Guild);
+           var queue = player.Queue;
+           var voiceChannel = player.VoiceChannel;
+            await _lavaNode.LeaveAsync(voiceChannel);
+            await _lavaNode.JoinAsync(voiceChannel);
+           player = _lavaNode.GetPlayer(Context.Guild);
+
+           foreach (var a in queue)
+           {
+               player.Queue.Enqueue(a);
+           }
+           await player.PlayAsync(player.Queue.FirstOrDefault());
+
+           Random rd = new Random();
+            uint color = (uint)rd.Next(0, 0xffffff);
+       }
        private LavaTrack searchSong(LavaPlayer player, string query)
        {
            LavaTrack track = null; //일단 비어있는 트랙 생성
