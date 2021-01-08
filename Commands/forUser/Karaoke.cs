@@ -181,18 +181,18 @@ namespace bot
        }
        
        [Command("재생목록")]
-       public async Task queue()
+       public async Task queue(int page = 0)
        {
            var player = _lavaNode.GetPlayer(Context.Guild);
+           var queue = player.Queue.ToArray();
            string output = "```";
 
-           int index = 0;
            int totalSeconds = 0;
-           foreach (var a in player.Queue)
+           for (int i = page * 10; i < page * 10 + 10; i++)
            {
-               output = index == 0 ? output + $"현재 재생 중: {a.Title} ({a.Duration.Minutes}:{a.Duration.Seconds})\n" : output + $"\n{index}: {a.Title} ({a.Duration.Minutes}:{a.Duration.Seconds})";
-               totalSeconds += (int)a.Duration.TotalSeconds;
-               index++;
+               if (i >= queue.Length) break;
+               output = i == 0 ? output + $"현재 재생 중: {queue[i].Title} ({queue[i].Duration.Minutes}:{queue[i].Duration.Seconds})\n" : output + $"\n{i}: {queue[i].Title} ({queue[i].Duration.Minutes}:{queue[i].Duration.Seconds})";
+               totalSeconds += (int)queue[i].Duration.TotalSeconds;
            }
            output += "```";
            Random rd = new Random();
