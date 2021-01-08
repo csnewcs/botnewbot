@@ -194,7 +194,7 @@ namespace bot
                output = i == 0 ? output + $"현재 재생 중: {queue[i].Title} ({queue[i].Duration.Minutes}:{queue[i].Duration.Seconds})\n" : output + $"\n{i}: {queue[i].Title} ({queue[i].Duration.Minutes}:{queue[i].Duration.Seconds})";
                totalSeconds += (int)queue[i].Duration.TotalSeconds;
            }
-           output += "```";
+           output += $"\n\n{page + 1} / {queue.Length / 10 + 1}```";
            Random rd = new Random();
            EmbedBuilder builder = new EmbedBuilder()
            .AddField($"{Context.Guild.Name} 서버의 재생목록", output)
@@ -214,18 +214,27 @@ namespace bot
        [Command("다시들어와")]
        public async Task reJoin()
        {
-           var player = _lavaNode.GetPlayer(Context.Guild);
-           var queue = player.Queue;
-           var voiceChannel = player.VoiceChannel;
-            await _lavaNode.LeaveAsync(voiceChannel);
-            await _lavaNode.JoinAsync(voiceChannel);
-           player = _lavaNode.GetPlayer(Context.Guild);
-
-           foreach (var a in queue)
+           try
            {
-               player.Queue.Enqueue(a);
+            var player = _lavaNode.GetPlayer(Context.Guild);
+            var queue = player.Queue.ToArray();
+
+            var voiceChannel = player.VoiceChannel;
+                _lavaNode.LeaveAsync(voiceChannel);
+                await _lavaNode.JoinAsync(voiceChannel);
+            player = _lavaNode.GetPlayer(Context.Guild);
+
+            foreach (var a in queue)
+            {
+                
+                player.Queue.Enqueue(a);
+            }
+            await player.PlayAsync(player.Queue.FirstOrDefault());
            }
-           await player.PlayAsync(player.Queue.FirstOrDefault());
+           catch (Exception e)
+           {
+               Console.WriteLine(e);
+           }
 
            Random rd = new Random();
             uint color = (uint)rd.Next(0, 0xffffff);
