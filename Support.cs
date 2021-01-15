@@ -5,12 +5,62 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
+using csnewcs.Sql;
+
 namespace bot
 {
-    class Support
+    public class Support
     {
-        public Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
-        public Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
+        Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
+        Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
+        SqlHelper sqlHelper;
+
+        public Support(SqlHelper helper = null)
+        {
+            sqlHelper = helper;
+        }
+        public void changeSqlHelper(SqlHelper helper)
+        {
+            sqlHelper = helper;
+        }
+        public long getMoney(SocketGuildUser user)
+        {
+            long money = (long)sqlHelper.getData("guild_" + user.Guild.Id, "id", user.Id, "money");
+            // Console.WriteLine(money);
+            return money;
+        }
+        public void setMoney(SocketGuildUser user, long money)
+        {
+            sqlHelper.setData("guild_" + user.Guild.Id.ToString(), "id", user.Id,  "money", money);
+        }
+        public void addUser(SocketGuildUser user)
+        {
+            string[] columns = new string[] {"id", "money"};
+            object[] datas = new object[] {user.Id, 100};
+            sqlHelper.addData("guild_" + user.Guild.Id.ToString(), columns, datas);
+        }
+        public bool userExists(SocketGuildUser user)
+        {
+            return  sqlHelper.dataExits("guild_" + user.Guild.Id.ToString(), "id", user.Id);
+        }
+        public bool guildExists(SocketGuild guild)
+        {
+            return sqlHelper.tableExits("botnewbot", "guild_" + guild.Id.ToString());
+        }
+        public void addGuild(SocketGuild guild)
+        {
+            sqlHelper.addTable("guild_" + guild.Id.ToString(), new string[] {
+                    "id:varchar(20) NOT NULL",
+                    "money:BIGINT",
+                    "serverinfo:TEXT"
+                });
+            sqlHelper.addData("guild_" + guild.Id.ToString(), new string[] {"id", "serverinfo"}, new object[] {"serverinfo", @"{""editMessage"": 0, ""deleteMessage"": 0, ""noticeBot"": 0}"});
+        }
+        public void delUser(SocketGuildUser user)
+        {
+            // sqlHelper.remove
+        }
+
         public string getNickname(SocketGuildUser guild)
         {
             if (string.IsNullOrEmpty(guild.Nickname))
@@ -22,10 +72,10 @@ namespace bot
                 return guild.Nickname;
             }
         }
-        public string unit(ulong money)
+        public string unit(long money)
         {
             string result = "";
-            ulong[] units = new ulong[5] {10000000000000000, 1000000000000, 100000000, 10000, 1};
+            long[] units = new long[5] {10000000000000000, 1000000000000, 100000000, 10000, 1};
             char[] unitChars = new char[5] {'경', '조', '억', '만', '\0'};
             int index = 0;
             foreach (var number in units)

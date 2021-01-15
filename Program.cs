@@ -17,6 +17,8 @@ using Victoria;
 using Victoria.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
 
+using csnewcs.Sql;
+
 
 namespace bot
 {
@@ -28,7 +30,7 @@ namespace bot
         CommandService command;
         LavaNode lavaNode;
         ServiceProvider _services;
-        Support support = new Support();
+        Support support ;
 
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
         public static string prefix = "";
@@ -43,6 +45,7 @@ namespace bot
             _services = new ServiceCollection()
                 .AddSingleton<DiscordSocketClient>(new DiscordSocketClient(config))
                 .AddSingleton<CommandService>(new CommandService(serviceConfig))
+                .AddSingleton<Support>(new Support())
 		        // Other services DiscordSocketClient, CommandService, etc
                 .AddLavaNode(x => {
                     x.SelfDeaf = false;
@@ -50,11 +53,14 @@ namespace bot
             client = _services.GetRequiredService<DiscordSocketClient>();
             command = _services.GetRequiredService<CommandService>();
             lavaNode = _services.GetRequiredService<LavaNode>();
+            support = _services.GetRequiredService<Support>();
+            
+
             lavaNode.OnLog += log;
             LavaLinkEvents events = new LavaLinkEvents();
             lavaNode.OnTrackEnded += events.TrackEnded;
-            
 
+            
             Console.WriteLine("공지를 날리실거면 notice.txt에 내용을 적고 아무 키나 누르세요...  ");
 
 
@@ -69,8 +75,8 @@ namespace bot
             client.MessageDeleted += messageDeleted;
             client.MessageUpdated += messageEdited;
             client.JoinedGuild += joinedGuild;
-            client.LeftGuild += leftGuild;
-            client.UserJoined += personJoinedGuild;
+            // client.LeftGuild += leftGuild;
+            // client.UserJoined += personJoinedGuild;
             
 
             string[] botConfig = new string[0];
@@ -96,6 +102,10 @@ namespace bot
             await client.SetGameAsync($"'{prefix}명령어'로 명령어 확인!");
             
             prefix = botConfig[1];
+
+            
+
+
             Thread thread = new Thread(minus);
             Season ss = new Season();
             Thread mkdt = new Thread(() => ss.mkdt(client));
@@ -160,27 +170,15 @@ namespace bot
                     var guild = channel.Guild;
                     var guildUser = msg.Author as SocketGuildUser;
 
-                    DirectoryInfo dtinfo = new DirectoryInfo($"servers/{guild.Id}");
-                    FileInfo finfo = new FileInfo($"servers/{guild.Id}/{guildUser.Id}");
-                    if (!finfo.Exists)
+                    // DirectoryInfo dtinfo = new DirectoryInfo($"servers/{guild.Id}");
+                    // FileInfo finfo = new FileInfo($"servers/{guild.Id}/{guildUser.Id}");
+                    if (!support.userExists(guildUser))
                     {
-                        if (!dtinfo.Exists)
+                        support.addUser(guildUser);
+                        if (!support.guildExists(guildUser.Guild))
                         {
-                            dtinfo.Create();
-                            File.WriteAllText(dtinfo.FullName + "/config.json", @"{
-                                ""editMessage"": 0,
-                                ""deleteMessage"": 0,
-                                ""noticeBot"": 0
-                            }");
-                            foreach (var a in guild.Users)
-                            {
-                                if (a.IsBot) continue;
-                                File.WriteAllText($"servers/{guild.Id}/{a.Id}", @"{
-                                ""money"": 100
-                                }");
-                            }
+                            support.addGuild(guildUser.Guild);
                         }
-                        else File.WriteAllText(finfo.FullName, @"{""money"": 100}");
                     }
 
                     addMoney(guildUser, msg);
@@ -234,11 +232,14 @@ namespace bot
             Random random = new Random();
             int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) * (random.Next(3, 16)) + 1;
             Console.WriteLine("bytes: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length) + "     get BNB: " + getByte);
-            string path = $"servers/{guildUser.Guild.Id}/{guildUser.Id}";
-            JObject user = JObject.Parse(File.ReadAllText(path));
-            ulong money = (ulong)user["money"] + (ulong)getByte;
-            user["money"] = money;
-            File.WriteAllText(path, user.ToString());
+            long money = support.getMoney(guildUser);
+            money += getByte;
+            support.setMoney(guildUser, money);
+            // string path = $"servers/{guildUser.Guild.Id}/{guildUser.Id}";
+            // JObject user = JObject.Parse(File.ReadAllText(path));
+            // ulong money = (ulong)user["money"] + (ulong)getByte;
+            // user["money"] = money;
+            // File.WriteAllText(path, user.ToString());
         }
         bool coolDown(ulong Id) //명령어는 3초에 한 번씩
         {
@@ -349,16 +350,16 @@ namespace bot
 
             // server[guild.OwnerId].addServer(guild, guild.Owner);
         }
-        Task personJoinedGuild(SocketGuildUser user)
-        {
-            if (!user.IsBot) File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}","{\"money\":100}");
-            return Task.CompletedTask;
-        }
-        Task leftGuild(SocketGuild guild)
-        {
-            Directory.Delete("servers/" + guild.Id.ToString(),true);
-            return Task.CompletedTask;
-        }
+        // Task personJoinedGuild(SocketGuildUser user)
+        // {
+        //     if (!user.IsBot) support.addUser(user);
+        //     return Task.CompletedTask;
+        // }
+        // Task leftGuild(SocketGuild guild)
+        // {
+        //     Directory.Delete("servers/" + guild.Id.ToString(),true);
+        //     return Task.CompletedTask;
+        // }
         Task guildAvailable(SocketGuild guild)
         {
             guild.DefaultChannel.SendMessageAsync("");
@@ -370,6 +371,18 @@ namespace bot
             {
                 lavaNode.ConnectAsync();
             }
+            var servers = client.Guilds;
+            Dictionary<string, string[]> tables = new Dictionary<string, string[]>();
+            foreach (var server in servers)
+            {
+                tables.Add("guild_" + server.Id.ToString(), new string[] {
+                    "id:varchar(20) NOT NULL",
+                    "money:BIGINT",
+                    "serverinfo:TEXT"
+                });
+            }
+            SqlHelper sqlHelper = new SqlHelper("localhost", "botnewbot", tables);
+            support.changeSqlHelper(sqlHelper);
             return Task.CompletedTask;
         }
         

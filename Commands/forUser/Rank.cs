@@ -18,7 +18,7 @@ namespace bot
     {
         Support support = new Support();
         JObject json = new JObject();
-        KeyValuePair<ulong, ulong>[] people;
+        KeyValuePair<ulong, long>[] people;
 
         [Command]
         public async Task help()
@@ -131,11 +131,11 @@ namespace bot
         }
         private void sort()
         {
-            people =  new KeyValuePair<ulong, ulong>[json.Count];//rank-1: {ID:MONEY}
+            people =  new KeyValuePair<ulong, long>[json.Count];//rank-1: {ID:MONEY}
             int i = 0;
             foreach(var person in json)
             {
-                people[i] = new KeyValuePair<ulong, ulong>(ulong.Parse(person.Key), (ulong)person.Value["money"]);
+                people[i] = new KeyValuePair<ulong, long>(ulong.Parse(person.Key), (long)person.Value["money"]);
                 i++;
             }
             for (i = 1; i < people.Length; i++) //삽입 정렬
@@ -150,7 +150,7 @@ namespace bot
         private void swap(int a, int b)
         {
             // Console.WriteLine(people[a] + "<>" + people[b]);
-            KeyValuePair<ulong, ulong> temp = people[a];
+            KeyValuePair<ulong, long> temp = people[a];
             people[a] = people[b];
             people[b] = temp;
         }
