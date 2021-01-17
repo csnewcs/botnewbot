@@ -8,9 +8,6 @@ using Newtonsoft.Json.Linq;
 
 namespace bot
 {
-    ///////////////////////
-    // 여기는 은행 관련된 곳 //
-    ///////////////////////
     [Group("라이센스")]
     public class License : ModuleBase<SocketCommandContext>
     {
@@ -25,7 +22,7 @@ namespace bot
             .AddField("botnewbot (이 봇)", "라이센스: MIT, 소스코드: https://github.com/csnewcs/botnewbot")
             .AddField("Discord.Net", "라이센스: MIT, 소스코드: https://github.com/discord-net/Discord.Net")
             .AddField("Newtonsoft.Json", "라이센스: MIT, 소스코드: https://github.com/JamesNK/Newtonsoft.Json")
-            .AddField("Lavalink4NET.Discord.Net", "라이센스: MIT, 소스코드: https://github.com/angelobreuer/Lavalink4NET");
+            .AddField("Victoria", "소스코드: https://github.com/Yucked/Victoria");
             await ReplyAsync("", embed: builder.Build());
         }
     }

@@ -55,10 +55,19 @@ namespace bot
                     "serverinfo:TEXT"
                 });
             sqlHelper.addData("guild_" + guild.Id.ToString(), new string[] {"id", "serverinfo"}, new object[] {"serverinfo", @"{""editMessage"": 0, ""deleteMessage"": 0, ""noticeBot"": 0}"});
+            foreach (var user in guild.Users)
+            {
+                if (user.IsBot) continue;
+                addUser(user);
+            }
         }
         public void delUser(SocketGuildUser user)
         {
             // sqlHelper.remove
+        }
+        public void delGuild(SocketGuild guild)
+        {
+
         }
 
         public string getNickname(SocketGuildUser guild)

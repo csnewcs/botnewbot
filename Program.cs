@@ -107,11 +107,11 @@ namespace bot
 
 
             Thread thread = new Thread(minus);
-            Season ss = new Season();
-            Thread mkdt = new Thread(() => ss.mkdt(client));
+            // Season ss = new Season();
+            // Thread mkdt = new Thread(() => ss.mkdt(client));
             Thread version = new Thread(checkVersion);
             thread.Start();
-            mkdt.Start();
+            // mkdt.Start();
             version.Start();
             
             await command.AddModulesAsync(assembly:Assembly.GetEntryAssembly(), services: _services);
@@ -172,13 +172,13 @@ namespace bot
 
                     // DirectoryInfo dtinfo = new DirectoryInfo($"servers/{guild.Id}");
                     // FileInfo finfo = new FileInfo($"servers/{guild.Id}/{guildUser.Id}");
-                    if (!support.userExists(guildUser))
+                    if (!support.guildExists(guildUser.Guild))
+                    {
+                        support.addGuild(guildUser.Guild);
+                    }
+                    else if (!support.userExists(guildUser))
                     {
                         support.addUser(guildUser);
-                        if (!support.guildExists(guildUser.Guild))
-                        {
-                            support.addGuild(guildUser.Guild);
-                        }
                     }
 
                     addMoney(guildUser, msg);
@@ -330,31 +330,33 @@ namespace bot
         }
         async Task joinedGuild(SocketGuild guild) //서버에 처음 들어갔을 때
         {
-            // setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
-            // server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
-            Directory.CreateDirectory("servers/" + guild.Id.ToString()); //servers/서버 ID가 이름인 디렉터리 생성
-            // Console.WriteLine(guild.OwnerId);
-            // SocketGuildUser owner = guild.GetUser(guild.OwnerId);
-            // await owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
-            foreach (SocketGuildUser user in guild.Users) //유저 추가
-            {
-                if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
-            }
-            File.WriteAllText("servers/" + guild.Id.ToString() + "/config.json", @"{
-                ""editMessage"": 0,
-                ""deleteMessage"": 0,
-                ""noticeBot"": 0
-            }");
-            await guild.DefaultChannel.SendMessageAsync($"안녕하세요? botnewbot입니다. 이 봇의 접두사는 '{prefix}' 이며, '{prefix}명령어' 로 사용 가능한 명령어를 확인할 수 있습니다.\n서버의 관리자들은 '{prefix}명령어 관리자' 로 서버 관리에 관한 명령어를 확인할 수 있습니다.");
-            // await owner.SendMessageAsync("초기 설정을 시작합니다.");
+            support.addGuild(guild);
 
-            // server[guild.OwnerId].addServer(guild, guild.Owner);
+            // // setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
+            // // server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
+            // Directory.CreateDirectory("servers/" + guild.Id.ToString()); //servers/서버 ID가 이름인 디렉터리 생성
+            // // Console.WriteLine(guild.OwnerId);
+            // // SocketGuildUser owner = guild.GetUser(guild.OwnerId);
+            // // await owner.SendMessageAsync("설정 전 정리를 하고 있습니다. 잠시만 기다려주세요");
+            // foreach (SocketGuildUser user in guild.Users) //유저 추가
+            // {
+            //     if (!user.IsBot) File.WriteAllText($"servers/{guild.Id}/{user.Id}","{\"money\":100}");
+            // }
+            // File.WriteAllText("servers/" + guild.Id.ToString() + "/config.json", @"{
+            //     ""editMessage"": 0,
+            //     ""deleteMessage"": 0,
+            //     ""noticeBot"": 0
+            // }");
+            // await guild.DefaultChannel.SendMessageAsync($"안녕하세요? botnewbot입니다. 이 봇의 접두사는 '{prefix}' 이며, '{prefix}명령어' 로 사용 가능한 명령어를 확인할 수 있습니다.\n서버의 관리자들은 '{prefix}명령어 관리자' 로 서버 관리에 관한 명령어를 확인할 수 있습니다.");
+            // // await owner.SendMessageAsync("초기 설정을 시작합니다.");
+
+            // // server[guild.OwnerId].addServer(guild, guild.Owner);
         }
-        // Task personJoinedGuild(SocketGuildUser user)
-        // {
-        //     if (!user.IsBot) support.addUser(user);
-        //     return Task.CompletedTask;
-        // }
+        Task personJoinedGuild(SocketGuildUser user)
+        {
+            if (!user.IsBot) support.addUser(user);
+            return Task.CompletedTask;
+        }
         // Task leftGuild(SocketGuild guild)
         // {
         //     Directory.Delete("servers/" + guild.Id.ToString(),true);

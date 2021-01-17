@@ -20,9 +20,9 @@ namespace csnewcs.Sql
             */
             string connString = $"server={server};Database={dbName};Uid={dbName};";
             conn = new MySqlConnection(connString);
+            conn.Open();
             foreach (var table in checkTables)
             {
-                conn.Open();
                 string hasTableCommand = $"SELECT 1 FROM Information_schema.tables WHERE table_schema='{dbName}' AND table_name='{table.Key}';";
                 MySqlCommand cmd = new MySqlCommand(hasTableCommand, conn);
                 var result = cmd.ExecuteReader();
@@ -60,8 +60,8 @@ namespace csnewcs.Sql
                         Console.WriteLine($"{table.Key} 테이블의 {column[0]} 생성 완료");
                     }
                 }
-                conn.Close();
             }
+            conn.Close();
         }
         public  void addDB()
         {
@@ -88,8 +88,9 @@ namespace csnewcs.Sql
         public  void removeDB()
         {
         }
-        public void removeTable()
+        public void removeTable(string table)
         {
+            string cmd = $"DROP TABLE {table};";
         }
         public void removeColumn()
         {
@@ -131,16 +132,14 @@ namespace csnewcs.Sql
             }
             cmd = cmd.Substring(0,cmd.Length - 1);
             cmd += ");";
-            Console.WriteLine(cmd);
-
-            conn.Open();
+            
             MySqlCommand command = new MySqlCommand(cmd, conn);
             command.ExecuteNonQuery();
             conn.Close();
         }
         public void removeData(string table, string where, object whereData)
         {
-
+            string cmd = $"DROP FROM {table} WHERE {where}='{whereData}';";
         }
         public void setData(string table, string whereColumn ,  object whereData,string column,  object data)
         {
@@ -163,6 +162,7 @@ namespace csnewcs.Sql
                 break;
             }
             result.Close();
+            conn.Close();
             return exists;
         }
         public bool columnExits(string column)
@@ -184,6 +184,7 @@ namespace csnewcs.Sql
                     break;
                 }
             }
+            result.Close();
             conn.Close();
             return success;
         }
