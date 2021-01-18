@@ -27,7 +27,8 @@ namespace bot
             .AddField($"{prefix}도박", $"```돈을 걸고 간단한 게임을 하는 것입니다. 도박이니 당연히 운입니다.\n자세한 도움말: {prefix}도박```")
             .AddField($"{prefix}순위", $"```서버 내에서 순위를 확인하는 것입니다.\n공동순위일 경우 ID순으로 정렬됩니다.\n자세한 도움말: {prefix}순위```")
             .AddField($"{prefix}노래방", $"이 봇으로 노래를 들을 수 있습니다.\n자세한 도움말: {prefix}노래방")
-            .WithUrl("https://github.com/csnewcs/botnewbot/wiki/%EB%AA%85%EB%A0%B9%EC%96%B4");
+            .WithUrl("https://github.com/csnewcs/botnewbot/wiki/%EB%AA%85%EB%A0%B9%EC%96%B4")
+            .WithFooter("csnewcs 제작");
             await user.SendMessageAsync("", embed:builder.Build());
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }

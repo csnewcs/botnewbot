@@ -131,7 +131,11 @@ namespace bot
             // int index = 0;
             foreach (SocketGuildUser user in users)
             {
-                if (!user.IsBot) people.Add(new KeyValuePair<SocketGuildUser, long>(user, support.getMoney(user)));
+                try
+                {
+                    if (!user.IsBot) people.Add(new KeyValuePair<SocketGuildUser, long>(user, support.getMoney(user)));
+                }
+                catch{}
             }
 
             // string dirPath = $"servers/{guildId}";
