@@ -16,8 +16,16 @@ namespace bot
     [Group("순위")]
     public class Rank : ModuleBase<SocketCommandContext>
     {
-        JObject json = new JObject();
-        KeyValuePair<ulong, ulong>[] people;
+        Support support;
+        public Rank(Support _support)
+        {
+            support = _support;
+        }
+
+        // Dictionary<SocketGuildUser, long> people = new Dictionary<SocketGuildUser, long>();
+        // JObject json = new JObject();
+        // KeyValuePair<SocketGuildUser, long>[] people;
+        List<KeyValuePair<SocketGuildUser, long>> people;
 
         [Command]
         public async Task help()
@@ -35,16 +43,16 @@ namespace bot
         [Command("나")]
         public async Task me()
         {
-            makeJson(Context.Guild.Id);
+            makeDict(Context.Guild);
             sort();
             int rank = 1;
             foreach (var a in people)
             {
-                if (Context.User.Id == a.Key) break;
+                if (Context.User as SocketGuildUser == a.Key) break;
                 rank++;
             }
             Random rd = new Random();
-            string nickName = Program.getNickname(Context.User as SocketGuildUser);
+            string nickName = support.getNickname(Context.User as SocketGuildUser);
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
             .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
@@ -54,7 +62,7 @@ namespace bot
         [Command("모두")]
         public async Task all()
         {
-            makeJson(Context.Guild.Id);
+            makeDict(Context.Guild);
             sort();
             Random rd = new Random();
             uint color = (uint)rd.Next(0x000000, 0xffffff);
@@ -66,8 +74,8 @@ namespace bot
             string users = "";
             foreach (var a in people)
             {
-                string nickName = Program.getNickname(Context.Guild.GetUser(a.Key)); //해당 사람의 닉네임 얻기
-                users += $"{count+1}등\n{nickName}: ({Program.unit(a.Value)} BNB)\n\n"; 
+                string nickName = support.getNickname(a.Key); //해당 사람의 닉네임 얻기
+                users += $"{count+1}등\n{nickName}: ({support.unit(a.Value)} BNB)\n\n"; 
                 count++;
 
                 if (count % 20 == 0 && count != users.Length - 1)
@@ -93,7 +101,7 @@ namespace bot
         [Command("상위권")]
         public async Task top()
         {
-            makeJson(Context.Guild.Id);
+            makeDict(Context.Guild);
             sort();
             Random rd = new Random();
             EmbedBuilder builder = new EmbedBuilder()
@@ -103,8 +111,8 @@ namespace bot
             {
                 try
                 {
-                    string nickName = Program.getNickname(Context.Guild.GetUser(people[i].Key));
-                    builder.AddField($"{i + 1}등", $"{nickName}: {Program.unit(people[i].Value)} BNB");
+                    string nickName = support.getNickname(people[i].Key);
+                    builder.AddField($"{i + 1}등", $"{nickName}: {support.unit(people[i].Value)} BNB");
                 }
                 catch
                 {
@@ -113,31 +121,45 @@ namespace bot
             }
             await ReplyAsync("", embed:builder.Build());
         }
-        private void makeJson(ulong guildId)
+        private void makeDict(SocketGuild guild)
         {
-            json = new JObject();
-            string dirPath = $"servers/{guildId}";
-            DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
-            foreach (var fileName in dirInfo.GetFiles())
+            var users = guild.Users;
+            // int count = 0;
+            // foreach (var user in users) if (!user.IsBot) count++;
+
+            people = new List<KeyValuePair<SocketGuildUser, long>>();
+            // int index = 0;
+            foreach (SocketGuildUser user in users)
             {
-                if (fileName.Name != $"config.json")
+                try
                 {
-                    string temp = File.ReadAllText($"{dirPath}/{fileName.Name}");
-                    JToken token = JToken.Parse(temp);
-                    json.Add(fileName.Name, token); //ID: {"money":1234}
+                    if (!user.IsBot) people.Add(new KeyValuePair<SocketGuildUser, long>(user, support.getMoney(user)));
                 }
+                catch{}
             }
+
+            // string dirPath = $"servers/{guildId}";
+            // DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
+            // foreach (var fileName in dirInfo.GetFiles())
+            // {
+                // if (fileName.Name != $"config.json")
+                // {
+                    // string temp = File.ReadAllText($"{dirPath}/{fileName.Name}");
+                    // JToken token = JToken.Parse(temp);
+                    // json.Add(fileName.Name, token); //ID: {"money":1234}
+                // }
+            // }
         }
         private void sort()
         {
-            people =  new KeyValuePair<ulong, ulong>[json.Count];//rank-1: {ID:MONEY}
-            int i = 0;
-            foreach(var person in json)
-            {
-                people[i] = new KeyValuePair<ulong, ulong>(ulong.Parse(person.Key), (ulong)person.Value["money"]);
-                i++;
-            }
-            for (i = 1; i < people.Length; i++) //삽입 정렬
+            // people =  new KeyValuePair<ulong, long>[people.Count];//rank-1: {ID:MONEY}
+            // int i = 0;
+            // foreach(var person in people)
+            // {
+            //     people[i] = new KeyValuePair<ulong, long>(person.Key.Id, (long)person.Value);
+            //     i++;
+            // }
+            for (int i = 1; i < people.Count; i++) //삽입 정렬
             {
                 // Console.WriteLine(people[i]);
                 for (int j = 0; j  < i; j++)
@@ -149,7 +171,7 @@ namespace bot
         private void swap(int a, int b)
         {
             // Console.WriteLine(people[a] + "<>" + people[b]);
-            KeyValuePair<ulong, ulong> temp = people[a];
+            var temp = people[a];
             people[a] = people[b];
             people[b] = temp;
         }
