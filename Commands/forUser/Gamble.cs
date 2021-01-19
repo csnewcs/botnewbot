@@ -34,16 +34,15 @@ namespace bot
         {
             try
             {
-
                 await ReplyAsync($"{money} / {select}");
                 if (select < 1 || select > 9)
                 {
                     await ReplyAsync("제비는 1~9번까지 있습니다.");
                     return;
                 }
-                if (money % 100 != 0 || money == 0)
+                if (money % 10 != 0 || money == 0)
                 {
-                    await ReplyAsync("100BNB 단위로만 도박이 가능합니다.");
+                    await ReplyAsync("10BNB 단위로만 도박이 가능합니다.");
                     return;
                 }
                 
@@ -52,7 +51,7 @@ namespace bot
                     await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                     return;
                 }
-                int[] multi = new int[] {0, 5, 10, 20, 40, 80, 120, 175, 220};
+                int[] multi = new int[] {0, 5, 10, 20, 40, 80, 160, 200, 250};
                 Random rd = new Random();
                 int temp = 0;
                 foreach (int i in multi) //그냥 랜덤으로 한번에 끝내려다가 그래도 제비뽑기니까 섞음
@@ -80,9 +79,9 @@ namespace bot
                 await manySlot(money, loop, Context.User as SocketGuildUser, Context.Message);
                 return;
             }
-            if (money % 150 != 0 || money == 0)
+            if (money % 10 != 0 || money == 0)
             {
-                await ReplyAsync("150BNB 단위로만 도박이 가능합니다.");
+                await ReplyAsync("10BNB 단위로만 도박이 가능합니다.");
                 return;
             }
             
@@ -92,7 +91,7 @@ namespace bot
                 return;
             }
             Random rd = new Random();
-            money = money / 3;
+            money = money / 10;
             string[] number = new string[9] {":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:" ,":eight:" ,":nine:"};
             int one = rd.Next(0, 9);
             int two = rd.Next(0, 9);
@@ -103,23 +102,23 @@ namespace bot
             long result = 0;
             if (one == two && one == three && two == three) //숫자 3개 모두 일치
             {
-                if (one == 6) result = money * 100;
-                else result = money * (one + 3) * (one + 3); 
+                if (one == 6) result = money * 300;
+                else result = money * (one + 9) * (one + 9); 
                 plusMoney(Context.User as SocketGuildUser, result);
                 builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {support.unit(money * 3)} BNB가 {support.unit(result)} BNB가 되어 돌아갑니다!");
             }
             else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
             {
-                long avg = (long)(one + two + three) / 3;
-                if (one == 6) result = money * 15;
+                long avg = (long)(one + two + three + 3);
+                if (one == 6) result = money * 45;
                 else result = money * (avg + 4); //1 ~ 9배
                 plusMoney(Context.User as SocketGuildUser, result);
                 builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {support.unit(money * 3)} BNB가 {support.unit(result)} BNB가 되어 돌아갑니다.");
             }
             else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
             {
-                long avg = (long)(one + two + three) / 3;
-                if (two == 7) result = money * 15;
+                long avg = (long)(one + two + three + 3);
+                if (two == 6) result = money * 45;
                 else result = money * (avg + 2);
                 plusMoney(Context.User as SocketGuildUser, result);
                 builder.AddField("축하 드립니다.", $"숫자 2개를 {two + 1}으로 맞추셨습니다. 거셨던 {support.unit(money * 3)} BNB가 {support.unit(result)} BNB가 되어 돌아갑니다.");
@@ -138,9 +137,9 @@ namespace bot
                 await ReplyAsync("100번까지만 연속 슬롯머신이 가능합니다.");
                 return;
             }
-            if (money % 30 != 0 || money == 0)
+            if (money % 10 != 0 || money == 0)
             {
-                await ReplyAsync("30BNB 단위로만 도박이 가능합니다.");
+                await ReplyAsync("10BNB 단위로만 도박이 가능합니다.");
                 return;
             }
             
@@ -149,7 +148,7 @@ namespace bot
                 await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                 return;
             }
-            money = money / 3;
+            money = money / 10;
             Random rd = new Random();
             
             string[] number = new string[9] {":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:" ,":eight:" ,":nine:"};
@@ -163,16 +162,16 @@ namespace bot
                 if (one == two && one == three && two == three) //숫자 3개 모두 일치
                 {
                     long temp = 0;
-                    if (one == 6) temp = money * 130;
-                    else temp = money * (one + 2) * ( one + 2); //4 ~ 100배
+                    if (one == 6) temp = money * 300;
+                    else temp = money * (one + 9) * ( one + 9);
                     result += temp;
                     results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit(temp)} BNB)\n";
                 }
                 else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
                 {
                     long temp = 0;
-                    long avg = (one + two + three) / 3;
-                    if (one == 6) temp = money * 15;
+                    long avg = (one + two + three + 3);
+                    if (one == 6) temp = money * 45;
                     else temp = money * (avg + 3);
                     result += temp;
                     results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit(temp)} BNB)\n";
@@ -180,8 +179,8 @@ namespace bot
                 else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
                 {
                     long temp = 0;
-                    long avg = (one + two + three) / 3;
-                    if (two == 6) temp = money * 15;
+                    long avg = (one + two + three+3);
+                    if (two == 6) temp = money * 45;
                     else temp = money * (avg + 3);
                     result += temp;
                     results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit(temp)} BNB)\n";

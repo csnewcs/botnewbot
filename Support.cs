@@ -1,10 +1,12 @@
 using System;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
+using Newtonsoft.Json.Linq;
 using csnewcs.Sql;
 
 namespace bot
@@ -13,15 +15,36 @@ namespace bot
     {
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
+        Dictionary<ulong, ulong>  _helpMessages = new Dictionary<ulong, ulong>(); //메세지 ID, 사용자 ID
+        public Dictionary<ulong, ulong> helpMessages
+        {
+            get
+            {
+                return _helpMessages;
+            }
+            set
+            {
+                _helpMessages = value;
+            }
+        }
+
+
         SqlHelper sqlHelper;
+
+
 
         public Support(SqlHelper helper = null)
         {
             sqlHelper = helper;
         }
+      
         public void changeSqlHelper(SqlHelper helper)
         {
             sqlHelper = helper;
+        }
+        public JObject getGuildConfig(SocketGuild guild)
+        {
+            return JObject.Parse(sqlHelper.getData("guild_" + guild.Id.ToString(), "id", "serverinfo", "serverinfo").ToString());
         }
         public long getMoney(SocketGuildUser user)
         {

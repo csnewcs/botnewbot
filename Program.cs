@@ -18,6 +18,7 @@ using Victoria.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
 
 using csnewcs.Sql;
+using csnewcs.Game.GoStop;
 
 
 namespace bot
@@ -75,6 +76,7 @@ namespace bot
             client.MessageDeleted += messageDeleted;
             client.MessageUpdated += messageEdited;
             client.JoinedGuild += joinedGuild;
+            client.ReactionAdded += reactionAdded;
             // client.LeftGuild += leftGuild;
             // client.UserJoined += personJoinedGuild;
             
@@ -293,17 +295,37 @@ namespace bot
         }
         async Task messageEdited(Cacheable<IMessage, ulong> beforeMsg, SocketMessage afterMsg, ISocketMessageChannel editedMessageChannel) //메세지 수정될 때
         {
+            // Console.WriteLine("메세지 업데이트");
+            // if (beforeMsg.Value.Reactions.Count != afterMsg.Reactions.Count)
+            // {
+            //     Console.WriteLine("들어옴");
+            //     bool person = false;
+            //     string emojiName = "";
+            //     foreach (var reaction in afterMsg.Reactions)
+            //     {
+            //         if (!reaction.Value.IsMe)
+            //         {
+            //             person = true;
+            //             emojiName = reaction.Key.Name;
+            //         }
+            //         Console.WriteLine(reaction.Key.Name);
+            //     }
+            //     await afterMsg.Channel.SendMessageAsync("이모지 변경됨 " + emojiName);
+            // }
+            
+            if (beforeMsg.Value.Content == afterMsg.Content) return;
             if (editedMessageChannel is SocketTextChannel) //서버인지 확인
             {
                 SocketGuild guild = (editedMessageChannel as SocketTextChannel).Guild;
-                JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                JObject json = support.getGuildConfig(guild);
+                // JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
                 if (afterMsg.Embeds.Count > 0 && beforeMsg.Value.Embeds.Count <= 0)
                 {
                     return;
                 }
                 if (json["editMessage"].ToString() != "0" && !string.IsNullOrEmpty(afterMsg.Content)) 
                 {
-                    if (beforeMsg.Value.Author.IsBot) return;
+                    // if (beforeMsg.Value.Author.IsBot) return;
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["editMessage"].ToString()));
                     SocketGuildUser user = guild.GetUser(beforeMsg.Value.Author.Id);
                     string nickname = support.getNickname(user);
@@ -351,6 +373,69 @@ namespace bot
             // // await owner.SendMessageAsync("초기 설정을 시작합니다.");
 
             // // server[guild.OwnerId].addServer(guild, guild.Owner);
+        }
+        async Task reactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            Console.WriteLine("이모지 변경 감지");
+            // if (message.Value.Author != client.) 
+            // {
+            //     return;
+            //     // return Task.CompletedTask;
+            // }
+            // Console.WriteLine("봇이 보낸 거 맞음");
+            if(support.helpMessages.ContainsKey(message.Value.Id))
+            {
+                Console.WriteLine("메세지가 감지됨");
+                EmbedBuilder builder= new EmbedBuilder();
+                string[] emojis = new string[5] {
+                    "\U0001f4b0", "\U0001f4b8", "\U0001f3c6", "\U0001f3a4", "\U0001f6e0" 
+                };
+                if (reaction.UserId == support.helpMessages[message.Value.Id])
+                {
+                    string prefix = Program.prefix;
+                    Console.WriteLine(reaction.Emote.Name);
+                    if (reaction.Emote.Name == emojis[0])
+                    {
+                            builder.AddField($"{prefix}은행", "현재 자신이 돈이 얼마나 있는지 확인합니다.");
+                    }
+                    else if (reaction.Emote.Name == emojis[1])
+                    {
+                        builder.AddField($"{prefix}도박 제비뽑기 <걸 돈> <선택할 제비>", "```제비뽑기로 도박을 합니다. 1~9번 제비가 있으며, 건 돈의 0%~250%를 돌려받을 수 있습니다. (10BNB 단위로 도박이 가능합니다)```")
+                                        .AddField($"{prefix}도박 슬롯머신 <걸 돈>", "```슬롯머신으로 도박을 합니다. 건 돈의 0배~30배를 돌려받을 수 있습니다. (10BNB 단위로 도박이 가능합니다)```")
+                                        .AddField($"{prefix}도박 슬롯머신 <판당 걸 돈> <연속으로 돌릴 횟수>", "```슬롯머신을 여러 번 돌립니다. 한 번에 최대 100번까지 돌릴 수 있으며, 결과는 DM으로 전송됩니다.```");
+                    }
+                    else if (reaction.Emote.Name == emojis[2])
+                    {
+                        builder.AddField($"{prefix}순위 나", "```이 서버 내에서 나의 순위를 확인합니다.```")
+                                        .AddField($"{prefix}순위 상위권", "```이 서버의 상위 5명을 확인합니다.```")
+                                        .AddField($"{prefix}순위 모두", "```이 서버에 속해있는 모든 사람들의 순위를 확인합니다. 결과는 DM으로 전송됩니다.```");
+                    }
+                    else if (reaction.Emote.Name == emojis[3])
+                    {
+                        builder.AddField($"{prefix}노래방 들어와", "```사용자가 있는 통화방으로 봇이 들어갑니다.```")
+                                        .AddField($"{prefix}노래방 등록 <검색어 | URL>", "```노래를 등록합니다. 재생하고 있는 것이 없다면 바로 재생하고, 아니면 재생목록에 추가됩니다.```")
+                                        .AddField($"{prefix}노래방 일괄등록 <검색어>,[검색어]", "```반점(,)을 기준으로 URL혹은 검색어를 나눠 노래를 등록합니다.```")
+                                        .AddField($"{prefix}노래방 재생목록 [페이지]", "현재 재생목록을 보여줍니다. 한 페이지에 10곡씩");
+                    }
+                    else if (reaction.Emote.Name == emojis[4])
+                    {
+                        builder.WithTitle("관리자용 명령어")
+                                        .AddField($"{prefix}역할 부여 <@역할을 부여할 사람> <@부여될 역할>", "```언급한 사람들에게 언급한 역할들을 부여합니다. 한 번에 여러 사람에게 하는 것도 가능하고, 한 번에 여러 역할을 부여하는 것도 가능합니다.```")
+                                        .AddField($"{prefix}역할 강탈 <@역할을 없앨 사람> <@없어질 역할>", "```언급할 사람에게서 언급한 역할을 제거합니다. 한 번에 여러 사람에게 하는 것도 가능하고, 한 번에 여러 역할을 없애는 것도 가능합니다..```")
+                                        .AddField($"{prefix}처벌 뮤트 <@음소거 시킬 사람>", "```언급한 사람들의 마이크를 강제로 꺼버립니다. 한 번에 여러 명을 음소거 시키는 것도 가능합니다.```")
+                                        .AddField($"{prefix}처벌 킥 <@추방할 사람>", "```언급한 사람들을 서버에서 추방시킵니다. 한 번에 여러 명을 추방하는 것도 가능합니다.```")
+                                        .AddField($"{prefix}처벌 벤 <@차단할 사람>", "```언급한 사람들을 서버에서 차단시킵니다. 한 번에 여러 명을 차단하는 것도 가능합니다.```")
+                                        .AddField($"{prefix}처벌해제 뮤트 <@음소거된 사람>", "```언급한 사람들의 마이크를 다시 킵니다. 한 번에 여러 명을 푸는 것도 가능합니다.```")
+                                        .AddField($"{prefix}처벌해제 밴 목록", "```이 서버에서 벤을 당한 사람들 목록을 불러옵니다. 결과는 DM으로 전송됩니다.```")
+                                        .AddField($"{prefix}처벌해제 벤 <차단을 풀 사람의 ID>", "```ID를 준 사람의 차단을 해제합니다. 밴 목록에서 ID를 가져와주세요.```")
+                                        .AddField($"{prefix}처벌해제 밴 모두", "```이 서버에서 차단 당한 사람 모두를 해제합니다.```");
+                    }
+                    support.helpMessages.Remove(message.Id);
+                    await message.Value.ModifyAsync(async (m) => {m.Embed = builder.Build();});
+                }
+            }
+            
+            // return Task.CompletedTask;
         }
         Task personJoinedGuild(SocketGuildUser user)
         {
