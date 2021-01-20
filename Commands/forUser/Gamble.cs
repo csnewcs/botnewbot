@@ -2,10 +2,21 @@ using System;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
+
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using Newtonsoft.Json.Linq;
+
+// using SixLabors.ImageSharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+// using SixLabors.ImageSharp
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Formats.Png;
+
+using Newtonsoft.Json.Linq
+;
+using csnewcs.Game.GoStop;
 
 namespace bot
 {
@@ -22,7 +33,7 @@ namespace bot
         {
             EmbedBuilder build = new EmbedBuilder()
             .WithTitle("도박 명령어 도움말")
-            .WithColor(new Color(0xbe33ff))
+            .WithColor(new Discord.Color(0xbe33ff))
             .AddField("제비뽑기", "1번 ~ 9번 제비를 뽑아 건 돈의 0% ~ 220%를 돌려받습니다.\n(사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
             .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다.\n나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다.\n(사용법: $도박 슬롯머신 [걸 돈])")
             .AddField("슬롯머신(연속)", "슬롯머신과 같습니다. 단 연속으로(100번까지) 돌립니다.\n결과 중 일부는 DM으로 전송됩니다.\n(사용법: $도박 슬롯머신 [(판당)걸 돈] [돌릴 수(0이면 일반 슬롯머신으로 간주)])");
@@ -200,7 +211,7 @@ namespace bot
             uint color = (uint)rd.Next(0x000000, 0xffffff);
             EmbedBuilder builder = new EmbedBuilder()
                 .WithTitle($"{support.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과")
-                .WithColor(new Color(color));
+                .WithColor(new Discord.Color(color));
             if (array.Length > 1)
             {
                 int i = 1;
@@ -217,7 +228,7 @@ namespace bot
                 .AddField("결론", log);
             }
             EmbedBuilder serverSend = new EmbedBuilder()
-            .WithColor(new Color(color))
+            .WithColor(new Discord.Color(color))
             .AddField($"{support.getNickname(user)}님의 {loop}번 연속 슬롯머신 결과", log);
             await msg.Author.SendMessageAsync("", embed:builder.Build());
             await msg.Channel.SendMessageAsync("DM으로 결과를 전송했습니다.", embed:serverSend.Build());
@@ -244,6 +255,114 @@ namespace bot
             // getUser["money"] = money - minus;
             // File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}", getUser.ToString());
             return false;
+        }
+
+        [Command("고스톱")]
+        public async Task goStop(string type)
+        {
+            try
+            {
+                EmbedBuilder builder = new EmbedBuilder();
+                Random rd = new Random();
+                builder.WithColor(new Discord.Color((uint)rd.Next(0, 0xffffff)));
+                SocketGuildChannel channel = Context.Channel as SocketGuildChannel;
+                SocketGuild guild = Context.Guild;
+
+                if (type == "시작")
+                {
+                    if (support.goStopGame.ContainsKey(Context.Channel as SocketGuildChannel))
+                    {
+                        builder.AddField("저런", "이미 게임이 진행중이에요. 나중에 다시 시도해주세요.");
+                    }
+                    else if(support.tempUsers.ContainsKey(Context.Channel as SocketGuildChannel))
+                    {
+                        builder.AddField("저런", $"이미 시작을 했어요 '{Context.Message.Content[0]}고스톱 참가' 로 게임에 참가해주세요!");
+                    }
+                    else
+                    {
+                        System.Collections.Generic.List<ulong> list = new System.Collections.Generic.List<ulong>();
+                        list.Add(Context.User.Id);
+                        support.tempUsers.Add(Context.Channel as SocketGuildChannel, list);
+                        builder.AddField("성공", $"게임이 곧 시작됩니다. 참가하실 분들은 '{Context.Message.Content[0]}고스톱 참가'로 게임에 참가해주세요.");
+                        await startGoStop(Context.Channel as SocketGuildChannel);
+                    }
+                }
+                else if (type == "참가")
+                {
+                    if (support.goStopGame.ContainsKey(channel))
+                    {
+                        builder.AddField("저런", "이미 게임이 진행중이에요. 나중에 다시 시도해주세요.");
+                    }
+                    else if(support.tempUsers.ContainsKey(channel))
+                    {
+                        builder.AddField("저런", $"아직 게임 시작을 하지 않았어요 '{Context.Message.Content[0]}고스톱 시작'으로 먼저 게임을 시작해주세요.");
+                    }
+                    else if (support.tempUsers[channel].Count > 3)
+                    {
+                        builder.AddField("저런", "이미 사람이 꽉 찼어요. 나중에 다시 시도해주세요.");
+                    }
+                    else if (support.tempUsers[channel].Contains(Context.User.Id))
+                    {
+                        builder.AddField("저런", "이미 게임에 참가하셨어요.");
+                    }
+                    else
+                    {
+                        support.tempUsers[channel].Add(Context.User.Id);
+                        builder.AddField("성공", "게임에 참가하셨습니다. 게임이 시작될 때 까지 잠시만 기다려주세요.");
+                    }
+                }
+                await ReplyAsync("", false, builder.Build());
+            }
+            catch(Exception e)
+            {
+                await ReplyAsync(e.ToString());
+            }
+        }
+        public async Task startGoStop(SocketGuildChannel channel)
+        {
+            try
+            {
+                Random rd = new Random();
+                EmbedBuilder builder = new EmbedBuilder().WithColor((uint)rd.Next(0, 0xffffff));
+                
+                var players = support.tempUsers[channel];
+                // if (players.Count < 2)
+                // {
+                //     builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
+                // }
+                // else if(players.Count > 4)
+                // {
+                //     builder.AddField("실패!", "사람이 너무 많아요. 최대 4명 까지 한 번에 플레이가 가능해요.");
+                // }
+                // else
+                // {
+                    support.goStopGame.Add(channel, new GoStop(support.tempUsers[channel].ToArray()));
+                // }
+                
+                var hwatuImages = support.goStopGame[channel].getHwatus(Context.User.Id);
+                int width = hwatuImages[0].hwatuImage.Width + 20;
+                int height = hwatuImages[0].hwatuImage.Height;
+
+                using (var image = new Image<Rgba32>(width * hwatuImages.Count, height))
+                {
+                    int index=0;
+                    foreach(var a in hwatuImages)
+                    {
+                        Point point = new Point(index * width, 0);
+                        image.Mutate(image => image.DrawImage(a.hwatuImage, point, 1));
+                        index++;
+                    }
+
+                    image.Save(new FileStream("temp.png", FileMode.OpenOrCreate), new PngEncoder());
+                }
+
+                await ((SocketTextChannel)channel).SendFileAsync("temp.png", "");
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            // await ((SocketTextChannel)channel).SendMessageAsync("", false, builder.Build());
         }
     }
 }

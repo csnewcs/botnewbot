@@ -220,7 +220,7 @@ namespace bot
             var queue = player.Queue.ToArray();
 
             var voiceChannel = player.VoiceChannel;
-                _lavaNode.LeaveAsync(voiceChannel);
+                await _lavaNode.LeaveAsync(voiceChannel);
                 await _lavaNode.JoinAsync(voiceChannel);
             player = _lavaNode.GetPlayer(Context.Guild);
 

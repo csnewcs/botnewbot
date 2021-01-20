@@ -8,14 +8,18 @@ using Discord.WebSocket;
 
 using Newtonsoft.Json.Linq;
 using csnewcs.Sql;
+using csnewcs.Game.GoStop;
 
 namespace bot
 {
     public class Support
     {
+        SqlHelper sqlHelper;
         Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         Dictionary<ulong, ulong>  _helpMessages = new Dictionary<ulong, ulong>(); //메세지 ID, 사용자 ID
+        Dictionary<SocketGuildChannel, GoStop> _gostop = new Dictionary<SocketGuildChannel, GoStop>();
+        Dictionary<SocketGuildChannel, List<ulong>> _tempUsers = new Dictionary<SocketGuildChannel, List<ulong>>(); 
         public Dictionary<ulong, ulong> helpMessages
         {
             get
@@ -27,9 +31,29 @@ namespace bot
                 _helpMessages = value;
             }
         }
+        public Dictionary<SocketGuildChannel, GoStop> goStopGame
+        {
+            get
+            {
+                return _gostop;
+            }
+            set
+            {
+                _gostop = value;
+            }
+        }
 
-
-        SqlHelper sqlHelper;
+        public Dictionary<SocketGuildChannel, List<ulong>> tempUsers
+        {
+            get
+            {
+                return _tempUsers;
+            }
+            set
+            {
+                _tempUsers = value;
+            }
+        }
 
 
 

@@ -9,5 +9,6 @@
     <PackageReference Include="Victoria" Version="5.1.10"/>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1"/>
     <PackageReference Include="MySql.Data" Version="8.0.22"/>
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.2"/>
   </ItemGroup>
 </Project>
