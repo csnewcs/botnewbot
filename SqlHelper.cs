@@ -116,7 +116,7 @@ namespace csnewcs.Sql
             // string cmd = $"DESC {table};";
             // var reader = new MySqlCommand(cmd, conn).ExecuteReader();
             // Console.WriteLine(reader.GetSByte
-            int i = 0;
+            // int i = 0;
             // while (reader.Read())
             // {
             //     Console.WriteLine(reader["1"]);

@@ -350,9 +350,10 @@ namespace bot
             fs.Close();
             return Task.CompletedTask;
         }
-        async Task joinedGuild(SocketGuild guild) //서버에 처음 들어갔을 때
+        Task joinedGuild(SocketGuild guild) //서버에 처음 들어갔을 때
         {
             support.addGuild(guild);
+            return Task.CompletedTask;
 
             // // setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
             // // server.Add(guild.OwnerId, new Server()); //(서버 주인 ID, 서버 설정 클래스)
@@ -400,8 +401,8 @@ namespace bot
                     }
                     else if (reaction.Emote.Name == emojis[1])
                     {
-                        builder.AddField($"{prefix}도박 제비뽑기 <걸 돈> <선택할 제비>", "```제비뽑기로 도박을 합니다. 1~9번 제비가 있으며, 건 돈의 0%~250%를 돌려받을 수 있습니다. (10BNB 단위로 도박이 가능합니다)```")
-                                        .AddField($"{prefix}도박 슬롯머신 <걸 돈>", "```슬롯머신으로 도박을 합니다. 건 돈의 0배~30배를 돌려받을 수 있습니다. (10BNB 단위로 도박이 가능합니다)```")
+                        builder.AddField($"{prefix}도박 제비뽑기 <걸 돈> <선택할 제비>", "```제비뽑기로 도박을 합니다. 1~9번 제비가 있으며, 건 돈의 0%~250%를 돌려받을 수 있습니다. (최소 10BNB를 걸어야 도박이 가능합니다)```")
+                                        .AddField($"{prefix}도박 슬롯머신 <걸 돈>", "```슬롯머신으로 도박을 합니다. 건 돈의 0배~30배를 돌려받을 수 있습니다. (최소 10BNB를 걸어야 도박이 가능합니다)```")
                                         .AddField($"{prefix}도박 슬롯머신 <판당 걸 돈> <연속으로 돌릴 횟수>", "```슬롯머신을 여러 번 돌립니다. 한 번에 최대 100번까지 돌릴 수 있으며, 결과는 DM으로 전송됩니다.```");
                     }
                     else if (reaction.Emote.Name == emojis[2])
@@ -433,7 +434,7 @@ namespace bot
                     }
                     builder.WithColor(0xbe33ff);
                     support.helpMessages.Remove(message.Id);
-                    await message.Value.ModifyAsync(async m => {m.Embed = builder.Build();});
+                    await message.Value.ModifyAsync(m => {m.Embed = builder.Build();});
                 }
             }
             
