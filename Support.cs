@@ -130,6 +130,7 @@ namespace bot
         }
         public string unit(long money)
         {
+            if (money == 0) return "0";
             string result = "";
             long[] units = new long[5] {10000000000000000, 1000000000000, 100000000, 10000, 1};
             char[] unitChars = new char[5] {'경', '조', '억', '만', '\0'};

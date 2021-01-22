@@ -41,23 +41,24 @@ namespace bot
             await ReplyAsync("DM으로 결과를 전송했습니다.");
         }
         [Command("제비뽑기")]
-        public async Task draw(long money, ulong select) //제비뽑기
+        public async Task draw(long _money, ulong select) //제비뽑기
         {
+            double money = (double)_money;
             try
             {
-                await ReplyAsync($"{money} / {select}");
+                // await ReplyAsync($"{money} / {select}");
                 if (select < 1 || select > 9)
                 {
                     await ReplyAsync("제비는 1~9번까지 있습니다.");
                     return;
                 }
-                if (money % 10 != 0 || money == 0)
+                if (money < 10)
                 {
-                    await ReplyAsync("10BNB 단위로만 도박이 가능합니다.");
+                    await ReplyAsync("최소 10BNB는 걸어야 합니다.");
                     return;
                 }
                 
-                if (minusMoney(Context.User as SocketGuildUser, money))
+                if (minusMoney(Context.User as SocketGuildUser, (long)money))
                 {
                     await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                     return;
@@ -73,30 +74,30 @@ namespace bot
                     multi[rd1] = multi[rd2];
                     multi[rd2] = temp;
                 }
-                long result = money / 100 * (long)multi[select - 1];
+                long result = (long)Math.Round(money / 100 * (double)multi[select - 1]);
                 plusMoney(Context.User as SocketGuildUser, result);
                 EmbedBuilder builder = new EmbedBuilder()
-                .AddField(support.getNickname(Context.User as SocketGuildUser) + "님의 제비뽑기 결과", $"× {multi[select - 1]}%를 뽑으셔서 {support.unit(money)}BNB가 {support.unit(result)}BNB가 되었습니다.")
+                .AddField(support.getNickname(Context.User as SocketGuildUser) + "님의 제비뽑기 결과", $"× {multi[select - 1]}%를 뽑으셔서 {support.unit(_money)}BNB가 {support.unit(result)}BNB가 되었습니다.")
                 .WithColor(rd.Next(0, 255), rd.Next(0, 255), rd.Next(0, 255));
                 await ReplyAsync("", embed:builder.Build());
             }
             catch (Exception e) {await ReplyAsync(e.ToString());}
         }
         [Command("슬롯머신")]
-        public async Task slot(long money, uint loop = 0) //슬롯머신
+        public async Task slot(long _money, uint loop = 0) //슬롯머신
         {
+            if (_money < 10)
+            {
+                await ReplyAsync("최소 10BNB를 걸어야 합니다.");
+            }
+            double money = (double)_money;
             if (loop != 0)
             {
                 await manySlot(money, loop, Context.User as SocketGuildUser, Context.Message);
                 return;
             }
-            if (money % 10 != 0 || money == 0)
-            {
-                await ReplyAsync("10BNB 단위로만 도박이 가능합니다.");
-                return;
-            }
             
-            if (minusMoney(Context.User as SocketGuildUser, money))
+            if (minusMoney(Context.User as SocketGuildUser, _money))
             {
                 await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                 return;
@@ -110,51 +111,52 @@ namespace bot
             EmbedBuilder builder = new EmbedBuilder()
             .WithTitle(number[one] + number[two] + number[three])
             .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256));
-            long result = 0;
+            double result = 0;
+            result = Math.Round(result);
             if (one == two && one == three && two == three) //숫자 3개 모두 일치
             {
-                if (one == 6) result = money * 300;
+                if (one == 6) result = (long)Math.Round(money * 300);
                 else result = money * (one + 9) * (one + 9); 
-                plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {support.unit(money * 3)} BNB가 {support.unit(result)} BNB가 되어 돌아갑니다!");
+                plusMoney(Context.User as SocketGuildUser, (long)result);
+                builder.AddField("축하 드립니다!", $"숫자 3개를 모두 {one + 1}으로 맞추셨습니다! 거셨던 {support.unit(_money)} BNB가 {support.unit((long)result)} BNB가 되어 돌아갑니다!");
             }
             else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
             {
                 long avg = (long)(one + two + three + 3);
                 if (one == 6) result = money * 45;
                 else result = money * (avg + 4); //1 ~ 9배
-                plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {support.unit(money * 3)} BNB가 {support.unit(result)} BNB가 되어 돌아갑니다.");
+                plusMoney(Context.User as SocketGuildUser, (long)result);
+                builder.AddField("축하 드립니다.", $"숫자 2개를 {one + 1}으로 맞추셨습니다. 거셨던 {support.unit(_money )} BNB가 {support.unit((long)result)} BNB가 되어 돌아갑니다.");
             }
             else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
             {
                 long avg = (long)(one + two + three + 3);
                 if (two == 6) result = money * 45;
                 else result = money * (avg + 2);
-                plusMoney(Context.User as SocketGuildUser, result);
-                builder.AddField("축하 드립니다.", $"숫자 2개를 {two + 1}으로 맞추셨습니다. 거셨던 {support.unit(money * 3)} BNB가 {support.unit(result)} BNB가 되어 돌아갑니다.");
+                plusMoney(Context.User as SocketGuildUser, (long)result);
+                builder.AddField("축하 드립니다.", $"숫자 2개를 {two + 1}으로 맞추셨습니다. 거셨던 {support.unit(_money )} BNB가 {support.unit((long)result)} BNB가 되어 돌아갑니다.");
             }
             else
             {
-                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {support.unit(money * 3)} BNB가 소멸 되었습니다.");
+                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {support.unit(_money * 3)} BNB가 소멸 되었습니다.");
             }
             await ReplyAsync("", embed:builder.Build());
         }
         
-        private async Task manySlot(long money, uint loop, SocketGuildUser user, SocketMessage msg)
+        private async Task manySlot(double money, uint loop, SocketGuildUser user, SocketMessage msg)
         {
+            if (money <  10)
+            {
+                await ReplyAsync("최소 10BNB를 걸어야 합니다.");
+                return;
+            }
             if (loop > 100)
             {
                 await ReplyAsync("100번까지만 연속 슬롯머신이 가능합니다.");
                 return;
             }
-            if (money % 10 != 0 || money == 0)
-            {
-                await ReplyAsync("10BNB 단위로만 도박이 가능합니다.");
-                return;
-            }
             
-            if (minusMoney(Context.User as SocketGuildUser, money * loop))
+            if (minusMoney(Context.User as SocketGuildUser, (long)Math.Round(money * loop)))
             {
                 await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                 return;
@@ -172,29 +174,29 @@ namespace bot
                 int three = rd.Next(0, 9);
                 if (one == two && one == three && two == three) //숫자 3개 모두 일치
                 {
-                    long temp = 0;
+                    double temp = 0;
                     if (one == 6) temp = money * 300;
-                    else temp = money * (one + 9) * ( one + 9);
-                    result += temp;
-                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit(temp)} BNB)\n";
+                    else temp = (long)money * (one + 9) * ( one + 9);
+                    result += (long)Math.Round(temp);
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit((long)Math.Round(temp))} BNB)\n";
                 }
                 else if (one == two || one == three) //숫자 2개 일치 (첫번째 숫자가 들어감)
                 {
-                    long temp = 0;
+                    double temp = 0;
                     long avg = (one + two + three + 3);
                     if (one == 6) temp = money * 45;
                     else temp = money * (avg + 3);
-                    result += temp;
-                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit(temp)} BNB)\n";
+                    result += (long)Math.Round(temp);
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit((long)Math.Round(temp))} BNB)\n";
                 }
                 else if (two == three) //숫자 2개 일치 (첫번째 숫자가 들어가지 않음)
                 {
-                    long temp = 0;
+                    double temp = 0;
                     long avg = (one + two + three+3);
                     if (two == 6) temp = money * 45;
                     else temp = money * (avg + 3);
-                    result += temp;
-                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit(temp)} BNB)\n";
+                    result += (long)Math.Round(temp);
+                    results += $"{i}번째 결과: {number[one]}{number[two]}{number[three]}(+ {support.unit((long)Math.Round(temp))} BNB)\n";
                 }
                 else
                 {
@@ -204,9 +206,10 @@ namespace bot
             }
             plusMoney(user, result);
             string log = "";
-            money *= 3;
-            if (result > money * loop) log = $"{support.unit(result - (money * loop))} BNB 이득";
-            else log = $"{support.unit((money * loop) - result)} BNB 손해";
+            
+            if (result > money * 10 * loop) log = $"{support.unit(result - ((long)money * loop * 10))} BNB 이득";
+            else log = $"{support.unit(((long)money * 10 * loop) - result)} BNB 손해";
+
             string[] array = results.Split(';');
             uint color = (uint)rd.Next(0x000000, 0xffffff);
             EmbedBuilder builder = new EmbedBuilder()
@@ -242,6 +245,16 @@ namespace bot
             // getUser["money"] = (ulong)getUser["money"] + plus;
             // File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}", getUser.ToString());
         }
+
+        // private void plusMoney(SocketGuildUser user, double plus)
+        // {
+        //     long money = (long)support.getMoney(user);
+        //     money += (long)Math.Round(plus);
+        //     support.setMoney(user, money);
+        //     // JObject getUser = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
+        //     // getUser["money"] = (ulong)getUser["money"] + plus;
+        //     // File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}", getUser.ToString());
+        // }
         private bool minusMoney(SocketGuildUser user, long minus)
         {
             // JObject getUser = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
@@ -339,23 +352,8 @@ namespace bot
                     support.goStopGame.Add(channel, new GoStop(support.tempUsers[channel].ToArray()));
                 // }
                 
-                var hwatuImages = support.goStopGame[channel].getHwatus(Context.User.Id);
-                int width = hwatuImages[0].hwatuImage.Width + 20;
-                int height = hwatuImages[0].hwatuImage.Height;
-
-                using (var image = new Image<Rgba32>(width * hwatuImages.Count, height))
-                {
-                    int index=0;
-                    foreach(var a in hwatuImages)
-                    {
-                        Point point = new Point(index * width, 0);
-                        image.Mutate(image => image.DrawImage(a.hwatuImage, point, 1));
-                        index++;
-                    }
-
-                    image.Save(new FileStream("temp.png", FileMode.OpenOrCreate), new PngEncoder());
-                }
-
+                
+                support.goStopGame[channel].getPlayer(Context.User.Id).getScoreHwatusImage().Save("temp.png", new PngEncoder());
                 await ((SocketTextChannel)channel).SendFileAsync("temp.png", "");
             }
             catch(Exception e)
