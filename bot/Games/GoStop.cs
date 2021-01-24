@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using SixLabors.ImageSharp;
@@ -141,6 +143,7 @@ namespace csnewcs.Game.GoStop
             using (var image = new Image<Rgba32>(width * hwatus.Count, height))
             {
                 int index=0;
+                
                 foreach(var a in hwatus)
                 {
                     Point point = new Point(index * width, 0);
@@ -236,13 +239,14 @@ namespace csnewcs.Game.GoStop
             {
                 Point pt = new Point(0, 0);
                 partImages[index] = new Image<Rgba32>(cardSize.Width * 5 + 26, cardSize.Height * (part.Count + 0)+41);
+
                 foreach(var line in part)
                 {
-                    foreach(var one in line)
+                    foreach (var one in line) 
                     {
-                        // Console.WriteLine($"필요: {(cardSize.Width * pt.X + 1) + one.Size().Width}x{(partImages[index].Size().Width - cardSize.Height * pt.Y + 1) + one.Size().Height}, 현재: {partImages[index].Size().Width}x{partImages[index].Size().Height}");
                         partImages[index].Mutate(x => x.DrawImage(one, new Point(cardSize.Width * pt.X + 1, partImages[index].Size().Height - (cardSize.Height * (pt.Y+1))  + 1), 1));
                         pt.X++;
+                        // Console.WriteLine($"필요: {(cardSize.Width * pt.X + 1) + one.Size().Width}x{(partImages[index].Size().Width - cardSize.Height * pt.Y + 1) + one.Size().Height}, 현재: {partImages[index].Size().Width}x{partImages[index].Size().Height}");
                     }
                     pt.Y++;
                     pt.X = 0;
@@ -250,13 +254,14 @@ namespace csnewcs.Game.GoStop
                 if (partImages[index].Size().Height > returnImageSize.Height) returnImageSize.Height = partImages[index].Size().Height;
                 index++;
             }
-            returnImageSize.Height += cardSize.Height * 2 + 4;
+            returnImageSize.Height += cardSize.Height * 2 + 45;
+            returnImageSize.Width += 26;
             
-            Image returnImage = new Image<Rgba32>(returnImageSize.Width + 26, returnImageSize.Height + 41);
+            Image returnImage = new Image<Rgba32>(returnImageSize.Width, returnImageSize.Height);
             returnImage.Mutate(m => {
                 m.DrawImage(partImages[3], new Point(1,  returnImageSize.Height / 2), 1);
-                m.DrawImage(partImages[1], new Point((returnImageSize.Width - partImages[1].Size().Width) / 2, (returnImageSize.Height - partImages[1].Size().Height / 2) + 1), 1);
-                m.DrawImage(partImages[2], new Point((returnImageSize.Width - partImages[2].Size().Width) / 2, (returnImageSize.Height - cardSize.Height) / 2 + 1), 1);
+                m.DrawImage(partImages[2], new Point((returnImageSize.Width - partImages[2].Size().Width) / 2, (returnImageSize.Height / 2 - partImages[2].Size().Height) / 2 + 1), 1);
+                m.DrawImage(partImages[1], new Point((returnImageSize.Width - partImages[1].Size().Width) / 2, (returnImageSize.Height - partImages[1].Size().Height ) + 1), 1);
                 m.DrawImage(partImages[0], new Point(returnImageSize.Width - (cardSize.Width * 5), returnImageSize.Height - partImages[0].Height), 1);
             });
             return returnImage;

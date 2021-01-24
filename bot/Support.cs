@@ -108,6 +108,7 @@ namespace bot
                 addUser(user);
             }
         }
+        
         public void delUser(SocketGuildUser user)
         {
             // sqlHelper.remove

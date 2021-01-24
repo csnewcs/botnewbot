@@ -276,10 +276,11 @@ namespace bot
             if (deletedMessageChannel is SocketGuildChannel) //서버인지 확인
             {
                 SocketGuild guild = (deletedMessageChannel as SocketTextChannel).Guild;
-                JObject json = JObject.Parse(File.ReadAllText($"servers/{guild.Id}/config.json"));
+                JObject json  = support.getGuildConfig(guild);
                 if (json["deleteMessage"].ToString() != "0") //메세지가 삭제되었을 알리는지 확인
                 {
-                    if (msg.Value.Author.IsBot) return;
+                    if (msg.Value.Author.IsBot || !msg.HasValue) return;
+                    // if(msg.Value.Author != msg.Value)
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
                     SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
                     string nickname = support.getNickname(user);
