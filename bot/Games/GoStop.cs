@@ -13,9 +13,9 @@ namespace csnewcs.Game.GoStop
     public class GoStop
     {
         int hwatuCardCount = 50;
-        int playerCount;
         const string hwatuPath = "./HwatuImages";
         Dictionary<ulong, Player> players = new Dictionary<ulong, Player>();
+        Field field;
 
         Hwatu[] allHwatus = new Hwatu[50] {
             new Hwatu(Month.Jan, HwatuType.Light, Image.Load($"{hwatuPath}/1Light.png")), new Hwatu(Month.Jan, HwatuType.Pea, Image.Load($"{hwatuPath}/1Pea1.png")), new Hwatu(Month.Jan, HwatuType.Pea, Image.Load($"{hwatuPath}/1Pea2.png")), new Hwatu(Month.Jan, HwatuType.RedBelt, Image.Load($"{hwatuPath}/1RedBelt.png")),
@@ -43,37 +43,74 @@ namespace csnewcs.Game.GoStop
             // {
             //     throw new Exception("ToLessPlayer");
             // }
-            int playerHwatuCount = ids.Length > 3 ? 7 : 10;
-            int fieldHwatuCount = ids.Length > 3 ? 6 : 8;
+            int playerHwatuCount = ids.Length > 2 ? 7 : 10;
+            int fieldHwatuCount = ids.Length > 2 ? 6 : 8;
             Random rd = new Random();
+
             for(int i = 0; i < allHwatus.Length; i++) //화투 패 섞기
             {
                 swap(ref allHwatus, i, rd.Next(0, allHwatus.Length));
             }
-            for(int i = 0; i < ids.Length; i++)
-            {
-                int random = rd.Next(0, ids.Length);
-                var temp = ids[i];
-                ids[i] = ids[random];
-                ids[random] = ids[i];
-            }
+            // for(int i = 0; i < ids.Length; i++)
+            // {
+            //     int random = rd.Next(0, ids.Length);
+                
+            //     var temp = ids[i];
+            //     ids[i] = ids[random];
+            //     Console.WriteLine($"{temp} <-> {ids[random]}");
+            //     ids[random] = ids[i];
+            // }
 
-
-            for(int i = 0; i < ids.Length; i++)
-            {
+            int index = 0;
+            // foreach(var one in allHwatus)
+            // {
                 List<Hwatu> give = new List<Hwatu>();
-                for(int j = 0; j < playerHwatuCount; j++)
+                
+                for(int i = 0; i < ids.Length; i++)
                 {
-                    give.Add(allHwatus[i * playerHwatuCount + j]);
+                    Console.WriteLine(ids[i]);
+                    give = new List<Hwatu>();
+                    for(int j = 0; j < playerHwatuCount; j++)
+                    {
+                        give.Add(allHwatus[index]);
+                        index++;
+                    }
+                    players.Add(ids[i], new Player(give, i));
                 }
-                Console.WriteLine(ids[i]);
-                players.Add(ids[i], new Player(give, i, allHwatus));
-            }
 
-        }
+                Console.WriteLine(fieldHwatuCount);
+                give = new List<Hwatu>();
+                for(int i = 0; i < fieldHwatuCount; i++)
+                {
+                    Console.WriteLine(index);
+                    give.Add(allHwatus[index]);
+                    index++;
+                }
+                field = new Field(give);
+            }
+        // }
         public Player getPlayer(ulong id)
         {
+            foreach(var a in players) Console.WriteLine(a.Key);
             return players[id];
+        }
+        public Player[] getAllPlayers()
+        {
+            Player[] returnPlayers = new Player[players.Count];
+            int i = 0;
+            foreach (var a in players)
+            {
+                returnPlayers[i] = a.Value;
+                i++;
+            }
+            return returnPlayers;
+        }
+        public Field Field
+        {
+            get
+            {
+                return field;
+            }
         }
         void swap(ref Hwatu[] hwatus, int indexa, int indexb)
         {
@@ -81,10 +118,7 @@ namespace csnewcs.Game.GoStop
             hwatus[indexa] = hwatus[indexb];
             hwatus[indexb] = temp;
         }
-        public List<Hwatu> getHwatus(ulong id)
-        {
-            return players[id].getHwatus();
-        }
+        
     }
     public enum Month //13월은 조커
     {
@@ -128,7 +162,6 @@ namespace csnewcs.Game.GoStop
     {
         List<Hwatu> hwatus;
         List<Hwatu> scoreHwatus;
-        List<Hwatu> fortest;
 
         public List<Hwatu> getHwatus()
         {
@@ -140,8 +173,7 @@ namespace csnewcs.Game.GoStop
             int width = hwatus[0].hwatuImage.Width + 20;
             int height = hwatus[0].hwatuImage.Height;
 
-            using (var image = new Image<Rgba32>(width * hwatus.Count, height))
-            {
+                var image = new Image<Rgba32>(width * hwatus.Count, height);
                 int index=0;
                 
                 foreach(var a in hwatus)
@@ -151,11 +183,10 @@ namespace csnewcs.Game.GoStop
                     index++;
                 }
                 return image;
-            }
         }
         public Image getScoreHwatusImage()
         {
-            scoreHwatus = fortest; //일단 테스트
+            // scoreHwatus = fortest; //일단 테스트
 
 
             int width = scoreHwatus[0].hwatuImage.Width - 10;
@@ -272,18 +303,45 @@ namespace csnewcs.Game.GoStop
             // }
         }
         int order;
-        public Player(List<Hwatu> _hwatus, int _order, Hwatu[] test)
+        public Player(List<Hwatu> _hwatus, int _order)
         {
             hwatus = _hwatus;
             scoreHwatus = new List<Hwatu>();
             order = _order;
-            fortest = test.ToList();
         }
 
     }
     public struct Field
     {
-        List<Hwatu> hwatus;
-        public Field(List<Hwatu> _hwatus) => hwatus = _hwatus;
+        List<Hwatu> _hwatus;
+        public List<Hwatu> hwatus
+        {
+            get
+            {
+                return hwatus;
+            }
+        }
+        public Image getFieldImage()
+        {
+            Console.WriteLine("들어옴");
+            Size size = _hwatus[0].hwatuImage.Size();
+            Image returnImage = new Image<Rgba32>(size.Width * _hwatus.Count, size.Height * _hwatus.Count);
+            Console.WriteLine(returnImage.Width + "x" + returnImage.Height);
+            Point max = new Point(size.Width * (_hwatus.Count - 1), size.Height * (_hwatus.Count - 1));
+
+            Random rd = new Random();
+            foreach(var one in _hwatus)
+            {
+                Image image = one.hwatuImage;
+                image.Mutate(m => m.Rotate(rd.Next(0, 360)));
+                returnImage.Mutate(m => m.DrawImage(image, new Point(rd.Next(0, max.X), rd.Next(0, max.Y)), 1));
+            }
+            return returnImage;
+        }
+        public Field(List<Hwatu> hwatus)
+        {
+            Console.WriteLine(hwatus.Count + "장");
+            _hwatus = hwatus;
+        }
     }
 }

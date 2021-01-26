@@ -31,7 +31,12 @@ namespace bot
         CommandService command;
         LavaNode lavaNode;
         ServiceProvider _services;
-        Support support ;
+        static Support support;
+        public static Support _support
+        {
+            get {return support;}
+        }
+
 
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
         public static string prefix = "";
@@ -200,7 +205,7 @@ namespace bot
 
 
                     string[] split = msg.Content.Split(' ');
-                    if (split[0] == prefix + "초기설정") await support.reset(guildUser);
+                    // if (split[0] == prefix + "초기설정") await support.reset(guildUser);
                     SocketCommandContext context = new SocketCommandContext(client, message);
 
                     var result = await command.ExecuteAsync(context: context, argPos: argPos, services: _services);
@@ -255,7 +260,7 @@ namespace bot
                 return false;
             }
         }
-        void minus()
+        async void minus()
         {
             while(true)
             {
@@ -268,6 +273,18 @@ namespace bot
                         people.Remove(key);
                     }
                 }
+                // foreach(var a in Program.support.timer.ToArray())
+                // {
+                //     var key = a.Key;
+                //     Console.WriteLine(a.Value);
+                //     Program.support.timer[key]--;
+                //     if(a.Value == 1)
+                //     {
+                //         Program.support.timer.Remove(key);
+                //         Gamble gamble = new Gamble(Program.support);
+                //         await gamble.startGoStop(key);
+                //     }
+                // }
                 System.Threading.Thread.Sleep(1000);
             }
         }
@@ -480,6 +497,7 @@ namespace bot
 
         private void checkVersion()
         {
+            string lastversion = "";
             WebClient client = new WebClient();
             client.Encoding = System.Text.Encoding.UTF8;
             while(true)
@@ -491,11 +509,11 @@ namespace bot
                     string download = client.DownloadString("https://api.github.com/repos/csnewcs/botnewbot/tags");
                     if (string.IsNullOrEmpty(download)) continue;
                     JArray tags = JArray.Parse(download);
-                    if (tags.Count > version)
+                    if (tags.Count > version && lastversion != tags.Last["name"].ToString())
                     {
                         Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
                         sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
-                        break;
+                        lastversion = tags.Last["name"].ToString();
                     }
                 }
                 catch

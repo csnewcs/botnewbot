@@ -20,6 +20,9 @@ namespace bot
         Dictionary<ulong, ulong>  _helpMessages = new Dictionary<ulong, ulong>(); //메세지 ID, 사용자 ID
         Dictionary<SocketGuildChannel, GoStop> _gostop = new Dictionary<SocketGuildChannel, GoStop>();
         Dictionary<SocketGuildChannel, List<ulong>> _tempUsers = new Dictionary<SocketGuildChannel, List<ulong>>(); 
+        Dictionary<SocketGuildChannel, int> _timer = new Dictionary<SocketGuildChannel, int>();
+
+
         public Dictionary<ulong, ulong> helpMessages
         {
             get
@@ -54,7 +57,13 @@ namespace bot
                 _tempUsers = value;
             }
         }
-
+        public Dictionary<SocketGuildChannel, int> timer
+        {
+            get
+            {
+                return _timer;
+            }
+        }
 
 
         public Support(SqlHelper helper = null)
@@ -147,19 +156,7 @@ namespace bot
             }
             return result;
         }
-        public async Task reset(SocketGuildUser user)
-        {
-            if (!hasPermission(user, Permission.Admin))
-            {
-                return;
-            }
-            SocketGuild guild = user.Guild;
-            File.Delete($"servers/{guild.Id}/config.json");
-            setting.Add(user.Id, guild.Id);
-            server.Add(user.Id, new Server());
-            await user.SendMessageAsync("초기 설정을 시작합니다.");
-            server[user.Id].addServer(guild, user);
-        }
+        
         public bool isOver(SocketGuildUser first, SocketGuildUser second) //위에 있는 역할일수록 수가 큼
         {
             if (first.Id == first.Guild.OwnerId)

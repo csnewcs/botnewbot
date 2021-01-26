@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
@@ -289,15 +290,15 @@ namespace bot
                     }
                     else if(support.tempUsers.ContainsKey(Context.Channel as SocketGuildChannel))
                     {
-                        builder.AddField("저런", $"이미 시작을 했어요 '{Context.Message.Content[0]}고스톱 참가' 로 게임에 참가해주세요!");
+                        builder.AddField("저런", $"이미 시작을 했어요 '{Context.Message.Content[0]}도박 고스톱 참가' 로 게임에 참가해주세요!");
                     }
                     else
                     {
                         System.Collections.Generic.List<ulong> list = new System.Collections.Generic.List<ulong>();
                         list.Add(Context.User.Id);
                         support.tempUsers.Add(Context.Channel as SocketGuildChannel, list);
-                        builder.AddField("성공", $"게임이 곧 시작됩니다. 참가하실 분들은 '{Context.Message.Content[0]}고스톱 참가'로 게임에 참가해주세요.");
-                        await startGoStop(Context.Channel as SocketGuildChannel);
+                        builder.AddField("성공", $"게임이 10초 후 시작됩니다. 참가하실 분들은 '{Context.Message.Content[0]}도박 고스톱 참가'로 게임에 참가해주세요.");
+                        new Thread(() => countdown(channel)).Start();
                     }
                 }
                 else if (type == "참가")
@@ -306,9 +307,9 @@ namespace bot
                     {
                         builder.AddField("저런", "이미 게임이 진행중이에요. 나중에 다시 시도해주세요.");
                     }
-                    else if(support.tempUsers.ContainsKey(channel))
+                    else if(!support.tempUsers.ContainsKey(channel))
                     {
-                        builder.AddField("저런", $"아직 게임 시작을 하지 않았어요 '{Context.Message.Content[0]}고스톱 시작'으로 먼저 게임을 시작해주세요.");
+                        builder.AddField("저런", $"아직 게임 시작을 하지 않았어요 '{Context.Message.Content[0]}도박 고스톱 시작'으로 먼저 게임을 시작해주세요.");
                     }
                     else if (support.tempUsers[channel].Count > 3)
                     {
@@ -324,7 +325,7 @@ namespace bot
                         builder.AddField("성공", "게임에 참가하셨습니다. 게임이 시작될 때 까지 잠시만 기다려주세요.");
                     }
                 }
-                await ReplyAsync("", false, builder.Build());
+               await ReplyAsync("", false, builder.Build());
             }
             catch(Exception e)
             {
@@ -333,34 +334,69 @@ namespace bot
         }
         public async Task startGoStop(SocketGuildChannel channel)
         {
+            Console.WriteLine("들어옴");
             try
             {
+
                 Random rd = new Random();
                 EmbedBuilder builder = new EmbedBuilder().WithColor((uint)rd.Next(0, 0xffffff));
-                
+                SocketTextChannel textChannel = (SocketTextChannel)channel;
+
                 var players = support.tempUsers[channel];
                 // if (players.Count < 2)
                 // {
                 //     builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
+                //     await textChannel.SendMessageAsync("", false, builder.Build());
                 // }
                 // else if(players.Count > 4)
                 // {
                 //     builder.AddField("실패!", "사람이 너무 많아요. 최대 4명 까지 한 번에 플레이가 가능해요.");
+                //     await textChannel.SendMessageAsync("", false, builder.Build());
                 // }
                 // else
                 // {
                     support.goStopGame.Add(channel, new GoStop(support.tempUsers[channel].ToArray()));
+                    
+                    SocketGuild guild = channel.Guild;
+                    string path = $"GoStop/{channel.Id}/";
+                    DirectoryInfo dtInfo = new DirectoryInfo("GoStop/" + channel.Id + "/");
+                    if (dtInfo.Exists)
+                    {
+                        foreach (var file in dtInfo.GetFiles())
+                        {
+                            file.Delete();
+                        }
+                    }
+                    else
+                    {
+                        dtInfo.Create();
+                    }
+                    
+                    foreach(var player in players)
+                    {
+                        string filePath = path + player + ".png";
+                        support.goStopGame[channel].getPlayer(player).getHwatusImage().Save(filePath, new PngEncoder());
+                        await guild.GetUser(player).SendFileAsync(filePath, "당신의 패입니다.");
+                        GC.Collect();
+                        
+                    }
+                    
+                    support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
+                    await textChannel.SendFileAsync(path + "field.png", "게임 시작!");
                 // }
                 
                 
-                support.goStopGame[channel].getPlayer(Context.User.Id).getScoreHwatusImage().Save("temp.png", new PngEncoder());
-                await ((SocketTextChannel)channel).SendFileAsync("temp.png", "");
             }
             catch(Exception e)
             {
                 Console.WriteLine(e);
             }
             // await ((SocketTextChannel)channel).SendMessageAsync("", false, builder.Build());
+        }
+        async void countdown(SocketGuildChannel channel)
+        {
+            await Task.Delay(10000);
+            await startGoStop(channel);
         }
     }
 }
