@@ -14,7 +14,22 @@ namespace csnewcs.Game.GoStop
     {
         int hwatuCardCount = 50;
         const string hwatuPath = "./HwatuImages";
-        Dictionary<ulong, Player> players = new Dictionary<ulong, Player>();
+        List<Player> _players = new List<Player>();
+        public List<Player> players
+        {
+            get {return _players;}
+        }
+
+        Player _turn;
+        public Player turn
+        {
+            get
+            {
+                return _turn;
+            }
+        }
+
+        
         Field field;
 
         Hwatu[] allHwatus = new Hwatu[50] {
@@ -35,14 +50,14 @@ namespace csnewcs.Game.GoStop
         
         public GoStop(ulong[] ids) //
         {
-            // if (ids.Length > 4)
-            // {
-            //     throw new Exception("ToManyPlayer");
-            // }
-            // else if(ids.Length < 2)
-            // {
-            //     throw new Exception("ToLessPlayer");
-            // }
+            if (ids.Length > 4)
+            {
+                throw new Exception("ToManyPlayer");
+            }
+            else if(ids.Length < 2)
+            {
+                throw new Exception("ToLessPlayer");
+            }
             int playerHwatuCount = ids.Length > 2 ? 7 : 10;
             int fieldHwatuCount = ids.Length > 2 ? 6 : 8;
             Random rd = new Random();
@@ -75,14 +90,13 @@ namespace csnewcs.Game.GoStop
                         give.Add(allHwatus[index]);
                         index++;
                     }
-                    players.Add(ids[i], new Player(give, i));
+                    _players.Add(new Player(give, i, ids[i]));
                 }
+                _turn =  _players[0];
 
-                Console.WriteLine(fieldHwatuCount);
                 give = new List<Hwatu>();
                 for(int i = 0; i < fieldHwatuCount; i++)
                 {
-                    Console.WriteLine(index);
                     give.Add(allHwatus[index]);
                     index++;
                 }
@@ -91,18 +105,20 @@ namespace csnewcs.Game.GoStop
         // }
         public Player getPlayer(ulong id)
         {
-            foreach(var a in players) Console.WriteLine(a.Key);
-            return players[id];
+            Player turn = new Player(new List<Hwatu>(), 0, 0);
+            foreach(var a in _players)
+            {
+                if (a.id == id) turn = a;
+            }
+            if(turn.id == 0)
+            {
+                throw new Exception("NonePlayer");
+            }
+            return turn;
         }
         public Player[] getAllPlayers()
         {
-            Player[] returnPlayers = new Player[players.Count];
-            int i = 0;
-            foreach (var a in players)
-            {
-                returnPlayers[i] = a.Value;
-                i++;
-            }
+            Player[] returnPlayers = _players.ToArray();
             return returnPlayers;
         }
         public Field Field
@@ -118,7 +134,43 @@ namespace csnewcs.Game.GoStop
             hwatus[indexa] = hwatus[indexb];
             hwatus[indexb] = temp;
         }
-        
+        public void turnPlayerPutHwatu(Hwatu hwatu, int getwhat = 0)
+        {
+            int index = _players.IndexOf(turn);
+            Player temp = turn;
+            putHwatu(ref temp, ref field, hwatu, getwhat);
+            _players[index] = temp;
+        }
+        public void putHwatu(ref Player player, ref Field field, Hwatu hwatu, int getwhat = 0)
+        {
+            if (!player.hwatus.Contains(hwatu))
+            {
+                throw new Exception("PlayerDoesNotHave");
+            }
+            List<Hwatu> getHwatu = new List<Hwatu>();
+            foreach(var fieldHwatu in field.hwatus)
+            {
+                if(fieldHwatu.month == hwatu.month) getHwatu.Add(fieldHwatu);
+            }
+            player.hwatus.Remove(hwatu);
+            if(getHwatu.Count == 0)
+            {
+                field.hwatus.Add(hwatu);
+            }
+            else
+            {
+                field.hwatus.Remove(getHwatu[getwhat]);
+                player.scoreHwatus.Add(hwatu);
+                player.scoreHwatus.Add(getHwatu[getwhat]);
+            }
+            changeTurn();
+        }
+        void changeTurn()
+        {
+            int index = _players.IndexOf(turn);
+            index = _players.Count - 1 == index ? 0 : index + 1;
+            _turn = players[index];
+        }
     }
     public enum Month //13월은 조커
     {
@@ -130,13 +182,20 @@ namespace csnewcs.Game.GoStop
     }
     public struct Hwatu
     {
-        Month month;
+        Month _month;
         HwatuType _hwatuType;
         public HwatuType hwatuType
         {
             get
             {
                 return _hwatuType;
+            }
+        }
+        public Month month
+        {
+            get
+            {
+                return _month;
             }
         }
         Image _hwatuImage;
@@ -147,9 +206,9 @@ namespace csnewcs.Game.GoStop
                 return _hwatuImage;
             }
         }
-        public Hwatu(Month _month, HwatuType _hwatuType, Image _hwatuImage)
+        public Hwatu(Month month, HwatuType _hwatuType, Image _hwatuImage)
         {
-            month = _month;
+            _month = month;
             this._hwatuImage = _hwatuImage;
             this._hwatuType = _hwatuType;
         }
@@ -160,12 +219,21 @@ namespace csnewcs.Game.GoStop
     }
     public struct Player
     {
-        List<Hwatu> hwatus;
-        List<Hwatu> scoreHwatus;
+        List<Hwatu> _hwatus;
+        List<Hwatu> _scoreHwatus;
+        ulong _id;
 
-        public List<Hwatu> getHwatus()
+        public ulong id
         {
-            return hwatus;
+            get {return _id;}
+        }
+        public List<Hwatu> hwatus
+        {
+            get {return _hwatus;}
+        }
+        public List<Hwatu> scoreHwatus
+        {
+            get {return _scoreHwatus;}
         }
         // Hwatu[] getHwatus;
         public Image getHwatusImage()
@@ -303,13 +371,24 @@ namespace csnewcs.Game.GoStop
             // }
         }
         int order;
-        public Player(List<Hwatu> _hwatus, int _order)
+        public Player(List<Hwatu> hwatus, int _order, ulong id)
         {
-            hwatus = _hwatus;
-            scoreHwatus = new List<Hwatu>();
+            _hwatus = hwatus;
+            _scoreHwatus = new List<Hwatu>();
             order = _order;
+            _id = id;
         }
-
+        
+        public static bool operator ==(Player one, Player two)
+        {
+            if(one.id == two.id && one.hwatus == two.hwatus && one.scoreHwatus == two.scoreHwatus) return true;
+            else return false;
+        }
+        public static bool operator !=(Player one, Player two)
+        {
+            if(one.id == two.id && one.hwatus == two.hwatus && one.scoreHwatus == two.scoreHwatus) return false;
+            else return true;
+        }
     }
     public struct Field
     {
@@ -318,7 +397,7 @@ namespace csnewcs.Game.GoStop
         {
             get
             {
-                return hwatus;
+                return _hwatus;
             }
         }
         public Image getFieldImage()

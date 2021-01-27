@@ -17,6 +17,9 @@ using Victoria;
 using Victoria.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
 
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+
 using csnewcs.Sql;
 using csnewcs.Game.GoStop;
 
@@ -213,6 +216,44 @@ namespace bot
                 }
                 else
                 {
+                    try
+                    {
+                        if (!support.turnPlayer.ContainsKey(msg.Author.Id)) return;
+                        SocketGuildChannel channel = support.turnPlayer[msg.Author.Id];
+
+                        var gostopgame = support.goStopGame[channel];
+                        var gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
+
+                        support.goStopGame[channel].turnPlayerPutHwatu(gostopPlayer.hwatus[int.Parse(msg.Content) - 1]);
+                        string path = $"GoStop/{channel.Id}/{msg.Author.Id}";
+
+                        gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
+                        gostopPlayer.getHwatusImage().Save(path + ".png", new PngEncoder());
+                        gostopPlayer.getScoreHwatusImage().Save(path + "score.png", new PngEncoder());
+                        gostopgame.Field.getFieldImage().Save($"GoStop/{channel.Id}/field.png", new PngEncoder());
+
+                        await msg.Author.SendFileAsync($"{path}.png", "당신의 패입니다");
+                        await msg.Author.SendFileAsync($"{path}score.png", "당신의 점수판");
+                        await ((SocketTextChannel)channel).SendFileAsync($"{path}score.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}님의 점수판");
+                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "판");
+
+                        gostopgame = support.goStopGame[channel];
+                        gostopPlayer = gostopgame.turn;
+                        
+                        string send = "당신의 차례입니다. 아래 목록에서 낼 것을 골라 번호를 입력하세요. \n```";
+                        foreach(var hwatu in gostopPlayer.hwatus)
+                        {
+                            send += hwatu.ToString() + "\n";
+                        }
+                        send += "```";
+                        support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
+
+                        SocketUser next = client.GetUser(gostopPlayer.id);
+                        await next.SendMessageAsync(send);
+                    } 
+                    catch(Exception e) {Console.WriteLine(e);}
+                        
+
                     // if (support.setting.ContainsKey(msg.Author.Id)) //세팅 값에 있는지 확인 후 있으면 설정 이어가기
                     // {
                     //     SocketGuild guild = client.GetGuild(support.setting[msg.Author.Id]);
@@ -260,7 +301,7 @@ namespace bot
                 return false;
             }
         }
-        async void minus()
+        void minus()
         {
             while(true)
             {
@@ -303,7 +344,7 @@ namespace bot
                     string nickname = support.getNickname(user);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle($"{nickname}님의 메세지가 삭제됨")
-                    .WithColor(new Color(0xff0000)) //빨간색
+                    .WithColor(new Discord.Color(0xff0000)) //빨간색
                     .AddField("내용", msg.Value, true)
                     .AddField("위치", deletedMessageChannel.Name);
                     Embed embed = embedBuilder.Build();
@@ -349,7 +390,7 @@ namespace bot
                     string nickname = support.getNickname(user);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle($"{nickname}님의 메세지가 수정됨")
-                    .WithColor(new Color(0x880088))
+                    .WithColor(new Discord.Color(0x880088))
                     .AddField("이전 내용", beforeMsg.Value, true)
                     .AddField("현재 내용", afterMsg.Content, true)
                     .AddField("위치", editedMessageChannel.Name);

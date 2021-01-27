@@ -19,6 +19,7 @@ namespace bot
         Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
         Dictionary<ulong, ulong>  _helpMessages = new Dictionary<ulong, ulong>(); //메세지 ID, 사용자 ID
         Dictionary<SocketGuildChannel, GoStop> _gostop = new Dictionary<SocketGuildChannel, GoStop>();
+        Dictionary<ulong, SocketGuildChannel> _turnPlayer = new Dictionary<ulong, SocketGuildChannel>();
         Dictionary<SocketGuildChannel, List<ulong>> _tempUsers = new Dictionary<SocketGuildChannel, List<ulong>>(); 
         Dictionary<SocketGuildChannel, int> _timer = new Dictionary<SocketGuildChannel, int>();
 
@@ -45,7 +46,13 @@ namespace bot
                 _gostop = value;
             }
         }
-
+        public Dictionary<ulong, SocketGuildChannel> turnPlayer
+        {
+            get
+            {
+                return _turnPlayer;
+            }
+        }
         public Dictionary<SocketGuildChannel, List<ulong>> tempUsers
         {
             get

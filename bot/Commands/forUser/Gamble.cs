@@ -334,15 +334,14 @@ namespace bot
         }
         public async Task startGoStop(SocketGuildChannel channel)
         {
-            Console.WriteLine("들어옴");
             try
             {
-
                 Random rd = new Random();
                 EmbedBuilder builder = new EmbedBuilder().WithColor((uint)rd.Next(0, 0xffffff));
                 SocketTextChannel textChannel = (SocketTextChannel)channel;
 
                 var players = support.tempUsers[channel];
+                
                 // if (players.Count < 2)
                 // {
                 //     builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
@@ -356,7 +355,11 @@ namespace bot
                 // else
                 // {
                     support.goStopGame.Add(channel, new GoStop(support.tempUsers[channel].ToArray()));
-                    
+
+                    Player first = support.goStopGame[channel].turn;
+                    SocketGuildUser firstTrun = channel.Guild.GetUser(first.id);
+
+                    support.turnPlayer.Add(firstTrun.Id, channel);
                     SocketGuild guild = channel.Guild;
                     string path = $"GoStop/{channel.Id}/";
                     DirectoryInfo dtInfo = new DirectoryInfo("GoStop/" + channel.Id + "/");
@@ -378,11 +381,17 @@ namespace bot
                         support.goStopGame[channel].getPlayer(player).getHwatusImage().Save(filePath, new PngEncoder());
                         await guild.GetUser(player).SendFileAsync(filePath, "당신의 패입니다.");
                         GC.Collect();
-                        
                     }
                     
+                    string send = "당신의 차례입니다. 아래 목록에서 낼 것을 골라 번호를 입력하세요. \n```";
+                    foreach(var hwatu in first.hwatus)
+                    {
+                        send += hwatu.ToString() + "\n";
+                    }
+                    send += "```";
                     support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
                     await textChannel.SendFileAsync(path + "field.png", "게임 시작!");
+                    await firstTrun.SendMessageAsync(send);
                 // }
                 
                 
