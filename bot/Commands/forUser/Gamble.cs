@@ -286,6 +286,7 @@ namespace bot
                 {
                     if (support.goStopGame.ContainsKey(Context.Channel as SocketGuildChannel))
                     {
+                        Console.WriteLine(support.goStopGame[Context.Channel as SocketGuildChannel].players[0].id);
                         builder.AddField("저런", "이미 게임이 진행중이에요. 나중에 다시 시도해주세요.");
                     }
                     else if(support.tempUsers.ContainsKey(Context.Channel as SocketGuildChannel))
@@ -305,7 +306,7 @@ namespace bot
                 {
                     if (support.goStopGame.ContainsKey(channel))
                     {
-                        builder.AddField("저런", "이미 게임이 진행중이에요. 나중에 다시 시도해주세요.");
+                        builder.AddField("저런", "이미 게임이 진행중이에요. 다른 게임이 시작하면 다시 시도해주세요.");
                     }
                     else if(!support.tempUsers.ContainsKey(channel))
                     {
@@ -384,13 +385,17 @@ namespace bot
                     }
                     
                     string send = "당신의 차례입니다. 아래 목록에서 낼 것을 골라 번호를 입력하세요. \n```";
+                    int index = 1;
                     foreach(var hwatu in first.hwatus)
                     {
-                        send += hwatu.ToString() + "\n";
+                        send += $"{index}: {hwatu.toKR()}\n";
+                        index++;
                     }
                     send += "```";
                     support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
+
                     await textChannel.SendFileAsync(path + "field.png", "게임 시작!");
+                    await firstTrun.SendFileAsync($"{path}/field.png");
                     await firstTrun.SendMessageAsync(send);
                 // }
                 

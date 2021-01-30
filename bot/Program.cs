@@ -219,12 +219,18 @@ namespace bot
                     try
                     {
                         if (!support.turnPlayer.ContainsKey(msg.Author.Id)) return;
+                        int selected = 0;
+                        if(!int.TryParse(msg.Content, out selected))
+                        {
+                            await msg.Channel.SendMessageAsync("숫자만 입력해주세요.");
+                            return;
+                        }
                         SocketGuildChannel channel = support.turnPlayer[msg.Author.Id];
 
                         var gostopgame = support.goStopGame[channel];
                         var gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
 
-                        support.goStopGame[channel].turnPlayerPutHwatu(gostopPlayer.hwatus[int.Parse(msg.Content) - 1]);
+                        support.goStopGame[channel].turnPlayerPutHwatu(gostopPlayer.hwatus[selected - 1]);
                         string path = $"GoStop/{channel.Id}/{msg.Author.Id}";
 
                         gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
@@ -235,20 +241,26 @@ namespace bot
                         await msg.Author.SendFileAsync($"{path}.png", "당신의 패입니다");
                         await msg.Author.SendFileAsync($"{path}score.png", "당신의 점수판");
                         await ((SocketTextChannel)channel).SendFileAsync($"{path}score.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}님의 점수판");
-                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "판");
+                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "");
 
                         gostopgame = support.goStopGame[channel];
                         gostopPlayer = gostopgame.turn;
                         
                         string send = "당신의 차례입니다. 아래 목록에서 낼 것을 골라 번호를 입력하세요. \n```";
+                        int index = 1;
                         foreach(var hwatu in gostopPlayer.hwatus)
                         {
-                            send += hwatu.ToString() + "\n";
+                            send += $"{index}: {hwatu.toKR()}\n";
+                            index++;
                         }
                         send += "```";
                         support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
 
                         SocketUser next = client.GetUser(gostopPlayer.id);
+                        support.turnPlayer.Remove(msg.Author.Id);
+                        support.turnPlayer.Add(gostopPlayer.id, channel);
+                        await next.SendFileAsync($"GoStop/{channel.Id}/field.png");
+                        await next.SendFileAsync($"GoStop/{channel.Id}/{next.Id}.png");
                         await next.SendMessageAsync(send);
                     } 
                     catch(Exception e) {Console.WriteLine(e);}
