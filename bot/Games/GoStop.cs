@@ -15,6 +15,7 @@ namespace csnewcs.Game.GoStop
         int hwatuCardCount = 50;
         const string hwatuPath = "./HwatuImages";
         List<Player> _players = new List<Player>();
+
         public List<Player> players
         {
             get {return _players;}
@@ -151,13 +152,10 @@ namespace csnewcs.Game.GoStop
             {
                 throw new Exception("PlayerDoesNotHave");
             }
-            List<Hwatu> getHwatu = new List<Hwatu>();
-            foreach(var fieldHwatu in field.hwatus)
-            {
-                if(fieldHwatu.month == hwatu.month) getHwatu.Add(fieldHwatu);
-            }
+
+            Hwatu[] getHwatu = field.canGet(hwatu);
             player.hwatus.Remove(hwatu);
-            if(getHwatu.Count == 0)
+            if(getHwatu.Length == 0)
             {
                 field.hwatus.Add(hwatu);
             }
@@ -169,8 +167,41 @@ namespace csnewcs.Game.GoStop
             }
 
             Hwatu plusalpha = field.reverseHwatus[0];
+            getHwatu = field.canGet(plusalpha);
+                Console.WriteLine(getHwatu.Length);
+            
+            if(getHwatu.Length == 0)
+            {
+                field.reverseHwatus.RemoveAt(0);
+                field.hwatus.Add(plusalpha);
+            }
+            else if(getHwatu.Length == 1)
+            {
+                field.reverseHwatus.RemoveAt(0);
+                field.hwatus.Remove(getHwatu[0]);
+                player.scoreHwatus.Add(getHwatu[0]);
+                player.scoreHwatus.Add(plusalpha);
+            }
+            else
+            {
+                throw new Exception("Please Select Hwatu");
+            }
+
             
 
+            changeTurn();
+        }
+        public void selectHwatu(Hwatu hwatu)
+        {
+            int index = _players.IndexOf(turn);
+            Player temp = turn;
+            
+            temp.scoreHwatus.Add(hwatu);
+            temp.scoreHwatus.Add(field.reverseHwatus[0]);
+            field.reverseHwatus.RemoveAt(0);    
+            field.hwatus.Remove(hwatu);
+
+            _players[index] = temp;
             changeTurn();
         }
         void changeTurn()
@@ -465,6 +496,18 @@ namespace csnewcs.Game.GoStop
         {
             _hwatus = hwatus;
             _reverseHwatus = reverse;
+        }
+        public Hwatu[] canGet(Hwatu hwatu)
+        {
+            List<Hwatu> hwatus = new List<Hwatu>();
+            foreach(var fieldHwatu in _hwatus)
+            {
+                if(fieldHwatu.month == hwatu.month)
+                {
+                    hwatus.Add(fieldHwatu);
+                }
+            }
+            return hwatus.ToArray();
         }
     }
 }

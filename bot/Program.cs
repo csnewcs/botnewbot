@@ -219,18 +219,40 @@ namespace bot
                     try
                     {
                         if (!support.turnPlayer.ContainsKey(msg.Author.Id)) return;
+
+                        SocketGuildChannel channel = support.turnPlayer[msg.Author.Id];
+                        var gostopgame = support.goStopGame[channel];
+                        var gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
                         int selected = 0;
                         if(!int.TryParse(msg.Content, out selected))
                         {
                             await msg.Channel.SendMessageAsync("숫자만 입력해주세요.");
                             return;
                         }
-                        SocketGuildChannel channel = support.turnPlayer[msg.Author.Id];
+                        if(support.selectGet.ContainsKey(msg.Author.Id))
+                        {
+                            gostopgame.selectHwatu(support.selectGet[msg.Author.Id][selected]);
+                        }
 
-                        var gostopgame = support.goStopGame[channel];
-                        var gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
+                        try
+                        {
+                            support.goStopGame[channel].turnPlayerPutHwatu(gostopPlayer.hwatus[selected - 1]);
+                        }
+                        catch
+                        {
+                            Hwatu[] gets = gostopgame.Field.canGet(gostopPlayer.hwatus[selected - 1]);
+                            support.selectGet.Add(msg.Author.Id, gets);
+                            string sendMessage = $"```{gostopPlayer.hwatus[selected - 1].toKR()}를 가지고 먹을 화투를 선택하세요\n";
 
-                        support.goStopGame[channel].turnPlayerPutHwatu(gostopPlayer.hwatus[selected - 1]);
+                            for(int i = 1; i <= 2; i++)
+                            {
+                                sendMessage += $"{i}: {gets[i - 1].toKR()}\n";
+                            }
+                            sendMessage += "```";
+
+                            await msg.Author.SendMessageAsync(sendMessage);
+                            return;
+                        }
                         string path = $"GoStop/{channel.Id}/{msg.Author.Id}";
 
                         gostopPlayer = gostopgame.getPlayer(msg.Author.Id);

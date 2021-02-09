@@ -38,8 +38,7 @@ namespace bot
             .AddField("제비뽑기", "1번 ~ 9번 제비를 뽑아 건 돈의 0% ~ 220%를 돌려받습니다.\n(사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
             .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다.\n나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다.\n(사용법: $도박 슬롯머신 [걸 돈])")
             .AddField("슬롯머신(연속)", "슬롯머신과 같습니다. 단 연속으로(100번까지) 돌립니다.\n결과 중 일부는 DM으로 전송됩니다.\n(사용법: $도박 슬롯머신 [(판당)걸 돈] [돌릴 수(0이면 일반 슬롯머신으로 간주)])");
-            await Context.User.SendMessageAsync("", embed:build.Build());
-            await ReplyAsync("DM으로 결과를 전송했습니다.");
+            await ReplyAsync("", embed:build.Build());
         }
         [Command("제비뽑기")]
         public async Task draw(long _money, ulong select) //제비뽑기
@@ -343,19 +342,20 @@ namespace bot
 
                 var players = support.tempUsers[channel];
                 
-                // if (players.Count < 2)
-                // {
-                //     builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
-                //     await textChannel.SendMessageAsync("", false, builder.Build());
-                // }
-                // else if(players.Count > 4)
-                // {
-                //     builder.AddField("실패!", "사람이 너무 많아요. 최대 4명 까지 한 번에 플레이가 가능해요.");
-                //     await textChannel.SendMessageAsync("", false, builder.Build());
-                // }
-                // else
-                // {
+                if (players.Count < 2)
+                {
+                    builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
+                    await textChannel.SendMessageAsync("", false, builder.Build());
+                }
+                else if(players.Count > 4)
+                {
+                    builder.AddField("실패!", "사람이 너무 많아요. 최대 4명 까지 한 번에 플레이가 가능해요.");
+                    await textChannel.SendMessageAsync("", false, builder.Build());
+                }
+                else
+                {
                     support.goStopGame.Add(channel, new GoStop(support.tempUsers[channel].ToArray()));
+                }
 
                     Player first = support.goStopGame[channel].turn;
                     SocketGuildUser firstTrun = channel.Guild.GetUser(first.id);
