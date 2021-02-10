@@ -238,13 +238,18 @@ namespace bot
                         {
                             support.goStopGame[channel].turnPlayerPutHwatu(gostopPlayer.hwatus[selected - 1]);
                         }
-                        catch
+                        catch (Exception e)
                         {
+                            if(e.Message != "Please Select Hwatu")
+                            {
+                                Console.WriteLine(e);
+                                return;
+                            }
                             Hwatu[] gets = gostopgame.Field.canGet(gostopPlayer.hwatus[selected - 1]);
                             support.selectGet.Add(msg.Author.Id, gets);
                             string sendMessage = $"```{gostopPlayer.hwatus[selected - 1].toKR()}를 가지고 먹을 화투를 선택하세요\n";
 
-                            for(int i = 1; i <= 2; i++)
+                            for(int i = 1; i <= gets.Length; i++)
                             {
                                 sendMessage += $"{i}: {gets[i - 1].toKR()}\n";
                             }

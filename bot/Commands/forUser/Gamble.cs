@@ -246,15 +246,7 @@ namespace bot
             // File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}", getUser.ToString());
         }
 
-        // private void plusMoney(SocketGuildUser user, double plus)
-        // {
-        //     long money = (long)support.getMoney(user);
-        //     money += (long)Math.Round(plus);
-        //     support.setMoney(user, money);
-        //     // JObject getUser = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
-        //     // getUser["money"] = (ulong)getUser["money"] + plus;
-        //     // File.WriteAllText($"servers/{user.Guild.Id}/{user.Id}", getUser.ToString());
-        // }
+        
         private bool minusMoney(SocketGuildUser user, long minus)
         {
             // JObject getUser = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
@@ -346,60 +338,83 @@ namespace bot
                 {
                     builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
                     await textChannel.SendMessageAsync("", false, builder.Build());
+                    return;
                 }
                 else if(players.Count > 4)
                 {
                     builder.AddField("실패!", "사람이 너무 많아요. 최대 4명 까지 한 번에 플레이가 가능해요.");
                     await textChannel.SendMessageAsync("", false, builder.Build());
+                    return;
+                }
+
+                 Discord.Rest.RestTextChannel createChannel = null;
+                try
+                {
+                    createChannel = await Context.Guild.CreateTextChannelAsync($"{DateTime.Now}고스톱 채널");
+
+                    OverwritePermissions everyone = OverwritePermissions.DenyAll(createChannel).Modify(viewChannel: PermValue.Allow, readMessageHistory: PermValue.Allow, addReactions: PermValue.Allow);
+                    OverwritePermissions playersAndBot = everyone.Modify(sendMessages: PermValue.Allow, attachFiles: PermValue.Allow, embedLinks: PermValue.Allow);
+
+                    await createChannel.AddPermissionOverwriteAsync(Context.Guild.EveryoneRole, everyone);
+                    await createChannel.AddPermissionOverwriteAsync(Context.Guild.GetUser(Context.Client.CurrentUser.Id), playersAndBot);
+
+                    foreach (var player in support.tempUsers[channel])
+                    {
+                        await createChannel.AddPermissionOverwriteAsync(Context.Guild.GetUser(player), playersAndBot);
+                    }
+                }
+                catch
+                {
+                    await textChannel.SendMessageAsync("새 채널을 만들고 권한을 설정하는 데 실패햐였습니다. 봇의 권한을 확인해 주세요");
+                    support.goStopGame.Remove(channel);
+                    return;
+                }
+
+                channel = Context.Guild.GetChannel(createChannel.Id);
+                support.goStopGame.Add(channel, new GoStop(support.tempUsers[Context.Channel as SocketGuildChannel].ToArray()));
+
+                Player first = support.goStopGame[channel].turn;
+                SocketGuildUser firstTrun = channel.Guild.GetUser(first.id);
+
+                support.turnPlayer.Add(firstTrun.Id, channel);
+                SocketGuild guild = channel.Guild;
+                string path = $"GoStop/{channel.Id}/";
+                DirectoryInfo dtInfo = new DirectoryInfo("GoStop/" + channel.Id + "/");
+                if (dtInfo.Exists)
+                {
+                    foreach (var file in dtInfo.GetFiles())
+                    {
+                        file.Delete();
+                    }
                 }
                 else
                 {
-                    support.goStopGame.Add(channel, new GoStop(support.tempUsers[channel].ToArray()));
+                    dtInfo.Create();
                 }
-
-                    Player first = support.goStopGame[channel].turn;
-                    SocketGuildUser firstTrun = channel.Guild.GetUser(first.id);
-
-                    support.turnPlayer.Add(firstTrun.Id, channel);
-                    SocketGuild guild = channel.Guild;
-                    string path = $"GoStop/{channel.Id}/";
-                    DirectoryInfo dtInfo = new DirectoryInfo("GoStop/" + channel.Id + "/");
-                    if (dtInfo.Exists)
-                    {
-                        foreach (var file in dtInfo.GetFiles())
-                        {
-                            file.Delete();
-                        }
-                    }
-                    else
-                    {
-                        dtInfo.Create();
-                    }
-                    
-                    foreach(var player in players)
-                    {
-                        string filePath = path + player + ".png";
-                        support.goStopGame[channel].getPlayer(player).getHwatusImage().Save(filePath, new PngEncoder());
-                        await guild.GetUser(player).SendFileAsync(filePath, "당신의 패입니다.");
-                        GC.Collect();
-                    }
-                    
-                    string send = "당신의 차례입니다. 아래 목록에서 낼 것을 골라 번호를 입력하세요. \n```";
-                    int index = 1;
-                    foreach(var hwatu in first.hwatus)
-                    {
-                        send += $"{index}: {hwatu.toKR()}\n";
-                        index++;
-                    }
-                    send += "```";
-                    support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
-
-                    await textChannel.SendFileAsync(path + "field.png", "게임 시작!");
-                    await firstTrun.SendFileAsync($"{path}/field.png");
-                    await firstTrun.SendMessageAsync(send);
-                // }
                 
+                foreach(var player in players)
+                {
+                    string filePath = path + player + ".png";
+                    support.goStopGame[channel].getPlayer(player).getHwatusImage().Save(filePath, new PngEncoder());
+                    await guild.GetUser(player).SendFileAsync(filePath, "당신의 패입니다.");
+                    GC.Collect();
+                }
                 
+                string send = "당신의 차례입니다. 아래 목록에서 낼 것을 골라 번호를 입력하세요. \n```";
+                int index = 1;
+                foreach(var hwatu in first.hwatus)
+                {
+                    send += $"{index}: {hwatu.toKR()}\n";
+                    index++;
+                }
+                send += "```";
+                support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
+                
+                textChannel = channel as SocketTextChannel;
+
+                await textChannel.SendFileAsync(path + "field.png", "게임 시작!");
+                await firstTrun.SendFileAsync($"{path}/field.png");
+                await firstTrun.SendMessageAsync(send);                
             }
             catch(Exception e)
             {
