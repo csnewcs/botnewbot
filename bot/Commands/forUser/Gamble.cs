@@ -338,12 +338,14 @@ namespace bot
                 {
                     builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
                     await textChannel.SendMessageAsync("", false, builder.Build());
+                    support.tempUsers.Remove(channel);
                     return;
                 }
                 else if(players.Count > 4)
                 {
                     builder.AddField("실패!", "사람이 너무 많아요. 최대 4명 까지 한 번에 플레이가 가능해요.");
                     await textChannel.SendMessageAsync("", false, builder.Build());
+                    support.tempUsers.Remove(channel);
                     return;
                 }
 

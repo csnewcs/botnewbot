@@ -43,7 +43,7 @@ namespace csnewcs.Game.GoStop
             new Hwatu(Month.Jul, HwatuType.Etc, Image.Load($"{hwatuPath}/7Etc.png")), new Hwatu(Month.Jul, HwatuType.Pea, Image.Load($"{hwatuPath}/7Pea1.png")), new Hwatu(Month.Jul, HwatuType.Pea, Image.Load($"{hwatuPath}/7Pea2.png")), new Hwatu(Month.Jul, HwatuType.GrassBelt, Image.Load($"{hwatuPath}/7GrassBelt.png")),
             new Hwatu(Month.Aug, HwatuType.Light, Image.Load($"{hwatuPath}/8Light.png")), new Hwatu(Month.Aug, HwatuType.Pea, Image.Load($"{hwatuPath}/8Pea1.png")), new Hwatu(Month.Aug, HwatuType.Pea, Image.Load($"{hwatuPath}/8Pea2.png")), new Hwatu(Month.Aug, HwatuType.Bird, Image.Load($"{hwatuPath}/8Bird.png")),
             new Hwatu(Month.Sep, HwatuType.SSangPea, Image.Load($"{hwatuPath}/9SSangPea.png")), new Hwatu(Month.Sep, HwatuType.Pea, Image.Load($"{hwatuPath}/9Pea1.png")), new Hwatu(Month.Sep, HwatuType.Pea, Image.Load($"{hwatuPath}/9Pea2.png")), new Hwatu(Month.Sep, HwatuType.BlueBelt, Image.Load($"{hwatuPath}/9BlueBelt.png")),
-            new Hwatu(Month.Oct, HwatuType.Etc, Image.Load($"{hwatuPath}/10Etc.png")), new Hwatu(Month.Oct, HwatuType.Pea, Image.Load($"{hwatuPath}/10Pea1.png")), new Hwatu(Month.Oct, HwatuType.Pea, Image.Load($"{hwatuPath}/1Pea2.png")), new Hwatu(Month.Oct, HwatuType.BlueBelt, Image.Load($"{hwatuPath}/10BlueBelt.png")),
+            new Hwatu(Month.Oct, HwatuType.Etc, Image.Load($"{hwatuPath}/10Etc.png")), new Hwatu(Month.Oct, HwatuType.Pea, Image.Load($"{hwatuPath}/10Pea1.png")), new Hwatu(Month.Oct, HwatuType.Pea, Image.Load($"{hwatuPath}/10Pea2.png")), new Hwatu(Month.Oct, HwatuType.BlueBelt, Image.Load($"{hwatuPath}/10BlueBelt.png")),
             new Hwatu(Month.Nov, HwatuType.SSangPea, Image.Load($"{hwatuPath}/11SSangPea.png")), new Hwatu(Month.Nov, HwatuType.Pea, Image.Load($"{hwatuPath}/11Pea1.png")), new Hwatu(Month.Nov, HwatuType.Pea, Image.Load($"{hwatuPath}/11Pea2.png")), new Hwatu(Month.Nov, HwatuType.Light, Image.Load($"{hwatuPath}/11Light.png")),
             new Hwatu(Month.Dec, HwatuType.BeaLight, Image.Load($"{hwatuPath}/12BeaLight.png")), new Hwatu(Month.Dec, HwatuType.SSangPea, Image.Load($"{hwatuPath}/12SSangPea.png")), new Hwatu(Month.Dec, HwatuType.EtcBelt, Image.Load($"{hwatuPath}/12EtcBelt.png")), new Hwatu(Month.Dec, HwatuType.BeaBird, Image.Load($"{hwatuPath}/12BeaBird.png")),
             new Hwatu(Month.Joker, HwatuType.SSangPea, Image.Load($"{hwatuPath}/Joker.png")), new Hwatu(Month.Joker, HwatuType.SSangPea, Image.Load($"{hwatuPath}/Joker.png"))
@@ -92,11 +92,16 @@ namespace csnewcs.Game.GoStop
                     }
                     _players.Add(new Player(give, i, ids[i]));
                 }
-                _turn =  _players[0];
-
+                
                 give = new List<Hwatu>();
                 for(int i = 0; i < fieldHwatuCount; i++)
                 {
+                    if(allHwatus[i].month == Month.Joker)
+                    {
+                        _players[0].scoreHwatus.Add(allHwatus[i]);
+                        index++;
+                        continue;
+                    }
                     give.Add(allHwatus[index]);
                     index++;
                 }
@@ -106,6 +111,7 @@ namespace csnewcs.Game.GoStop
                     etc.Add(allHwatus[index]);
                 }
                 field = new Field(give, etc);
+            _turn =  _players[0];
             }
         // }
         public Player getPlayer(ulong id)
@@ -152,6 +158,13 @@ namespace csnewcs.Game.GoStop
             {
                 throw new Exception("PlayerDoesNotHave");
             }
+            if(hwatu.month == Month.Joker)
+            {
+                player.scoreHwatus.Add(hwatu);
+                player.hwatus.Remove(hwatu);
+                player.hwatus.Add(field.reverseHwatus[0]);
+                field.reverseHwatus.RemoveAt(0);
+            }
 
             Hwatu[] getHwatu = field.canGet(hwatu);
             player.hwatus.Remove(hwatu);
@@ -168,7 +181,6 @@ namespace csnewcs.Game.GoStop
 
             Hwatu plusalpha = field.reverseHwatus[0];
             getHwatu = field.canGet(plusalpha);
-                Console.WriteLine(getHwatu.Length);
             
             if(getHwatu.Length == 0)
             {
@@ -283,7 +295,14 @@ namespace csnewcs.Game.GoStop
         List<Hwatu> _scoreHwatus;
         ulong _id;
         readonly Size _cardSize;
+        int _go;
 
+
+        public int go
+        {
+            get {return _go;}
+            set {_go = value;}
+        }
         public ulong id
         {
             get {return _id;}
@@ -341,7 +360,6 @@ namespace csnewcs.Game.GoStop
             
             for(int i = 0; i < scoreHwatus.Count; i++)
             {
-                Console.WriteLine(scoreHwatus[i]);
                 switch(scoreHwatus[i].hwatuType)
                 {
                     case HwatuType.Pea or HwatuType.SSangPea:
@@ -441,8 +459,8 @@ namespace csnewcs.Game.GoStop
             _scoreHwatus = new List<Hwatu>();
             order = _order;
             _id = id;
+            _go = 0;
         }
-        
         public static bool operator ==(Player one, Player two)
         {
             if(one.id == two.id && one.hwatus == two.hwatus && one.scoreHwatus == two.scoreHwatus) return true;
@@ -452,6 +470,58 @@ namespace csnewcs.Game.GoStop
         {
             if(one.id == two.id && one.hwatus == two.hwatus && one.scoreHwatus == two.scoreHwatus) return false;
             else return true;
+        }
+        
+        public int getScore()
+        {
+            int score = 0;
+            int pea = 0, blueBelt = 0, redBelt = 0, grassBelt = 0, etcBelt = 0, bird = 0, beaBird = 0, light = 0, beaLight = 0, etc = 0;
+            
+            foreach(var hwatu in _scoreHwatus)
+            {
+                var type = hwatu.hwatuType;
+                switch(type)
+                {
+                    case  HwatuType.Pea: pea++; break;
+                    case HwatuType.SSangPea: pea += 2; break;
+                    case HwatuType.RedBelt: redBelt++; break;
+                    case HwatuType.BlueBelt: blueBelt++; break;
+                    case HwatuType.GrassBelt: grassBelt++; break;
+                    case HwatuType.EtcBelt: etcBelt++; break;
+                    case HwatuType.Bird: bird++; break;
+                    case HwatuType.BeaBird: beaBird++; break;
+                    case HwatuType.Light: light++; break;
+                    case HwatuType.BeaLight: beaLight++; break;
+                    case HwatuType.Etc: etc++; break;
+                }
+            }
+            int totalBelt = redBelt+ grassBelt + blueBelt + etcBelt;
+            int totalAnimal = bird + beaBird + etc;
+
+            Console.WriteLine("피: " + pea);
+            score += pea > 18 ?  pea - 19 : 0;
+            score += redBelt == 3 ? 3 : 0;
+            score += blueBelt == 3 ? 3 : 0;
+            score += grassBelt == 3 ? 3 : 0;
+            score += (redBelt + grassBelt + blueBelt + etcBelt) > 4 ? (redBelt + grassBelt + blueBelt + etcBelt) - 4 : 0;
+            if(bird == 3)
+            {
+                score += 5;
+                if(beaBird == 1) score++;
+            }
+            score += (bird + beaBird + etc) > 4 ? (bird + beaBird + etc) - 4 : 0;
+            if(light > 1)
+            {
+                if (light + beaLight == 3)
+                {
+                    if(beaLight == 0) score += 3;
+                    else score += 2;
+                } 
+                else if(light + beaLight == 5) score += 10;
+                else score += light + beaLight;
+            }
+
+            return score;
         }
     }
     public struct Field
@@ -478,8 +548,6 @@ namespace csnewcs.Game.GoStop
             Image returnImage = new Image<Rgba32>(size.Width * _hwatus.Count, size.Height * _hwatus.Count);
             returnImage.Mutate(m => m.BackgroundColor(Rgba32.ParseHex("#39977E")));
 
-
-            Console.WriteLine(returnImage.Width + "x" + returnImage.Height);
             Point max = new Point(size.Width * (_hwatus.Count - 1), size.Height * (_hwatus.Count - 1));
 
             Random rd = new Random();
@@ -509,5 +577,6 @@ namespace csnewcs.Game.GoStop
             }
             return hwatus.ToArray();
         }
+        
     }
 }

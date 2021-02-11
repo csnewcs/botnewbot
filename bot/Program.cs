@@ -150,23 +150,24 @@ namespace bot
                     Console.WriteLine("공지를 전송 할 수 없습니다. ./notice.txt 파일을 확인해 주세요");
                 }
             }
-            DirectoryInfo dir = new DirectoryInfo("servers");
-                foreach (var a in dir.GetDirectories())
-                {
-                    JObject server = JObject.Parse(File.ReadAllText($"servers/{a.Name}/config.json"));
-                    if ((ulong)server["noticeBot"] != 0)
-                    {
-                        SocketGuild guild = client.GetGuild(ulong.Parse(a.Name));
-                        SocketTextChannel channel = guild.GetChannel((ulong)server["noticeBot"]) as SocketTextChannel;
-                        try
-                        {
-                            channel.SendMessageAsync(send);
-                        }
-                        catch {}
-                    }
-                }
-                File.WriteAllText("notice.txt", "");
-                Console.WriteLine("공지 전송 완료");
+            // DirectoryInfo dir = new DirectoryInfo("servers");
+            
+            //     foreach (var a in dir.GetDirectories())
+            //     {
+            //         JObject server = JObject.Parse(File.ReadAllText($"servers/{a.Name}/config.json"));
+            //         if ((ulong)server["noticeBot"] != 0)
+            //         {
+            //             SocketGuild guild = client.GetGuild(ulong.Parse(a.Name));
+            //             SocketTextChannel channel = guild.GetChannel((ulong)server["noticeBot"]) as SocketTextChannel;
+            //             try
+            //             {
+            //                 channel.SendMessageAsync(send);
+            //             }
+            //             catch {}
+            //         }
+            //     }
+            //     File.WriteAllText("notice.txt", "");
+            //     Console.WriteLine("공지 전송 완료");
         }
         async Task messageReceived(SocketMessage msg) //메세지 받았을 때
         {
@@ -264,10 +265,10 @@ namespace bot
                         gostopPlayer.getHwatusImage().Save(path + ".png", new PngEncoder());
                         gostopPlayer.getScoreHwatusImage().Save(path + "score.png", new PngEncoder());
                         gostopgame.Field.getFieldImage().Save($"GoStop/{channel.Id}/field.png", new PngEncoder());
-
+                        int score = gostopPlayer.getScore();
                         await msg.Author.SendFileAsync($"{path}.png", "당신의 패입니다");
-                        await msg.Author.SendFileAsync($"{path}score.png", "당신의 점수판");
-                        await ((SocketTextChannel)channel).SendFileAsync($"{path}score.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}님의 점수판");
+                        await msg.Author.SendFileAsync($"{path}score.png", $"당신의 점수판\n현재 점수: {score}");
+                        await ((SocketTextChannel)channel).SendFileAsync($"{path}score.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}님의 점수판\n현재 점수: {score}");
                         await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "");
 
                         gostopgame = support.goStopGame[channel];
