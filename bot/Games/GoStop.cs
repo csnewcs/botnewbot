@@ -15,7 +15,8 @@ namespace csnewcs.Game.GoStop
         int hwatuCardCount = 50;
         const string hwatuPath = "./HwatuImages";
         List<Player> _players = new List<Player>();
-
+        private object lockobj = new object();
+        
         public List<Player> players
         {
             get {return _players;}
@@ -222,6 +223,61 @@ namespace csnewcs.Game.GoStop
             index = _players.Count - 1 == index ? 0 : index + 1;
             _turn = players[index];
         }
+        public Image getImage()
+        {
+            Image[] playerImages = new Image[_players.Count];
+            int playerCount = _players.Count;
+            Parallel.For(0, playerCount, i => {
+                var image = players[i].getScoreHwatusImage();
+                lock (lockobj)
+                {
+                    playerImages[i] = image;
+                }
+            });
+            Image fieldImage = field.getFieldImage();
+            int height = fieldImage.Height;
+            if(playerCount == 2)
+            {
+                height += playerImages[0].Height + playerImages[1].Height + 50;
+                playerImages[0].Mutate(m => m.Rotate(180));
+            }
+            else
+            {
+                height += playerImages[0].Height + playerImages[2].Height;
+                if(height < playerImages[1].Width) height = playerImages[1].Width;
+                height += 50;
+                playerImages[0].Mutate(m => m.Rotate(180));
+                playerImages[1].Mutate(m => m.Rotate(-90));
+            }
+
+            int width = fieldImage.Width;
+            foreach(var image in playerImages)
+            {
+                if(width < image.Width) width = image.Width;
+            }
+            width += 50;
+
+            Image<Rgba32> returnImage = new Image<Rgba32>(width, height);
+            if(playerCount == 2)
+            {
+                returnImage.Mutate(m => {
+                    m.DrawImage(playerImages[0], new Point((width - playerImages[0].Width) / 2, 25) , 1);
+                    m.DrawImage(fieldImage, new Point((width - fieldImage.Width) / 2, (height - fieldImage.Height) / 2), 1);
+                    m.DrawImage(playerImages[1], new Point((width  - playerImages[1].Width) / 2, height - playerImages[1].Height - 25), 1);
+                });
+            }
+            else
+            {
+                returnImage.Mutate(m => {
+                    m.DrawImage(playerImages[0], new Point((width - playerImages[0].Width) / 2 + playerImages[1].Width, 25) , 1);
+                    m.DrawImage(playerImages[1], new Point(25, 25), 1);
+                    m.DrawImage(fieldImage, new Point((width - fieldImage.Width) / 2 + playerImages[1].Width, (height - fieldImage.Height) / 2), 1);
+                    m.DrawImage(playerImages[2], new Point((width  - playerImages[1].Width) / 2 + playerImages[1].Width, height - playerImages[1].Height - 25), 1);
+                });
+            }
+            returnImage.Mutate(m => m.BackgroundColor(Rgba32.ParseHex("#39977E")));
+            return returnImage;
+        }
     }
     public enum Month //13월은 조커
     {
@@ -336,7 +392,7 @@ namespace csnewcs.Game.GoStop
         {
             // scoreHwatus = fortest; //일단 테스트
 
-
+            if(scoreHwatus.Count == 0) return new Image<Rgba32>(1, 1);
             int width = scoreHwatus[0].hwatuImage.Width - 10;
             int height = scoreHwatus[0].hwatuImage.Height - 10;
 

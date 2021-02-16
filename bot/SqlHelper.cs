@@ -110,6 +110,10 @@ namespace csnewcs.Sql
             conn.Close();
             return turn;
         }
+        // public object[] getDatas(string table, string where)
+        // {
+            
+        // }
         public void addData(string table, string[] column, object[] data)
         {
             conn.Open();

@@ -262,14 +262,16 @@ namespace bot
                         string path = $"GoStop/{channel.Id}/{msg.Author.Id}";
 
                         gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
+                        
+                        gostopgame.getImage().Save($"GoStop/{channel.Id}/pan.png", new PngEncoder());
                         gostopPlayer.getHwatusImage().Save(path + ".png", new PngEncoder());
-                        gostopPlayer.getScoreHwatusImage().Save(path + "score.png", new PngEncoder());
-                        gostopgame.Field.getFieldImage().Save($"GoStop/{channel.Id}/field.png", new PngEncoder());
+                        // gostopPlayer.getScoreHwatusImage().Save(path + "score.png", new PngEncoder());
+                        // gostopgame.Field.getFieldImage().Save($"GoStop/{channel.Id}/field.png", new PngEncoder());
                         int score = gostopPlayer.getScore();
-                        await msg.Author.SendFileAsync($"{path}.png", "당신의 패입니다");
-                        await msg.Author.SendFileAsync($"{path}score.png", $"당신의 점수판\n현재 점수: {score}");
-                        await ((SocketTextChannel)channel).SendFileAsync($"{path}score.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}님의 점수판\n현재 점수: {score}");
-                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "");
+                        await msg.Author.SendFileAsync($"GoStop/{channel.Id}/pan.png", "현재 상황");
+                        // await msg.Author.SendFileAsync($"{path}score.png", $"당신의 점수판\n현재 점수: {score}");
+                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/pan.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}현재 상황");
+                        // await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "");
 
                         gostopgame = support.goStopGame[channel];
                         gostopPlayer = gostopgame.turn;
@@ -282,12 +284,12 @@ namespace bot
                             index++;
                         }
                         send += "```";
-                        support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
+                        // support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
 
                         SocketUser next = client.GetUser(gostopPlayer.id);
                         support.turnPlayer.Remove(msg.Author.Id);
                         support.turnPlayer.Add(gostopPlayer.id, channel);
-                        await next.SendFileAsync($"GoStop/{channel.Id}/field.png");
+                        await next.SendFileAsync($"GoStop/{channel.Id}/pan.png");
                         await next.SendFileAsync($"GoStop/{channel.Id}/{next.Id}.png");
                         await next.SendMessageAsync(send);
                     } 
