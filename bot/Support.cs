@@ -20,9 +20,9 @@ namespace bot
         Dictionary<ulong, ulong>  _helpMessages = new Dictionary<ulong, ulong>(); //메세지 ID, 사용자 ID
         Dictionary<SocketGuildChannel, GoStop> _gostop = new Dictionary<SocketGuildChannel, GoStop>();
         Dictionary<ulong, SocketGuildChannel> _turnPlayer = new Dictionary<ulong, SocketGuildChannel>();
-        Dictionary<ulong, Hwatu[]> _selectGet = new Dictionary<ulong, Hwatu[]>();
         Dictionary<SocketGuildChannel, List<ulong>> _tempUsers = new Dictionary<SocketGuildChannel, List<ulong>>(); 
-        Dictionary<SocketGuildChannel, int> _timer = new Dictionary<SocketGuildChannel, int>();
+        Dictionary<ulong, KeyValuePair<Hwatu, Hwatu[]>> _selectGet = new Dictionary<ulong, KeyValuePair<Hwatu, Hwatu[]>>();
+        Dictionary<ulong, Hwatu[]> _selectFieldGet = new Dictionary<ulong, Hwatu[]>();
 
 
         public Dictionary<ulong, ulong> helpMessages
@@ -65,14 +65,11 @@ namespace bot
                 _tempUsers = value;
             }
         }
-        public Dictionary<SocketGuildChannel, int> timer
+        public Dictionary<ulong, Hwatu[]> selectFieldGet
         {
-            get
-            {
-                return _timer;
-            }
+            get {return _selectFieldGet;}
         }
-        public Dictionary<ulong, Hwatu[]> selectGet
+        public Dictionary<ulong, KeyValuePair<Hwatu, Hwatu[]>> selectGet
         {
             get {return _selectGet;}
         }

@@ -138,7 +138,7 @@ namespace bot
             }
             else
             {
-                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {support.unit(_money * 3)} BNB가 소멸 되었습니다.");
+                builder.AddField("저런", $"숫자 3개가 모두 맞지 않습니다. 거셨던 {support.unit(_money)} BNB가 소멸 되었습니다.");
             }
             await ReplyAsync("", embed:builder.Build());
         }
@@ -352,8 +352,7 @@ namespace bot
                  Discord.Rest.RestTextChannel createChannel = null;
                 try
                 {
-                    createChannel = await Context.Guild.CreateTextChannelAsync($"{DateTime.Now}고스톱 채널");
-
+                    createChannel = await Context.Guild.CreateTextChannelAsync($"{DateTime.Now}고스톱 채널", c => c.Position = channel.Position - 1);
                     OverwritePermissions everyone = OverwritePermissions.DenyAll(createChannel).Modify(viewChannel: PermValue.Allow, readMessageHistory: PermValue.Allow, addReactions: PermValue.Allow);
                     OverwritePermissions playersAndBot = everyone.Modify(sendMessages: PermValue.Allow, attachFiles: PermValue.Allow, embedLinks: PermValue.Allow);
 

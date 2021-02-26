@@ -225,19 +225,54 @@ namespace bot
                         var gostopgame = support.goStopGame[channel];
                         var gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
                         int selected = 0;
+
                         if(!int.TryParse(msg.Content, out selected))
                         {
                             await msg.Channel.SendMessageAsync("숫자만 입력해주세요.");
                             return;
                         }
-                        if(support.selectGet.ContainsKey(msg.Author.Id))
+
+
+                        Hwatu selectedHwatu = gostopPlayer.hwatus[selected - 1];
+                        Hwatu[] canGet = gostopgame.Field.canGet(selectedHwatu);
+                        int eat = 0;
+                        bool wasSelected = false;
+
+                        if(support.selectFieldGet.ContainsKey(msg.Author.Id))
                         {
-                            gostopgame.selectHwatu(support.selectGet[msg.Author.Id][selected]);
+                            gostopgame.selectHwatu(support.selectFieldGet[msg.Author.Id][selected - 1]);
+                            support.selectGet.Remove(msg.Author.Id);
+                            return;
+                        }
+                        else if(support.selectGet.ContainsKey(msg.Author.Id))
+                        {
+                            selectedHwatu = support.selectGet[msg.Author.Id].Key;
+                            canGet = gostopgame.Field.canGet(selectedHwatu);
+                            eat = Array.IndexOf(canGet, support.selectGet[msg.Author.Id].Value[selected - 1]);
+                            Console.WriteLine(selectedHwatu.toKR() + support.selectGet[msg.Author.Id].Value[selected - 1].toKR());
+                            wasSelected = true;
+                            support.selectGet.Remove(msg.Author.Id);
+                            // return;
                         }
 
+                        if(canGet.Length > 1 && !wasSelected)
+                        {
+                            KeyValuePair<Hwatu, Hwatu[]> putNGet = new KeyValuePair<Hwatu, Hwatu[]>(selectedHwatu, canGet);
+                            support.selectGet.Add(msg.Author.Id, putNGet);
+                            string sendMessage = $"```{selectedHwatu.toKR()}를 가지고 먹을 화투를 선택하세요\n";
+
+                            for(int i = 1; i <= canGet.Length; i++)
+                            {
+                                sendMessage += $"{i}: {canGet[i - 1].toKR()}\n";
+                            }
+                            sendMessage += "```";
+
+                            await msg.Author.SendMessageAsync(sendMessage);
+                            return;
+                        }
                         try
                         {
-                            support.goStopGame[channel].turnPlayerPutHwatu(gostopPlayer.hwatus[selected - 1]);
+                            support.goStopGame[channel].turnPlayerPutHwatu(selectedHwatu, eat);
                         }
                         catch (Exception e)
                         {
@@ -246,13 +281,13 @@ namespace bot
                                 Console.WriteLine(e);
                                 return;
                             }
-                            Hwatu[] gets = gostopgame.Field.canGet(gostopPlayer.hwatus[selected - 1]);
-                            support.selectGet.Add(msg.Author.Id, gets);
-                            string sendMessage = $"```{gostopPlayer.hwatus[selected - 1].toKR()}를 가지고 먹을 화투를 선택하세요\n";
+                            
+                            support.selectFieldGet.Add(msg.Author.Id, canGet);
+                            string sendMessage = $"```{selectedHwatu.toKR()}를 가지고 먹을 화투를 선택하세요\n";
 
-                            for(int i = 1; i <= gets.Length; i++)
+                            for(int i = 1; i <= canGet.Length; i++)
                             {
-                                sendMessage += $"{i}: {gets[i - 1].toKR()}\n";
+                                sendMessage += $"{i}: {canGet[i - 1].toKR()}\n";
                             }
                             sendMessage += "```";
 
@@ -270,7 +305,7 @@ namespace bot
                         int score = gostopPlayer.getScore();
                         await msg.Author.SendFileAsync($"GoStop/{channel.Id}/pan.png", "현재 상황");
                         // await msg.Author.SendFileAsync($"{path}score.png", $"당신의 점수판\n현재 점수: {score}");
-                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/pan.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}현재 상황");
+                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/pan.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}의 턴 종료, 현재 상황");
                         // await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "");
 
                         gostopgame = support.goStopGame[channel];

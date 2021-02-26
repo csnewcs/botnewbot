@@ -88,6 +88,7 @@ namespace bot
             var player = _lavaNode.GetPlayer(Context.Guild);
             var message = await ReplyAsync("잠시만 기다려 주세요 검색 중 입니다....");
             string query = Context.Message.ToString().Substring(8);
+            if(query[0] == ' ') query = query.Substring(1);
             try
             {
                 LavaTrack track = searchSong(player, query);
@@ -225,8 +226,7 @@ namespace bot
             player = _lavaNode.GetPlayer(Context.Guild);
 
             foreach (var a in queue)
-            {
-                
+            {                
                 player.Queue.Enqueue(a);
             }
             await player.PlayAsync(player.Queue.FirstOrDefault());
@@ -239,8 +239,40 @@ namespace bot
            Random rd = new Random();
             uint color = (uint)rd.Next(0, 0xffffff);
        }
+       [Command("멈춰")]
+       public async Task pause()
+       {
+           try
+           {
+            var player = _lavaNode.GetPlayer(Context.Guild);
+            await player.PauseAsync();
+            await ReplyAsync("멈췄습니다!");
+           }
+           catch (Exception e)
+           {
+               Console.WriteLine(e);
+           }
+       }
+       [Command("재생")]
+       public async Task play()
+       {
+           try
+           {
+            var player = _lavaNode.GetPlayer(Context.Guild);
+            await player.ResumeAsync();
+            // await ReplyAsync("")
+           }
+           catch (Exception e)
+           {
+               Console.WriteLine(e);
+           }
+       }
        private LavaTrack searchSong(LavaPlayer player, string query)
        {
+           if(query[0] == ' ')
+           {
+               query = query.Substring(1);
+           }
            LavaTrack track = null; //일단 비어있는 트랙 생성
            var result = Uri.IsWellFormedUriString(query, UriKind.Absolute) ? _lavaNode.SearchAsync(query).Result : _lavaNode.SearchYouTubeAsync(query).Result;
            if (result.Tracks.Count == 0) return track;

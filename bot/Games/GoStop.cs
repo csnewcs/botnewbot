@@ -97,9 +97,10 @@ namespace csnewcs.Game.GoStop
                 give = new List<Hwatu>();
                 for(int i = 0; i < fieldHwatuCount; i++)
                 {
-                    if(allHwatus[i].month == Month.Joker)
+                    // Console.WriteLine(allHwatus[index]);
+                    if(allHwatus[index].month == Month.Joker)
                     {
-                        _players[0].scoreHwatus.Add(allHwatus[i]);
+                        _players[0].scoreHwatus.Add(allHwatus[index]);
                         index++;
                         continue;
                     }
@@ -155,6 +156,7 @@ namespace csnewcs.Game.GoStop
         }
         public void putHwatu(ref Player player, ref Field field, Hwatu hwatu, int getwhat = 0)
         {
+            Console.WriteLine($"내는 거: {hwatu}");
             if (!player.hwatus.Contains(hwatu))
             {
                 throw new Exception("PlayerDoesNotHave");
@@ -163,8 +165,13 @@ namespace csnewcs.Game.GoStop
             {
                 player.scoreHwatus.Add(hwatu);
                 player.hwatus.Remove(hwatu);
-                player.hwatus.Add(field.reverseHwatus[0]);
-                field.reverseHwatus.RemoveAt(0);
+                var addHwatu = field.reverseHwatus[0];
+                player.hwatus.Add(addHwatu);
+                field.reverseHwatus.Remove(addHwatu);
+                if(addHwatu.month == Month.Joker)
+                {
+                    putHwatu(ref player, ref field, addHwatu);
+                }
             }
 
             Hwatu[] getHwatu = field.canGet(hwatu);
@@ -173,11 +180,13 @@ namespace csnewcs.Game.GoStop
             {
                 field.hwatus.Add(hwatu);
             }
-            else
+            else// if(getHwatu.Length == 1)
             {
+                Console.WriteLine(getwhat);
                 field.hwatus.Remove(getHwatu[getwhat]);
                 player.scoreHwatus.Add(hwatu);
                 player.scoreHwatus.Add(getHwatu[getwhat]);
+                Console.WriteLine($"먹은 거: {getHwatu[getwhat]}");
             }
 
             Hwatu plusalpha = field.reverseHwatus[0];
@@ -204,6 +213,7 @@ namespace csnewcs.Game.GoStop
 
             changeTurn();
         }
+        
         public void selectHwatu(Hwatu hwatu)
         {
             int index = _players.IndexOf(turn);
@@ -247,7 +257,7 @@ namespace csnewcs.Game.GoStop
                 if(height < playerImages[1].Width) height = playerImages[1].Width;
                 height += 50;
                 playerImages[0].Mutate(m => m.Rotate(180));
-                playerImages[1].Mutate(m => m.Rotate(-90));
+                playerImages[1].Mutate(m => m.Rotate(90));
             }
 
             int width = fieldImage.Width;
