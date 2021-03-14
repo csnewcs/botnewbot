@@ -100,12 +100,12 @@ namespace bot
                     player.Queue.Remove(track);
                     return;
                 }
-                if (track.Duration.Minutes > 15 || track.Duration.Hours > 0)
-                {
-                    await ReplyAsync("16분 이상의 음악은 등록할 수 없습니다.");
-                    player.Queue.Remove(track);
-                    return;
-                }
+                // if (track.Duration.Minutes > 15 || track.Duration.Hours > 0)
+                // {
+                //     await ReplyAsync("16분 이상의 음악은 등록할 수 없습니다.");
+                //     player.Queue.Remove(track);
+                //     return;
+                // }
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle("추가 성공")
                     .WithColor((uint)rd.Next(0x000000, 0xffffff));
@@ -158,11 +158,11 @@ namespace bot
                     builder.AddField($"{index+1} {a}", $"```추가 실패, 이유: 검색 결과 없음```");
                     player.Queue.Remove(tracks[index]);
                }
-               else if (tracks[index].Duration.Minutes > 15 || tracks[index].Duration.Hours > 0)
-               {
-                   builder.AddField($"{index+1} {a}", $"```추가 실패, 이유: 16분 이상의 긴 음악```");
-                   player.Queue.Remove(tracks[index]);
-               }
+            //    else if (tracks[index].Duration.Minutes > 15 || tracks[index].Duration.Hours > 0)
+            //    {
+            //        builder.AddField($"{index+1} {a}", $"```추가 실패, 이유: 16분 이상의 긴 음악```");
+            //        player.Queue.Remove(tracks[index]);
+            //    }
                else
                {
                    builder.AddField($"{index+1} {a}", $"```추가 성공, {tracks[index].Title} ({tracks[index].Duration.Minutes}:{tracks[index].Duration.Seconds})```");
