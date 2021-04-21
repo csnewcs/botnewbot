@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Discord;
@@ -7,16 +9,20 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Newtonsoft.Json.Linq;
 
+using botnewbot.Support;
+
 namespace bot
 {
     ////////////////////////////////////
     // 여기는 처벌 관련된 명령어 사용하는 곳 //
     ///////////////////////////////////
+    
     [Group("처벌")]
     public class Punish : ModuleBase<SocketCommandContext>
     {
         Support support = new Support();
-        [Command]
+        Permission permission = new Permission();
+        // [Command]
         public async Task help() //명령어: $처벌
         {
             EmbedBuilder builder = new EmbedBuilder()
@@ -31,47 +37,76 @@ namespace bot
         [Command("뮤트", true)]
         public async Task mute() //명령어: $처벌 뮤트 <누군가를 멘션>
         {
+            EmbedBuilder toSendEmbed = new EmbedBuilder();
+            string toSendMessage = ""; //Embed를 보낼 수 없는 상황에 보낼 메세지
             SocketGuildUser user = Context.User as SocketGuildUser;
+            SocketGuildUser bot = Context.Guild.GetUser(Context.Client.CurrentUser.Id);
+
             SocketMessage msg = Context.Message;
-            var muteUsers = msg.MentionedUsers;
-            if (!(support.hasPermission(user, Support.Permission.MuteUser) && support.isOver(user, muteUsers)) || muteUsers.Count == 0)
+            var toMuteUsers = msg.MentionedUsers;
+            if(toMuteUsers.Count == 0)
             {
-                return;
+                toSendEmbed.AddField("실패!", "이유: 언급된 사람이 없습니다.");
+                toSendMessage = "실패!\n언급된 사람이 없습니다.";
+            }
+            else if(!permission.canManageChannel(user))
+            {
+                toSendEmbed.AddField("실패!", $"이유: {user.Nickname}님은 채널을 관리할 권한이 없습니다.");
+                toSendMessage = $"실패!\n이유: {user.Nickname}님은 채널을 관리할 권한이 없습니다.";
+            }
+            else if(!permission.canManageChannel(bot))
+            {
+                toSendEmbed.AddField("실패!", "이유: 이 봇은 채널을 관리할 권한이 없습니다.");
+                toSendMessage = "실패!\n이유: 이 봇은 채널을 관리할 권한이 없습니다.";
+            }
+            else
+            {
+                int muteUserCount = toMuteUsers.Count;
+                var allChannels = Context.Guild.Channels;
+                List<SocketGuildChannel> textChannels = new List<SocketGuildChannel>();
+                foreach(var channel in  allChannels)
+                {
+                    if(channel is SocketTextChannel) textChannels.Add(channel);
+                }
+                foreach(var muteUser in toMuteUsers)
+                {
+                    SocketGuildUser muteGuildUser = muteUser as SocketGuildUser;
+                    OverwritePermissions overwrite = new OverwritePermissions().Modify(sendMessages: PermValue.Deny);
+                    foreach(var channel in textChannels)
+                    {
+                        if(user.Id == bot.Id)
+                        {
+                            toSendEmbed.AddField("뉴봇이는 슬퍼요", "저를 뮤트시키려 하시다니 너무 슬펴요ㅠㅠ");
+                            toSendMessage = "뉴봇이는 슬퍼요\n저를 뮤트시키려 하시다니 너무 슬퍼요ㅠㅠ";
+                            muteUserCount--;
+                            continue;
+                        }
+                        await channel.AddPermissionOverwriteAsync(user, overwrite);
+                    }
+                }
+                string addMessage = muteUserCount == 1 ? $"{toMuteUsers.First().Username}님" : $"{muteUserCount}분 의 뮤트 처리가 완료되었습니다.";
+
+                toSendEmbed.AddField("성공!", addMessage);
+                toSendMessage = addMessage;
             }
             try
             {
-                Random rd = new Random();
-                foreach (var muteUser in muteUsers)
-                {
-                    await (muteUser as SocketGuildUser).ModifyAsync(m => {m.Mute = true;});
-                }
-                if (muteUsers.Count != 1)
-                {
-                    EmbedBuilder builder = new EmbedBuilder()
-                    .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{support.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 처리가 완료되었습니다.");
-                    await msg.Channel.SendMessageAsync("", embed:builder.Build());
-                }
-                else 
-                {
-                    EmbedBuilder builder = new EmbedBuilder()
-                    .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{support.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 처리가 완료되었습니다.");
-                    await msg.Channel.SendMessageAsync("", embed:builder.Build());
-                }
+                await ReplyAsync("", false, toSendEmbed.Build());
             }
             catch
             {
-                await msg.Channel.SendMessageAsync("저런 그분은 음성채팅에 있지 않아요.");
+                await ReplyAsync(toSendMessage + "\n\n봇이 Embed를 보낼 수 없어서 일반 메세지로 대체되었습니다. 봇의 권한을 확인해 주세요.");
             }
         }
         [Command("킥", true)]
         public async Task kick()
         {
+            User user = new User();
+            Permission permission = new Permission();
             SocketMessage msg = Context.Message;
             var kickUsers = msg.MentionedUsers;
-            SocketGuildUser user = Context.User as SocketGuildUser;
-            if (!(support.hasPermission(user, Support.Permission.KickUser) && support.isOver(user, kickUsers)) || kickUsers.Count == 0)
+            SocketGuildUser guildUser = Context.User as SocketGuildUser;
+            if (permission.canKickMember(guildUser) || kickUsers.Count == 0)
             {
                 return;
             }
@@ -80,47 +115,47 @@ namespace bot
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{support.getNickname(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{user.getNickName(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }
             else 
             {
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{support.getNickname(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
+                .AddField("작업 완료", $"{user.getNickName(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
                 await msg.Channel.SendMessageAsync("", embed:builder.Build());
             }   
         }
-        [Command("밴", true)]
-        public async Task ban()
-        {
-            SocketGuildUser user = Context.User as SocketGuildUser;
-            SocketMessage msg = Context.Message;
-            var banUsers = msg.MentionedUsers;
-            if (!(support.hasPermission(user, Support.Permission.BanUser) && support.isOver(user, banUsers)) || banUsers.Count == 0)
-            {
-                return;
-            }
-            foreach (var a in banUsers)
-            {
-                await (a as SocketGuildUser).BanAsync();
-            }
-            Random rd = new Random();
-            if (banUsers.Count != 1)
-            {
-                EmbedBuilder builder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{support.getNickname(banUsers.First() as SocketGuildUser)}외 {banUsers.Count}분의 밴 처리가 완료되었습니다.");
+        // [Command("밴", true)]
+        // public async Task ban()
+        // {
+        //     SocketGuildUser user = Context.User as SocketGuildUser;
+        //     SocketMessage msg = Context.Message;
+        //     var banUsers = msg.MentionedUsers;
+        //     if (!(support.hasPermission(user, Support.Permission.BanUser) && support.isOver(user, banUsers)) || banUsers.Count == 0)
+        //     {
+        //         return;
+        //     }
+        //     foreach (var a in banUsers)
+        //     {
+        //         await (a as SocketGuildUser).BanAsync();
+        //     }
+        //     Random rd = new Random();
+        //     if (banUsers.Count != 1)
+        //     {
+        //         EmbedBuilder builder = new EmbedBuilder()
+        //         .WithColor((uint)rd.Next(0x000000, 0xffffff))
+        //         .AddField("작업 완료", $"{support.getNickname(banUsers.First() as SocketGuildUser)}외 {banUsers.Count}분의 밴 처리가 완료되었습니다.");
 
-                await msg.Channel.SendMessageAsync("", embed:builder.Build());
-            }
-            else 
-            {
-                EmbedBuilder builder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{support.getNickname(banUsers.First() as SocketGuildUser)}님의 밴 처리가 완료되었습니다.");
-                await msg.Channel.SendMessageAsync("", embed:builder.Build());
-            }
-        }
+        //         await msg.Channel.SendMessageAsync("", embed:builder.Build());
+        //     }
+        //     else 
+        //     {
+        //         EmbedBuilder builder = new EmbedBuilder()
+        //         .WithColor((uint)rd.Next(0x000000, 0xffffff))
+        //         .AddField("작업 완료", $"{support.getNickname(banUsers.First() as SocketGuildUser)}님의 밴 처리가 완료되었습니다.");
+        //         await msg.Channel.SendMessageAsync("", embed:builder.Build());
+        //     }
+        // }
     }
 }

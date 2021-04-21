@@ -6,7 +6,7 @@ using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using botnetbot.Support;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -23,6 +23,8 @@ using SixLabors.ImageSharp.Formats.Png;
 using csnewcs.Sql;
 using csnewcs.Game.GoStop;
 
+using botnewbot.Support;
+
 
 namespace bot
 {
@@ -34,11 +36,15 @@ namespace bot
         CommandService command;
         LavaNode lavaNode;
         ServiceProvider _services;
-        static Support support;
-        public static Support _support
-        {
-            get {return support;}
-        }
+        Money _money;
+        private User _user;
+        private Game _game;
+        private Guild _guild;
+        Support support;
+        //public static Support _support
+        //{
+        //    get {return support;}
+        //}
 
 
         Dictionary<ulong, int> people = new Dictionary<ulong, int>();
@@ -55,6 +61,9 @@ namespace bot
                 .AddSingleton<DiscordSocketClient>(new DiscordSocketClient(config))
                 .AddSingleton<CommandService>(new CommandService(serviceConfig))
                 .AddSingleton<Support>(new Support())
+                .AddSingleton(new Money())
+                .AddSingleton(new User())
+                .AddSingleton(new Guild())
 		        // Other services DiscordSocketClient, CommandService, etc
                 .AddLavaNode(x => {
                     x.SelfDeaf = false;
@@ -63,7 +72,10 @@ namespace bot
             command = _services.GetRequiredService<CommandService>();
             lavaNode = _services.GetRequiredService<LavaNode>();
             support = _services.GetRequiredService<Support>();
-            
+            _money = _services.GetRequiredService<Money>();
+            _user = _services.GetRequiredService<User>();
+            _guild = _services.GetRequiredService<Guild>();
+
 
             lavaNode.OnLog += log;
             LavaLinkEvents events = new LavaLinkEvents();
@@ -183,13 +195,13 @@ namespace bot
 
                     // DirectoryInfo dtinfo = new DirectoryInfo($"servers/{guild.Id}");
                     // FileInfo finfo = new FileInfo($"servers/{guild.Id}/{guildUser.Id}");
-                    if (!support.guildExists(guildUser.Guild))
+                    if (!_guild.exists(guildUser.Guild))
                     {
-                        support.addGuild(guildUser.Guild);
+                        _guild.add(guildUser.Guild);
                     }
-                    else if (!support.userExists(guildUser))
+                    else if (!_user.exist(guildUser))
                     {
-                        support.addUser(guildUser);
+                        _user.add(guildUser);
                     }
 
                     addMoney(guildUser, msg);
@@ -305,7 +317,8 @@ namespace bot
                         int score = gostopPlayer.getScore();
                         await msg.Author.SendFileAsync($"GoStop/{channel.Id}/pan.png", "현재 상황");
                         // await msg.Author.SendFileAsync($"{path}score.png", $"당신의 점수판\n현재 점수: {score}");
-                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/pan.png", $"{support.getNickname(channel.Guild.GetUser(msg.Author.Id))}의 턴 종료, 현재 상황");
+                        User user = new User();
+                        await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/pan.png", $"{user.getNickName(channel.Guild.GetUser(msg.Author.Id))}의 턴 종료, 현재 상황");
                         // await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "");
 
                         gostopgame = support.goStopGame[channel];
@@ -357,9 +370,7 @@ namespace bot
             Random random = new Random();
             int getByte = (System.Text.Encoding.Default.GetBytes(msg.Content).Length) * (random.Next(3, 16)) + 1;
             Console.WriteLine("bytes: " + (System.Text.Encoding.Default.GetBytes(msg.Content).Length) + "     get BNB: " + getByte);
-            long money = support.getMoney(guildUser);
-            money += getByte;
-            support.setMoney(guildUser, money);
+            _money.addMoney(guildUser, getByte);
             // string path = $"servers/{guildUser.Guild.Id}/{guildUser.Id}";
             // JObject user = JObject.Parse(File.ReadAllText(path));
             // ulong money = (ulong)user["money"] + (ulong)getByte;
@@ -417,8 +428,9 @@ namespace bot
                     if (msg.Value.Author.IsBot || !msg.HasValue) return;
                     // if(msg.Value.Author != msg.Value)
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["deleteMessage"].ToString()));
-                    SocketGuildUser user = guild.GetUser(msg.Value.Author.Id);
-                    string nickname = support.getNickname(user);
+                    SocketGuildUser guildUser = guild.GetUser(msg.Value.Author.Id);
+                    User user = new User();
+                    string nickname = user.getNickName(guildUser);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle($"{nickname}님의 메세지가 삭제됨")
                     .WithColor(new Discord.Color(0xff0000)) //빨간색
@@ -463,8 +475,9 @@ namespace bot
                 {
                     // if (beforeMsg.Value.Author.IsBot) return;
                     IMessageChannel channel = guild.GetTextChannel(ulong.Parse(json["editMessage"].ToString()));
-                    SocketGuildUser user = guild.GetUser(beforeMsg.Value.Author.Id);
-                    string nickname = support.getNickname(user);
+                    SocketGuildUser guildUser = guild.GetUser(beforeMsg.Value.Author.Id);
+                    User user = new User();
+                    string nickname = user.getNickName(guildUser);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                     .WithTitle($"{nickname}님의 메세지가 수정됨")
                     .WithColor(new Discord.Color(0x880088))
@@ -488,7 +501,7 @@ namespace bot
         }
         Task joinedGuild(SocketGuild guild) //서버에 처음 들어갔을 때
         {
-            support.addGuild(guild);
+            _guild.add(guild);
             return Task.CompletedTask;
 
             // // setting.Add(guild.OwnerId, guild.Id); // (서버 주인 ID, 서버 ID)
@@ -580,7 +593,7 @@ namespace bot
         }
         Task personJoinedGuild(SocketGuildUser user)
         {
-            if (!user.IsBot) support.addUser(user);
+            if (!user.IsBot) _user.add(user);
             return Task.CompletedTask;
         }
         // Task leftGuild(SocketGuild guild)
@@ -611,6 +624,9 @@ namespace bot
             }
             SqlHelper sqlHelper = new SqlHelper("localhost", "botnewbot", tables);
             support.changeSqlHelper(sqlHelper);
+            _money.setSqlHelper(sqlHelper);
+            _user.setSqlHelper(sqlHelper);
+            _guild.setSqlHelper(sqlHelper);
             return Task.CompletedTask;
         }
         

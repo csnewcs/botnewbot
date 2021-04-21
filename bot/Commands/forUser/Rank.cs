@@ -3,9 +3,12 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using botnetbot.Support;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
+
+using botnewbot.Support;
 using Newtonsoft.Json.Linq;
 
 namespace bot
@@ -43,6 +46,7 @@ namespace bot
         [Command("나")]
         public async Task me()
         {
+            User user = new User();
             makeDict(Context.Guild);
             sort();
             int rank = 1;
@@ -52,7 +56,7 @@ namespace bot
                 rank++;
             }
             Random rd = new Random();
-            string nickName = support.getNickname(Context.User as SocketGuildUser);
+            string nickName = user.getNickName(Context.User as SocketGuildUser);
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
             .AddField($"{nickName}님의 순위는", $"{rank}등입니다.");
@@ -62,6 +66,8 @@ namespace bot
         [Command("모두")]
         public async Task all()
         {
+            User user = new User();
+            Money money = new Money();
             makeDict(Context.Guild);
             sort();
             Random rd = new Random();
@@ -74,8 +80,8 @@ namespace bot
             string users = "";
             foreach (var a in people)
             {
-                string nickName = support.getNickname(a.Key); //해당 사람의 닉네임 얻기
-                users += $"{count+1}등\n{nickName}: ({support.unit(a.Value)} BNB)\n\n"; 
+                string nickName = user.getNickName(a.Key); //해당 사람의 닉네임 얻기
+                users += $"{count+1}등\n{nickName}: ({money.unit(a.Value)} BNB)\n\n"; 
                 count++;
 
                 if (count % 20 == 0 && count != users.Length - 1)
@@ -101,6 +107,8 @@ namespace bot
         [Command("상위권")]
         public async Task top()
         {
+            User user = new User();
+            Money money = new Money();
             makeDict(Context.Guild);
             sort();
             Random rd = new Random();
@@ -111,11 +119,12 @@ namespace bot
             {
                 try
                 {
-                    string nickName = support.getNickname(people[i].Key);
-                    builder.AddField($"{i + 1}등", $"{nickName}: {support.unit(people[i].Value)} BNB");
+                    string nickName = user.getNickName(people[i].Key);
+                    builder.AddField($"{i + 1}등", $"{nickName}: {money.unit(people[i].Value)} BNB");
                 }
-                catch
+                catch (Exception e)
                 {
+                    Console.Write(e);
                     builder.AddField($"{i+1}등", "사람이... 읎어요!");
                 }
             }
@@ -123,6 +132,7 @@ namespace bot
         }
         private void makeDict(SocketGuild guild)
         {
+            Money money = new Money();
             var users = guild.Users;
             // int count = 0;
             // foreach (var user in users) if (!user.IsBot) count++;
@@ -133,7 +143,7 @@ namespace bot
             {
                 try
                 {
-                    if (!user.IsBot) people.Add(new KeyValuePair<SocketGuildUser, long>(user, support.getMoney(user)));
+                    if (!user.IsBot) people.Add(new KeyValuePair<SocketGuildUser, long>(user, money.getUserMoney(user)));
                 }
                 catch{}
             }
@@ -170,7 +180,6 @@ namespace bot
         }
         private void swap(int a, int b)
         {
-            // Console.WriteLine(people[a] + "<>" + people[b]);
             var temp = people[a];
             people[a] = people[b];
             people[b] = temp;

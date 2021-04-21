@@ -1,9 +1,12 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using botnetbot.Support;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+
+using botnewbot.Support;
 using Newtonsoft.Json.Linq;
 
 namespace bot
@@ -14,21 +17,23 @@ namespace bot
     [Group("은행")]
     public class Bank : ModuleBase<SocketCommandContext>
     {
-        private readonly Support support;
+        private Money _money;
         
-        public Bank(Support sup)
+        
+        public Bank(Money money)
         {
-            support = sup;
+            _money = money;
         }
 
         [Command]
         [Summary("자기 돈 확인하기")]
         public async Task bank()
         {
-            SocketGuildUser user = Context.User as SocketGuildUser;
+            User user = new User();
+            SocketGuildUser guildUser = Context.User as SocketGuildUser;
             // JObject json = JObject.Parse(File.ReadAllText($"servers/{user.Guild.Id}/{user.Id}"));
-            string nickname = support.getNickname(user);
-            string moneyString = support.unit(support.getMoney(user));
+            string nickname = user.getNickName(guildUser);
+            string moneyString = _money.unit(_money.getUserMoney(guildUser));
             Random rd = new Random();
             EmbedBuilder builder = new EmbedBuilder()
             .WithColor(rd.Next(0, 256), rd.Next(0, 256), rd.Next(0, 256))

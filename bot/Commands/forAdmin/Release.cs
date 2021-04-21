@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Collections;
 using System.Threading.Tasks;
+using botnewbot.Support;
 using Newtonsoft.Json.Linq;
 using Discord.Commands;
 using Discord;
@@ -33,9 +34,11 @@ namespace bot
         [Command("뮤트", true)]
         public async Task mute()
         {
-            SocketGuildUser user = Context.User as SocketGuildUser;
+            SocketGuildUser guildUser = Context.User as SocketGuildUser;
             SocketMessage msg = Context.Message;
-            if (!support.hasPermission(user, Support.Permission.MuteUser))
+            User user = new User();
+            Permission permission = new Permission();
+            if (!permission.canMuteMember(guildUser))
             {
                 return;
             }
@@ -52,14 +55,14 @@ namespace bot
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{support.getNickname(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 해제가 완료되었습니다.");
+                    .AddField("작업 완료", $"{user.getNickName(muteUsers.First() as SocketGuildUser)}외 {muteUsers.Count}분의 뮤트 해제가 완료되었습니다.");
                     await msg.Channel.SendMessageAsync("", embed:builder.Build());
                 }
                 else 
                 {
                     EmbedBuilder builder = new EmbedBuilder()
                     .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                    .AddField("작업 완료", $"{support.getNickname(muteUsers.First() as SocketGuildUser)}님의 뮤트 해제가 완료되었습니다.");
+                    .AddField("작업 완료", $"{user.getNickName(muteUsers.First() as SocketGuildUser)}님의 뮤트 해제가 완료되었습니다.");
                     await ReplyAsync("", embed:builder.Build());
                 }
             }
@@ -71,10 +74,11 @@ namespace bot
         [Command("밴", true)]
         public async Task ban(string next)
         {
+            Permission permission = new Permission();
             SocketGuildUser user = Context.User as SocketGuildUser;
             SocketMessage msg = Context.Message;
             SocketGuild guild = Context.Guild;
-            if (!support.hasPermission(user, Support.Permission.BanUser))
+            if (!permission.canBanMember(user))
             {
                 return;
             }
@@ -108,7 +112,7 @@ namespace bot
             .WithColor(new Color(color));
             if (getBans.Result.Count == 0)
             {
-                await ReplyAsync("이 섭은 밴을 당한 멤버가 없습니다만?");
+                await ReplyAsync("이 서버은 밴을 당한 멤버가 없습니다");
                 return;
             }
             foreach (var a in getBans.Result)
@@ -130,7 +134,7 @@ namespace bot
             var banPeople = guild.GetBansAsync().Result;
             if (banPeople.Count == 0)
             {
-                await ReplyAsync("이 섭은 밴을 당한 멤버가 없습니다만?");
+                await ReplyAsync("이 서버은 밴을 당한 멤버가 없습니다");
                 return;
             }
             foreach (var banPerson in banPeople)

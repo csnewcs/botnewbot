@@ -87,7 +87,7 @@ namespace bot
         {
             return JObject.Parse(sqlHelper.getData("guild_" + guild.Id.ToString(), "id", "serverinfo", "serverinfo").ToString());
         }
-        public long getMoney(SocketGuildUser user)
+        /*public long getMoney(SocketGuildUser user)
         {
             long money = (long)sqlHelper.getData("guild_" + user.Guild.Id, "id", user.Id, "money");
             // Console.WriteLine(money);
@@ -96,18 +96,18 @@ namespace bot
         public void setMoney(SocketGuildUser user, long money)
         {
             sqlHelper.setData("guild_" + user.Guild.Id.ToString(), "id", user.Id,  "money", money);
-        }
-        public void addUser(SocketGuildUser user)
+        }*/
+        /*public void addUser(SocketGuildUser user)
         {
             string[] columns = new string[] {"id", "money"};
             object[] datas = new object[] {user.Id, 100};
             sqlHelper.addData("guild_" + user.Guild.Id.ToString(), columns, datas);
-        }
-        public bool userExists(SocketGuildUser user)
+        }*/
+        /*public bool userExists(SocketGuildUser user)
         {
             return  sqlHelper.dataExits("guild_" + user.Guild.Id.ToString(), "id", user.Id);
-        }
-        public bool guildExists(SocketGuild guild)
+        }*/
+        /*public bool guildExists(SocketGuild guild)
         {
             return sqlHelper.tableExits("botnewbot", "guild_" + guild.Id.ToString());
         }
@@ -124,18 +124,18 @@ namespace bot
                 if (user.IsBot) continue;
                 addUser(user);
             }
-        }
+        }*/
         
-        public void delUser(SocketGuildUser user)
+        /*public void delUser(SocketGuildUser user)
         {
             // sqlHelper.remove
         }
         public void delGuild(SocketGuild guild)
         {
 
-        }
+        }*/
 
-        public string getNickname(SocketGuildUser guild)
+        /*public string getNickname(SocketGuildUser guild)
         {
             if (string.IsNullOrEmpty(guild.Nickname))
             {
@@ -145,8 +145,8 @@ namespace bot
             {
                 return guild.Nickname;
             }
-        }
-        public string unit(long money)
+        }*/
+        /*public string unit(long money)
         {
             if (money == 0) return "0";
             string result = "";
@@ -163,73 +163,73 @@ namespace bot
                 index++;
             }
             return result;
-        }
+        }*/
         
-        public bool isOver(SocketGuildUser first, SocketGuildUser second) //위에 있는 역할일수록 수가 큼
-        {
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            IReadOnlyCollection<SocketRole> one = first.Roles, two = second.Roles;
-            int oneTop = 0;
-            int twoTop = 0;
-            foreach (var a in one)
-            {
-                if (a.Position > oneTop) oneTop = a.Position;
-            }
-            foreach (var a in two)
-            {
-                if (a.Position > twoTop) twoTop = a.Position;
-            }
-            return oneTop > twoTop;
-        }
-        public bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketUser> second)
-        {
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            IReadOnlyCollection<SocketRole> one = first.Roles;
-            int oneTop = 0;
-            int twoTop = 0;
-            foreach (var a in one)
-            {
-                if (a.Position > oneTop) oneTop = a.Position;
-            }
-            foreach (var a in second)
-            {
-                foreach (var b in (a as SocketGuildUser).Roles)
-                {
-                    if (b.Position > twoTop) twoTop = b.Position;
-                }
-            }
-            return oneTop > twoTop;
-        }
-        public bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketRole> second)
-        {
-            if (first.Id == first.Guild.OwnerId)
-            {
-                return true;
-            }
-            IReadOnlyCollection<SocketRole> one = first.Roles;
-            int oneTop = 0;
-            int twoTop = 0;
-            foreach (var a in one)
-            {
-                if (a.Position > oneTop) oneTop = a.Position;
-            }
-            foreach (var a in second)
-            {
-                if (a.Position > twoTop) twoTop = a.Position;
-            }
-            return oneTop > twoTop;
-        }
-        public bool hasPermission(SocketGuildUser user, Permission p)
+        // public bool isOver(SocketGuildUser first, SocketGuildUser second) //위에 있는 역할일수록 수가 큼
+        // {
+        //     if (first.Id == first.Guild.OwnerId)
+        //     {
+        //         return true;
+        //     }
+        //     IReadOnlyCollection<SocketRole> one = first.Roles, two = second.Roles;
+        //     int oneTop = 0;
+        //     int twoTop = 0;
+        //     foreach (var a in one)
+        //     {
+        //         if (a.Position > oneTop) oneTop = a.Position;
+        //     }
+        //     foreach (var a in two)
+        //     {
+        //         if (a.Position > twoTop) twoTop = a.Position;
+        //     }
+        //     return oneTop > twoTop;
+        // }
+        // public bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketUser> second)
+        // {
+        //     if (first.Id == first.Guild.OwnerId)
+        //     {
+        //         return true;
+        //     }
+        //     if (first.Id == first.Guild.OwnerId)
+        //     {
+        //         return true;
+        //     }
+        //     IReadOnlyCollection<SocketRole> one = first.Roles;
+        //     int oneTop = 0;
+        //     int twoTop = 0;
+        //     foreach (var a in one)
+        //     {
+        //         if (a.Position > oneTop) oneTop = a.Position;
+        //     }
+        //     foreach (var a in second)
+        //     {
+        //         foreach (var b in (a as SocketGuildUser).Roles)
+        //         {
+        //             if (b.Position > twoTop) twoTop = b.Position;
+        //         }
+        //     }
+        //     return oneTop > twoTop;
+        // }
+        // public bool isOver(SocketGuildUser first, IReadOnlyCollection<SocketRole> second)
+        // {
+        //     if (first.Id == first.Guild.OwnerId)
+        //     {
+        //         return true;
+        //     }
+        //     IReadOnlyCollection<SocketRole> one = first.Roles;
+        //     int oneTop = 0;
+        //     int twoTop = 0;
+        //     foreach (var a in one)
+        //     {
+        //         if (a.Position > oneTop) oneTop = a.Position;
+        //     }
+        //     foreach (var a in second)
+        //     {
+        //         if (a.Position > twoTop) twoTop = a.Position;
+        //     }
+        //     return oneTop > twoTop;
+        // }
+        /*public bool hasPermission(SocketGuildUser user, Permission p)
         {
             if (user.Guild.OwnerId == user.Id)
             {
@@ -272,6 +272,6 @@ namespace bot
             MuteUser,
             ManageRole,
             Admin
-        }
+        }*/
     }
 }
