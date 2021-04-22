@@ -6,7 +6,7 @@ using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using botnetbot.Support;
+using botnewbot.Support;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -38,7 +38,7 @@ namespace bot
         ServiceProvider _services;
         Money _money;
         private User _user;
-        private Game _game;
+        private botnewbot.Support.Game _game;
         private Guild _guild;
         Support support;
         //public static Support _support
@@ -64,6 +64,7 @@ namespace bot
                 .AddSingleton(new Money())
                 .AddSingleton(new User())
                 .AddSingleton(new Guild())
+                .AddSingleton(new botnewbot.Support.Game())
 		        // Other services DiscordSocketClient, CommandService, etc
                 .AddLavaNode(x => {
                     x.SelfDeaf = false;
@@ -75,6 +76,7 @@ namespace bot
             _money = _services.GetRequiredService<Money>();
             _user = _services.GetRequiredService<User>();
             _guild = _services.GetRequiredService<Guild>();
+            _game = _services.GetRequiredService<botnewbot.Support.Game>();
 
 
             lavaNode.OnLog += log;
@@ -231,10 +233,10 @@ namespace bot
                 {
                     try
                     {
-                        if (!support.turnPlayer.ContainsKey(msg.Author.Id)) return;
+                        if (!_game.turnPlayer.ContainsKey(msg.Author.Id)) return;
 
-                        SocketGuildChannel channel = support.turnPlayer[msg.Author.Id];
-                        var gostopgame = support.goStopGame[channel];
+                        SocketGuildChannel channel = _game.turnPlayer[msg.Author.Id];
+                        var gostopgame = _game.goStopGame[channel];
                         var gostopPlayer = gostopgame.getPlayer(msg.Author.Id);
                         int selected = 0;
 
@@ -250,27 +252,27 @@ namespace bot
                         int eat = 0;
                         bool wasSelected = false;
 
-                        if(support.selectFieldGet.ContainsKey(msg.Author.Id))
+                        if(_game.selectFieldGet.ContainsKey(msg.Author.Id))
                         {
-                            gostopgame.selectHwatu(support.selectFieldGet[msg.Author.Id][selected - 1]);
-                            support.selectGet.Remove(msg.Author.Id);
+                            gostopgame.selectHwatu(_game.selectFieldGet[msg.Author.Id][selected - 1]);
+                            _game.selectGet.Remove(msg.Author.Id);
                             return;
                         }
-                        else if(support.selectGet.ContainsKey(msg.Author.Id))
+                        else if(_game.selectGet.ContainsKey(msg.Author.Id))
                         {
-                            selectedHwatu = support.selectGet[msg.Author.Id].Key;
+                            selectedHwatu = _game.selectGet[msg.Author.Id].Key;
                             canGet = gostopgame.Field.canGet(selectedHwatu);
-                            eat = Array.IndexOf(canGet, support.selectGet[msg.Author.Id].Value[selected - 1]);
-                            Console.WriteLine(selectedHwatu.toKR() + support.selectGet[msg.Author.Id].Value[selected - 1].toKR());
+                            eat = Array.IndexOf(canGet, _game.selectGet[msg.Author.Id].Value[selected - 1]);
+                            Console.WriteLine(selectedHwatu.toKR() + _game.selectGet[msg.Author.Id].Value[selected - 1].toKR());
                             wasSelected = true;
-                            support.selectGet.Remove(msg.Author.Id);
+                            _game.selectGet.Remove(msg.Author.Id);
                             // return;
                         }
 
                         if(canGet.Length > 1 && !wasSelected)
                         {
                             KeyValuePair<Hwatu, Hwatu[]> putNGet = new KeyValuePair<Hwatu, Hwatu[]>(selectedHwatu, canGet);
-                            support.selectGet.Add(msg.Author.Id, putNGet);
+                            _game.selectGet.Add(msg.Author.Id, putNGet);
                             string sendMessage = $"```{selectedHwatu.toKR()}를 가지고 먹을 화투를 선택하세요\n";
 
                             for(int i = 1; i <= canGet.Length; i++)
@@ -284,7 +286,7 @@ namespace bot
                         }
                         try
                         {
-                            support.goStopGame[channel].turnPlayerPutHwatu(selectedHwatu, eat);
+                            _game.goStopGame[channel].turnPlayerPutHwatu(selectedHwatu, eat);
                         }
                         catch (Exception e)
                         {
@@ -294,7 +296,7 @@ namespace bot
                                 return;
                             }
                             
-                            support.selectFieldGet.Add(msg.Author.Id, canGet);
+                            _game.selectFieldGet.Add(msg.Author.Id, canGet);
                             string sendMessage = $"```{selectedHwatu.toKR()}를 가지고 먹을 화투를 선택하세요\n";
 
                             for(int i = 1; i <= canGet.Length; i++)
@@ -321,7 +323,7 @@ namespace bot
                         await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/pan.png", $"{user.getNickName(channel.Guild.GetUser(msg.Author.Id))}의 턴 종료, 현재 상황");
                         // await ((SocketTextChannel)channel).SendFileAsync($"GoStop/{channel.Id}/field.png", "");
 
-                        gostopgame = support.goStopGame[channel];
+                        gostopgame = _game.goStopGame[channel];
                         gostopPlayer = gostopgame.turn;
                         
                         string send = "당신의 차례입니다. 아래 목록에서 낼 것을 골라 번호를 입력하세요. \n```";
@@ -335,8 +337,8 @@ namespace bot
                         // support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
 
                         SocketUser next = client.GetUser(gostopPlayer.id);
-                        support.turnPlayer.Remove(msg.Author.Id);
-                        support.turnPlayer.Add(gostopPlayer.id, channel);
+                        _game.turnPlayer.Remove(msg.Author.Id);
+                        _game.turnPlayer.Add(gostopPlayer.id, channel);
                         await next.SendFileAsync($"GoStop/{channel.Id}/pan.png");
                         await next.SendFileAsync($"GoStop/{channel.Id}/{next.Id}.png");
                         await next.SendMessageAsync(send);
@@ -648,7 +650,7 @@ namespace bot
                     if (tags.Count > version && lastversion != tags.Last["name"].ToString())
                     {
                         Console.WriteLine("새로운 버전 {0}이(가) 나왔습니다!", tags.Last["name"]);
-                        sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
+                        //sendNotice($"이 봇의 새로운 버전 {tags.Last["name"]}가 나왔습니다!\n서버장님께 봇 업데이트를 요청해보는건 어떨까요?\n자세한 설명: https://github.com/csnewcs/botnewbot/releases/tag/{tags.Last["name"]}");
                         lastversion = tags.Last["name"].ToString();
                     }
                 }

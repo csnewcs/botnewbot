@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
-using botnetbot.Support;
+using botnewbot.Support;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
@@ -18,6 +18,7 @@ using SixLabors.ImageSharp.Formats.Png;
 using Newtonsoft.Json.Linq;
 using csnewcs.Game.GoStop;
 using botnewbot.Support;
+using Game = botnewbot.Support.Game;
 
 namespace bot
 {
@@ -29,11 +30,13 @@ namespace bot
     {
         private Money _money;
         private Support support;
+        private Game _game;
 
-        public Gamble(Money money, Support _support)
+        public Gamble(Money money, Support _support, botnewbot.Support.Game game)
         {
             _money = money;
             support = _support;
+            _game = game;
         } 
         [Command]
         public async Task help()
@@ -258,12 +261,12 @@ namespace bot
 
                 if (type == "시작")
                 {
-                    if (support.goStopGame.ContainsKey(Context.Channel as SocketGuildChannel))
+                    if (_game.goStopGame.ContainsKey(Context.Channel as SocketGuildChannel))
                     {
-                        Console.WriteLine(support.goStopGame[Context.Channel as SocketGuildChannel].players[0].id);
+                        Console.WriteLine(_game.goStopGame[Context.Channel as SocketGuildChannel].players[0].id);
                         builder.AddField("저런", "이미 게임이 진행중이에요. 나중에 다시 시도해주세요.");
                     }
-                    else if(support.tempUsers.ContainsKey(Context.Channel as SocketGuildChannel))
+                    else if(_game.tempUsers.ContainsKey(Context.Channel as SocketGuildChannel))
                     {
                         builder.AddField("저런", $"이미 시작을 했어요 '{Context.Message.Content[0]}도박 고스톱 참가' 로 게임에 참가해주세요!");
                     }
@@ -271,32 +274,32 @@ namespace bot
                     {
                         System.Collections.Generic.List<ulong> list = new System.Collections.Generic.List<ulong>();
                         list.Add(Context.User.Id);
-                        support.tempUsers.Add(Context.Channel as SocketGuildChannel, list);
+                        _game.tempUsers.Add(Context.Channel as SocketGuildChannel, list);
                         builder.AddField("성공", $"게임이 10초 후 시작됩니다. 참가하실 분들은 '{Context.Message.Content[0]}도박 고스톱 참가'로 게임에 참가해주세요.");
                         new Thread(() => countdown(channel)).Start();
                     }
                 }
                 else if (type == "참가")
                 {
-                    if (support.goStopGame.ContainsKey(channel))
+                    if (_game.goStopGame.ContainsKey(channel))
                     {
                         builder.AddField("저런", "이미 게임이 진행중이에요. 다른 게임이 시작하면 다시 시도해주세요.");
                     }
-                    else if(!support.tempUsers.ContainsKey(channel))
+                    else if(!_game.tempUsers.ContainsKey(channel))
                     {
                         builder.AddField("저런", $"아직 게임 시작을 하지 않았어요 '{Context.Message.Content[0]}도박 고스톱 시작'으로 먼저 게임을 시작해주세요.");
                     }
-                    else if (support.tempUsers[channel].Count > 3)
+                    else if (_game.tempUsers[channel].Count > 3)
                     {
                         builder.AddField("저런", "이미 사람이 꽉 찼어요. 나중에 다시 시도해주세요.");
                     }
-                    else if (support.tempUsers[channel].Contains(Context.User.Id))
+                    else if (_game.tempUsers[channel].Contains(Context.User.Id))
                     {
                         builder.AddField("저런", "이미 게임에 참가하셨어요.");
                     }
                     else
                     {
-                        support.tempUsers[channel].Add(Context.User.Id);
+                        _game.tempUsers[channel].Add(Context.User.Id);
                         builder.AddField("성공", "게임에 참가하셨습니다. 게임이 시작될 때 까지 잠시만 기다려주세요.");
                     }
                 }
@@ -315,20 +318,20 @@ namespace bot
                 EmbedBuilder builder = new EmbedBuilder().WithColor((uint)rd.Next(0, 0xffffff));
                 SocketTextChannel textChannel = (SocketTextChannel)channel;
 
-                var players = support.tempUsers[channel];
+                var players = _game.tempUsers[channel];
                 
                 if (players.Count < 2)
                 {
                     builder.AddField("실패!", "사람이 너무 없어요. 적어도 2명 이상이 플레이 해야 합니다!");
                     await textChannel.SendMessageAsync("", false, builder.Build());
-                    support.tempUsers.Remove(channel);
+                    _game.tempUsers.Remove(channel);
                     return;
                 }
                 else if(players.Count > 4)
                 {
                     builder.AddField("실패!", "사람이 너무 많아요. 최대 4명 까지 한 번에 플레이가 가능해요.");
                     await textChannel.SendMessageAsync("", false, builder.Build());
-                    support.tempUsers.Remove(channel);
+                    _game.tempUsers.Remove(channel);
                     return;
                 }
 
@@ -342,7 +345,7 @@ namespace bot
                     await createChannel.AddPermissionOverwriteAsync(Context.Guild.EveryoneRole, everyone);
                     await createChannel.AddPermissionOverwriteAsync(Context.Guild.GetUser(Context.Client.CurrentUser.Id), playersAndBot);
 
-                    foreach (var player in support.tempUsers[channel])
+                    foreach (var player in _game.tempUsers[channel])
                     {
                         await createChannel.AddPermissionOverwriteAsync(Context.Guild.GetUser(player), playersAndBot);
                     }
@@ -350,17 +353,17 @@ namespace bot
                 catch
                 {
                     await textChannel.SendMessageAsync("새 채널을 만들고 권한을 설정하는 데 실패햐였습니다. 봇의 권한을 확인해 주세요");
-                    support.goStopGame.Remove(channel);
+                    _game.goStopGame.Remove(channel);
                     return;
                 }
 
                 channel = Context.Guild.GetChannel(createChannel.Id);
-                support.goStopGame.Add(channel, new GoStop(support.tempUsers[Context.Channel as SocketGuildChannel].ToArray()));
+                _game.goStopGame.Add(channel, new GoStop(_game.tempUsers[Context.Channel as SocketGuildChannel].ToArray()));
 
-                Player first = support.goStopGame[channel].turn;
+                Player first = _game.goStopGame[channel].turn;
                 SocketGuildUser firstTrun = channel.Guild.GetUser(first.id);
 
-                support.turnPlayer.Add(firstTrun.Id, channel);
+                _game.turnPlayer.Add(firstTrun.Id, channel);
                 SocketGuild guild = channel.Guild;
                 string path = $"GoStop/{channel.Id}/";
                 DirectoryInfo dtInfo = new DirectoryInfo("GoStop/" + channel.Id + "/");
@@ -379,7 +382,7 @@ namespace bot
                 foreach(var player in players)
                 {
                     string filePath = path + player + ".png";
-                    support.goStopGame[channel].getPlayer(player).getHwatusImage().Save(filePath, new PngEncoder());
+                    _game.goStopGame[channel].getPlayer(player).getHwatusImage().Save(filePath, new PngEncoder());
                     await guild.GetUser(player).SendFileAsync(filePath, "당신의 패입니다.");
                     GC.Collect();
                 }
@@ -392,7 +395,7 @@ namespace bot
                     index++;
                 }
                 send += "```";
-                support.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
+                _game.goStopGame[channel].Field.getFieldImage().Save(path + "field.png", new PngEncoder());
                 
                 textChannel = channel as SocketTextChannel;
 

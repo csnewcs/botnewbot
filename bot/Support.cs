@@ -15,14 +15,14 @@ namespace bot
     public class Support
     {
         SqlHelper sqlHelper;
-        Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
-        Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트
+        /*Dictionary<ulong, ulong> setting = new Dictionary<ulong, ulong>(); //현재 설정중인 것들 저장
+        Dictionary<ulong, Server> server = new Dictionary<ulong, Server>(); //서버 객체 리스트*/
         Dictionary<ulong, ulong>  _helpMessages = new Dictionary<ulong, ulong>(); //메세지 ID, 사용자 ID
-        Dictionary<SocketGuildChannel, GoStop> _gostop = new Dictionary<SocketGuildChannel, GoStop>();
+        /*Dictionary<SocketGuildChannel, GoStop> _gostop = new Dictionary<SocketGuildChannel, GoStop>();
         Dictionary<ulong, SocketGuildChannel> _turnPlayer = new Dictionary<ulong, SocketGuildChannel>();
         Dictionary<SocketGuildChannel, List<ulong>> _tempUsers = new Dictionary<SocketGuildChannel, List<ulong>>(); 
         Dictionary<ulong, KeyValuePair<Hwatu, Hwatu[]>> _selectGet = new Dictionary<ulong, KeyValuePair<Hwatu, Hwatu[]>>();
-        Dictionary<ulong, Hwatu[]> _selectFieldGet = new Dictionary<ulong, Hwatu[]>();
+        Dictionary<ulong, Hwatu[]> _selectFieldGet = new Dictionary<ulong, Hwatu[]>();*/
 
 
         public Dictionary<ulong, ulong> helpMessages
@@ -36,7 +36,7 @@ namespace bot
                 _helpMessages = value;
             }
         }
-        public Dictionary<SocketGuildChannel, GoStop> goStopGame
+        /*public Dictionary<SocketGuildChannel, GoStop> goStopGame
         {
             get
             {
@@ -72,7 +72,7 @@ namespace bot
         public Dictionary<ulong, KeyValuePair<Hwatu, Hwatu[]>> selectGet
         {
             get {return _selectGet;}
-        }
+        }*/
 
         public Support(SqlHelper helper = null)
         {

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using botnetbot.Support;
+using botnewbot.Support;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;

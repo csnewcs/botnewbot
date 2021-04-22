@@ -2,7 +2,7 @@ using System;
 using csnewcs.Sql;
 using Discord.WebSocket;
 
-namespace botnetbot.Support
+namespace botnewbot.Support
 {
     public class Money
     {
