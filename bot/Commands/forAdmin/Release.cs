@@ -21,7 +21,8 @@ namespace bot
         [Command]
         public async Task help()
         {
-            EmbedBuilder builder = new EmbedBuilder()
+            await ReplyAsync($"이 명령어는 이전되었습니다. '{Program.prefix}명령어'를 사용해 주세요");
+            /*EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("처벌해제 명령어 사용법")
             .WithColor(new Color(0xbe33ff))
             .AddField("뮤트", "지정한 사람의 뮤트를 해제합니다.\n(지정한 사람이 음성채팅방에 있어야 사용 가능)\n(사용법: $처벌해제 뮤트 [뮤트를 풀 사용자 언급(여러 명 가능)])")
@@ -29,7 +30,7 @@ namespace bot
             .AddField("밴", "지정한 사람의 밴을 해제합니다.\n(밴 목록으로 그 사람의 ID를 알아와주세요.)\n(사용법: $처벌해제 밴 [밴을 풀 사람의 ID])")
             .AddField("밴 모두", "모든 사람의 밴을 해제합니다.\n(사용법: $처벌해제 밴 모두)");
             await Context.User.SendMessageAsync("", embed:builder.Build());
-            await ReplyAsync("DM으로 결과를 전송했습니다.");
+            await ReplyAsync("DM으로 결과를 전송했습니다.");*/
         }
         [Command("뮤트", true)]
         public async Task mute()

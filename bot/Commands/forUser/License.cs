@@ -17,7 +17,7 @@ namespace bot
         {
             Random rd = new Random();
             EmbedBuilder builder = new EmbedBuilder()
-            .WithTitle("이 봇과 봇에 사용된 Nuget들의 라이센스")
+            .WithTitle("이 봇과 봇에 사용된 외부 라이브러리들의 라이센스")
             .WithColor(new Color((uint)rd.Next(0x000000, 0xffffff)))
             .AddField("botnewbot (이 봇)", "라이센스: MIT, 소스코드: https://github.com/csnewcs/botnewbot")
             .AddField("Discord.Net", "라이센스: MIT, 소스코드: https://github.com/discord-net/Discord.Net")

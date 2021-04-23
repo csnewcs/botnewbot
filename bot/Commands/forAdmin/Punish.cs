@@ -22,17 +22,18 @@ namespace bot
     {
         Support support = new Support();
         Permission permission = new Permission();
-        // [Command]
+        [Command]
         public async Task help() //명령어: $처벌
         {
-            EmbedBuilder builder = new EmbedBuilder()
+            await ReplyAsync($"이 명령어는 이전되었습니다. '{Program.prefix}명령어'를 사용해 주세요");
+            /*EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("처벌 명령어 사용법")
             .WithColor(new Color(0xbe33ff))
             .AddField("뮤트", "지정한 사람의 마이크를 없앱니다.\n음성채팅방에서 다른 누구도 그 사람의 목소리를 들을 수 없습니다.\n(지정한 사람이 음성채팅방에 있어야 사용 가능)\n(사용법: $처벌 뮤트 [뮤트 시킬 사용자 언급(여러 명 가능)])")
             .AddField("킥", "지정한 사람을 서버에서 쫓아냅니다.\n단 다시 들어올 수 있습니다.\n(사용법: $처벌 킥 [킥 시킬 사용자 언급(여러 명 가능)])")
             .AddField("밴", "지정한 사람을 서버에서 쫓아냅니다.\n단 밴이 풀릴 때 까지 다시 들어올 수 없습니다.\n(사용법: $처벌 밴 [밴 시킬 사용자 언급(여러 명 가능)])");
             await Context.User.SendMessageAsync("", embed:builder.Build());
-            await ReplyAsync("DM으로 결과를 전송했습니다.");
+            await ReplyAsync("DM으로 결과를 전송했습니다.");*/
         }
         [Command("뮤트", true)]
         public async Task mute() //명령어: $처벌 뮤트 <누군가를 멘션>

@@ -41,13 +41,14 @@ namespace bot
         [Command]
         public async Task help()
         {
-            EmbedBuilder build = new EmbedBuilder()
+            await ReplyAsync($"이 명령어는 이전되었습니다. '{Program.prefix}명령어'를 사용해 주세요");
+            /*EmbedBuilder build = new EmbedBuilder()
             .WithTitle("도박 명령어 도움말")
             .WithColor(new Discord.Color(0xbe33ff))
             .AddField("제비뽑기", "1번 ~ 9번 제비를 뽑아 건 돈의 0% ~ 220%를 돌려받습니다.\n(사용법: $도박 제비뽑기 [걸 돈] [선택한 제비 번호])")
             .AddField("슬롯머신", "1번 ~ 9번까지의 랜덤한 숫자 3개가 나옵니다.\n나온 숫자에 의해 건 돈의 0배 ~ 43배를 돌려받습니다.\n(사용법: $도박 슬롯머신 [걸 돈])")
             .AddField("슬롯머신(연속)", "슬롯머신과 같습니다. 단 연속으로(100번까지) 돌립니다.\n결과 중 일부는 DM으로 전송됩니다.\n(사용법: $도박 슬롯머신 [(판당)걸 돈] [돌릴 수(0이면 일반 슬롯머신으로 간주)])");
-            await ReplyAsync("", embed:build.Build());
+            await ReplyAsync("", embed:build.Build());*/
         }
         [Command("제비뽑기")]
         public async Task draw(long stake, ulong select) //제비뽑기

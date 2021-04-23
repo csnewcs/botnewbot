@@ -28,7 +28,8 @@ namespace bot
         [Command]
         public async Task help()
         {
-            EmbedBuilder builder = new EmbedBuilder()
+            await ReplyAsync($"이 명령어는 이전되었습니다. '{Program.prefix}명령어'를 사용해 주세요");
+            /*EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("노래방 명령어 도움말")
             .AddField("들어와", "사용자가 있는 음성채팅방에 봇이 들어갑니다. 음악을 등록하기 전에 해야합니다.")
             .AddField("등록 (검색어|주소)", "유튜브에서 검색해 음악을 등록합니다. 검색어 대신 주소를 입력해 등록할 수도 있습니다.")
@@ -39,7 +40,7 @@ namespace bot
             .AddField("나와", "들어가 있던 음성채팅방에서 나옵니다.")
             .WithColor(new Color(0xbe33ff));
             await Context.User.SendMessageAsync("", embed:builder.Build());
-            await ReplyAsync("DM으로 결과를 전송했습니다.");
+            await ReplyAsync("DM으로 결과를 전송했습니다.");*/
         }
 
         [Command("들어와")]

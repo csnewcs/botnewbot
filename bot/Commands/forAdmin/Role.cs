@@ -21,7 +21,8 @@ namespace bot
         [Command]
         public async Task helpRole()
         {
-            EmbedBuilder build = new EmbedBuilder()
+            await ReplyAsync($"이 명령어는 이전되었습니다. '{Program.prefix}명령어'를 사용해 주세요");
+            /*EmbedBuilder build = new EmbedBuilder()
             .WithTitle("역할 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
             .AddField("부여", "사람 혹은 사람들에게 역할을 부여합니다.\n(사용법: $역할 부여 [역할 부여할 사람 멘션 (여러명 가능)] [@부여할 역할 멘션 (여러개 가능)])")
@@ -29,7 +30,7 @@ namespace bot
             .AddField("강탈", "사람 혹은 사람들에게서 역할을 뺏습니다.\n(사용법: $역할 강탈 [역할을 없앨 사람 멘션 (여러명 가능)] [@빼앗을 역할 멘션 (여러개 가능)])")
             .AddField("강탈 모두", "모든 사람들에게서 역할을 뺏습니다.\n(사용법: $역할 강탈 모두 [빼앗을 역할 멘션 (여러개 가능)])");
             await Context.User.SendMessageAsync("", embed:build.Build());
-            await ReplyAsync("DM으로 결과를 전송했습니다.");
+            await ReplyAsync("DM으로 결과를 전송했습니다.");*/
         }
         [Command("부여", true)]
         public async Task giveRole()

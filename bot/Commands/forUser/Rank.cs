@@ -33,14 +33,15 @@ namespace bot
         [Command]
         public async Task help()
         {
-            EmbedBuilder builder = new EmbedBuilder()
+            await ReplyAsync($"이 명령어는 이전되었습니다. '{Program.prefix}명령어'를 사용해 주세요");
+            /*EmbedBuilder builder = new EmbedBuilder()
             .WithTitle("순위 명령어 도움말")
             .WithColor(new Color(0xbe33ff))
             .AddField("나","자기 자신의 순위를 봅니다.\n(사용법: 순위 나)")
             .AddField("모두","서버 내부 사람 전체의 순위를 봅니다.\n(결과는 DM으로 전송됩니다.) (사용법: 순위 모두)")
             .AddField("상위권","서버 내부 사람 상위 5명의 순위를 봅니다.\n(사용법: 순위 상위권)");
             await Context.User.SendMessageAsync("", embed:builder.Build());
-            await ReplyAsync("DM으로 결과를 전송했습니다.");
+            await ReplyAsync("DM으로 결과를 전송했습니다.");*/
         }
 
         [Command("나")]
