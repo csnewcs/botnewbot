@@ -19,10 +19,10 @@ namespace bot
     [Group("순위")]
     public class Rank : ModuleBase<SocketCommandContext>
     {
-        Support support;
-        public Rank(Support _support)
+        private Money _money;
+        public Rank(Money money)
         {
-            support = _support;
+            _money = money;
         }
 
         // Dictionary<SocketGuildUser, long> people = new Dictionary<SocketGuildUser, long>();
@@ -133,7 +133,6 @@ namespace bot
         }
         private void makeDict(SocketGuild guild)
         {
-            Money money = new Money();
             var users = guild.Users;
             // int count = 0;
             // foreach (var user in users) if (!user.IsBot) count++;
@@ -144,7 +143,7 @@ namespace bot
             {
                 try
                 {
-                    if (!user.IsBot) people.Add(new KeyValuePair<SocketGuildUser, long>(user, money.getUserMoney(user)));
+                    if (!user.IsBot) people.Add(new KeyValuePair<SocketGuildUser, long>(user, _money.getUserMoney(user)));
                 }
                 catch{}
             }
