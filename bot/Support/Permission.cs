@@ -105,7 +105,11 @@ namespace botnewbot.Support
         public bool compareRolePosition(SocketGuildUser user, SocketRole role)
         {
             int userRolePositionTop = 0;
-            foreach(var userRole in user.Roles) userRolePositionTop = userRole.Position;
+            foreach (var userRole in user.Roles)
+            {
+                if(userRolePositionTop < userRole.Position) userRolePositionTop = userRole.Position;
+            }
+            Console.WriteLine(role.Position + " : " + userRolePositionTop);
             return role.Position < userRolePositionTop;
         }
     }
