@@ -168,7 +168,7 @@ namespace bot
                 return;
             }
             
-            if (!_money.addMoney(Context.User as SocketGuildUser, (long)Math.Round(money * loop)))
+            if (!_money.addMoney(Context.User as SocketGuildUser, -1 * (long)Math.Round(money * loop)))
             {
                 await ReplyAsync("가지고 있는 돈 보다 많은 돈을 쓸 수 없습니다.");
                 return;

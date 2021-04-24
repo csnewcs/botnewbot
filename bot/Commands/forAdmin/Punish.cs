@@ -102,30 +102,52 @@ namespace bot
         [Command("킥", true)]
         public async Task kick()
         {
+            EmbedBuilder builder = new EmbedBuilder();
+            string instead = "";
+            
             User user = new User();
             Permission permission = new Permission();
-            SocketMessage msg = Context.Message;
-            var kickUsers = msg.MentionedUsers;
+            
             SocketGuildUser guildUser = Context.User as SocketGuildUser;
-            if (permission.canKickMember(guildUser) || kickUsers.Count == 0)
+            if(permission.canKickMember(Context.Guild.GetUser(Context.Client.CurrentUser.Id)))
             {
-                return;
+                builder.AddField("작업 실패", "이 봇에겐 멤버를 킥할 권한이 없어요. 권한을 확인해 주세요.");
+                instead += "작업 실패\n이 봇에겐 멤버를 킥할 권한이 없어요. 권한을 확인해 주세요.";
             }
-            Random rd = new Random();
-            if (kickUsers.Count != 1)
+            else if (permission.canKickMember(guildUser))
             {
-                EmbedBuilder builder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{user.getNickName(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
-                await msg.Channel.SendMessageAsync("", embed:builder.Build());
+                SocketMessage msg = Context.Message;
+                var kickUsers = msg.MentionedUsers;
+                if (kickUsers.Count == 0)
+                {
+                    builder.AddField("작업 실패", "킥 할 분들을 멘션해 주세요.");
+                    instead += "작업 실패\n킥 할 분들을 멘션해 주세요.";
+                }
+                else if (kickUsers.Count != 1)
+                {
+                    builder.AddField("작업 완료", $"{user.getNickName(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.");
+                    instead += $"작업 완료\n{user.getNickName(kickUsers.First() as SocketGuildUser)}외 {kickUsers.Count}분의 킥 처리가 완료되었습니다.";
+                }
+                else 
+                {
+                    builder.AddField("작업 완료", $"{user.getNickName(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
+                    instead += $"작업 완료\n{user.getNickName(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.";
+                }
             }
-            else 
+            else
             {
-                EmbedBuilder builder = new EmbedBuilder()
-                .WithColor((uint)rd.Next(0x000000, 0xffffff))
-                .AddField("작업 완료", $"{user.getNickName(kickUsers.First() as SocketGuildUser)}님의 킥 처리가 완료되었습니다.");
-                await msg.Channel.SendMessageAsync("", embed:builder.Build());
-            }   
+                builder.AddField("작업 실패", "당신은 이 명령어를 사용할 권한이 없어요.");
+                instead += "작업 실패\n당신은 이 명령어를 사용할 권한이 없어요.";
+            }
+
+            try
+            {
+                await ReplyAsync("", false, builder.Build());
+            }
+            catch
+            {
+                await ReplyAsync(instead + "\n\n봇이 Embed를 보낼 수 없어서 일반 메세지로 대체되었습니다. 봇의 권한을 확인해 주세요.");
+            }
         }
         // [Command("밴", true)]
         // public async Task ban()
