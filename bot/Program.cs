@@ -539,8 +539,8 @@ namespace bot
             {
                 // Console.WriteLine("메세지가 감지됨");
                 EmbedBuilder builder= new EmbedBuilder();
-                string[] emojis = new string[5] {
-                    "\U0001f4b0", "\U0001f4b8", "\U0001f3c6", "\U0001f3a4", "\U0001f6e0" 
+                string[] emojis = new string[6] {
+                    "\U0001f4b0", "\U0001f4b8", "\U0001f3c6", "\U0001f3a4", "\U0001f6e0", "\U0001F3B8"
                 };
                 if (reaction.UserId == support.helpMessages[message.Value.Id])
                 {
@@ -575,7 +575,7 @@ namespace bot
                     {
                         builder.WithTitle("관리자용 명령어")
                                         .AddField($"{prefix}역할 부여 <@역할을 부여할 사람> <@부여될 역할>", "```언급한 사람들에게 언급한 역할들을 부여합니다. 한 번에 여러 사람에게 하는 것도 가능하고, 한 번에 여러 역할을 부여하는 것도 가능합니다.```")
-                                        .AddField($"{prefix}역할 강탈 <@역할을 없앨 사람> <@없앨 역할>", "```언급할 사람에게서 언급한 역할을 제거합니다. 한 번에 여러 사람에게 하는 것도 가능하고, 한 번에 여러 역할을 없애는 것도 가능합니다..```")
+                                        .AddField($"{prefix}역할 제거 <@역할을 없앨 사람> <@없앨 역할>", "```언급할 사람에게서 언급한 역할을 제거합니다. 한 번에 여러 사람에게 하는 것도 가능하고, 한 번에 여러 역할을 없애는 것도 가능합니다..```")
                                         .AddField($"{prefix}처벌 뮤트 <@음소거 시킬 사람>", "```언급한 사람들의 마이크를 강제로 꺼버립니다. 한 번에 여러 명을 음소거 시키는 것도 가능합니다.```")
                                         .AddField($"{prefix}처벌 킥 <@추방할 사람>", "```언급한 사람들을 서버에서 추방시킵니다. 한 번에 여러 명을 추방하는 것도 가능합니다.```")
                                         .AddField($"{prefix}처벌 밴 <@차단할 사람>", "```언급한 사람들을 서버에서 차단시킵니다. 한 번에 여러 명을 차단하는 것도 가능합니다.```")
@@ -584,6 +584,11 @@ namespace bot
                                         .AddField($"{prefix}처벌해제 밴 <차단을 풀 사람의 ID>", "```ID를 준 사람의 차단을 해제합니다. 밴 목록에서 ID를 가져와주세요.```")
                                         .AddField($"{prefix}처벌해제 밴 모두", "```이 서버에서 차단 당한 사람 모두를 해제합니다.```")
                                         .WithFooter("당연히 권한 없는 사람이 하면 아무 일도 일어나지 않아요.");
+                    }
+                    else if(reaction.Emote.Name == emojis[5])
+                    {
+                        builder.AddField($"{prefix}라이센스", "```이 봇과 이 봇에 사용된 라이센스 정보들을 보여줍니다.```")
+                               .AddField($"{prefix}핑", "```현재 이 봇의 메세지를 받는 데 걸리는 시간, API서버와 통신하는데 걸리는 시간을 보여줍니다.````");
                     }
                     builder.WithColor(0xbe33ff);
                     support.helpMessages.Remove(message.Id);
