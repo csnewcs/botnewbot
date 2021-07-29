@@ -1,0 +1,5 @@
+.Net 5.0 (https://github.com/dotnet/core) (MIT License)
+Discord.Net.Labs 2.4.9 (https://github.com/Discord-Net-Labs/Discord.Net-Labs) (MIT License)
+Victoria 5.2.0 (https://github.com/Yucked/Victoria) (MIT License)
+
+Party-Bot (https://github.com/DraxCodes/Party-Bot) (MIT License)
