@@ -56,6 +56,7 @@ namespace botnewbot.Services
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<InteractionHandler>()
+                .AddSingleton<SqlHandler>()
                 .BuildServiceProvider();
         }
     }

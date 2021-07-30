@@ -5,10 +5,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.2"/>
-    <!-- <PackageReference Include="Victoria" Version="5.2.0"/> -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0-preview.6.21352.12"/>
     <PackageReference Include="Discord.Net.Labs" Version="2.4.9"/>
     <PackageReference Include="Discord.Net.Labs.Core" Version="2.4.6"/>
+    <PackageReference Include="MySql.Data" Version="8.0.26"/>
   </ItemGroup>
 </Project>

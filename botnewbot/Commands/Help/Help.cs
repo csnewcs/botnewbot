@@ -33,7 +33,7 @@ namespace botnewbot.Commands
                 .WithCustomId("helpComponent")
                 .WithPlaceholder("도움말을 볼 명령어를 선택")
                 .WithOptions(options));
-            await ReplyAsync("볼 명령어의 도움말을 선택하세요.", false, component: componentBuilder.Build());
+            await ReplyAsync("도움말을 볼 주제를 선택하세요.", false, component: componentBuilder.Build());
         }
         public static async Task sendHelp(SocketMessageComponent component)
         {
@@ -46,11 +46,10 @@ namespace botnewbot.Commands
             {
                 EmbedFieldBuilder newField = new EmbedFieldBuilder();
                 newField.Name = command["Command"].ToString();
-                newField.Value = $"{command["Summary"]}\n같은 명령어: `{string.Join(", ", (command["Alias"] as JArray).ToObject<string[]>())}`";
+                newField.Value = $"```{command["Summary"]}```\n같은 명령어: `{string.Join(", ", (command["Alias"] as JArray).ToObject<string[]>())}`";
                 embedBuilder.AddField(newField);
             }
-            await component.RespondAsync("결과", embed: embedBuilder.Build(), type: InteractionResponseType.UpdateMessage, ephemeral: true);
-            await component.FollowupAsync("다시 보내기", type: InteractionResponseType.ChannelMessageWithSource, ephemeral: true);
+            await component.RespondAsync(embed: embedBuilder.Build(), type: InteractionResponseType.UpdateMessage, ephemeral: true);
         }
     }
 }
