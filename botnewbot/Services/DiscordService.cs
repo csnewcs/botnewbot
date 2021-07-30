@@ -15,21 +15,24 @@ namespace botnewbot.Services
         private ServiceProvider _provider;
         private DiscordSocketClient _client;
         private CommandService _commands;
-        private CommandHandler _handler;
+        private CommandHandler _commandHandler;
+        private InteractionHandler _interactionHandler;
 
         public DiscordService()
         {
             _provider = ConfigureServices();
             _client = _provider.GetService<DiscordSocketClient>();
             _commands = _provider.GetService<CommandService>();
-            _handler = _provider.GetService<CommandHandler>();
+            _commandHandler = _provider.GetService<CommandHandler>();
+            _interactionHandler = _provider.GetService<InteractionHandler>();
         }
         public async Task Init()
         {
             BotConfig.Init();
-            await _handler.setProvider(_provider);
+            await _commandHandler.setProvider(_provider);
             _client.Ready += ready;
             _client.Log += discordLog;
+            _client.InteractionCreated += _interactionHandler.interactionCreated;
             _commands.Log += discordLog;
             await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(), _provider);
             await _client.LoginAsync(TokenType.Bot, BotConfig.BotToken);
@@ -51,7 +54,9 @@ namespace botnewbot.Services
             return new ServiceCollection()
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton<CommandService>()
-                .AddSingleton<CommandHandler>().BuildServiceProvider();
+                .AddSingleton<CommandHandler>()
+                .AddSingleton<InteractionHandler>()
+                .BuildServiceProvider();
         }
     }
 }
