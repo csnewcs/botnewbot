@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MySql.Data;
 using MySql.Data.MySqlClient;
 
@@ -43,6 +44,31 @@ namespace botnewbot.Handlers
         // {
             
         // }
+        public bool getAllMoneyFromOneGuild(ulong guildId, out Dictionary<ulong, ulong> money)
+        {
+            money = new Dictionary<ulong, ulong>();
+            /*
+              멤버ID : 돈
+            */
+            bool result = false;
+            if(checkGuildMoneyTableExist(guildId))
+            {
+                connection.Open();
+                using (var command = new MySqlCommand($"SELECT * FROM money_{guildId}", connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            money.Add((ulong)reader["id"], (ulong)reader["money"]);
+                        }
+                    }
+                    result = true;
+                }
+                connection.Close();
+            }
+            return result;
+        }
         
         public ulong getUserMoney(ulong userId, ulong guildId)
         {
