@@ -87,16 +87,21 @@ namespace botnewbot.Handlers
                         }
                     }
                 }
+                connection.Close();
             }
             else
             {
                 addUser(userId, guildId);
             }
+
             return money;
         }
         public void setUserMoney(ulong userId, ulong guildId, ulong money)
         {
-            if(!checkGuildMoneyTableExist(guildId)) createGuildMoneyTableIfNotExist(guildId);
+            if(!checkGuildMoneyTableExist(guildId))
+            {
+                createGuildMoneyTableIfNotExist(guildId);
+            } 
             connection.Open();
             using (var command = new MySqlCommand($"UPDATE money_{guildId} SET money = {money} WHERE id = {userId};", connection))
             {
